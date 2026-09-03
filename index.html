@@ -9,6 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -103,6 +105,18 @@
     <!-- ── WORLD view ── -->
     <section class="view" id="view-world">
       <div class="grid">
+        <div class="card map span12">
+          <div class="card-head">
+            <h2>Live World Signals</h2>
+            <span class="count mono" id="mapCount">—</span>
+            <span class="src mono">NEWS-DERIVED</span>
+          </div>
+          <div class="mapbox">
+            <div id="worldmap"></div>
+            <div class="map-legend" id="mapLegend"></div>
+          </div>
+        </div>
+
         <div class="card status span6">
           <div class="card-head"><h2>Global Status Board</h2><span class="src mono">LIVE</span></div>
           <div class="statusboard" id="statusboard"></div>

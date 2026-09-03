@@ -382,12 +382,87 @@ function renderWorld(){
       <div class="rl">${temp? temp+' matching headline(s) in the live feed this cycle.':'No region-specific signal in current feed.'}</div>
       <div class="rtags">${tags}</div></div>`;
   }).join('');
+  updateMapSignals();
 }
 function advRatio(){
   const c=S.coins; if(!c.length) return '—';
   const adv=c.filter(x=>(x.price_change_percentage_24h||0)>0).length;
   return `${adv}/${c.length} watchlist assets higher on the day`;
 }
+
+/* ══════════════ 7b. LIVE WORLD SIGNAL MAP ══════════════ */
+// representative hubs; each matches live headlines by keyword
+const HUBS=[
+  ['United States',38.9,-77.0,['us','u.s.','united states','washington','white house','pentagon','america']],
+  ['Canada',45.4,-75.7,['canada','ottawa']],
+  ['Mexico',19.4,-99.1,['mexico']],
+  ['Brazil',-15.8,-47.9,['brazil']],
+  ['Argentina',-34.6,-58.4,['argentina','milei']],
+  ['United Kingdom',51.5,-0.1,['uk ','britain','london','westminster','starmer']],
+  ['France',48.9,2.35,['france','paris','macron']],
+  ['Germany',52.5,13.4,['germany','berlin','scholz']],
+  ['European Union',50.85,4.35,['eu ','european union','brussels']],
+  ['Russia',55.75,37.6,['russia','moscow','putin']],
+  ['Ukraine',50.45,30.5,['ukraine','kyiv']],
+  ['Turkey',41.0,28.9,['turkey','erdogan','istanbul']],
+  ['Iran',35.7,51.4,['iran','tehran']],
+  ['Israel',32.08,34.78,['israel','netanyahu','gaza']],
+  ['Saudi Arabia',24.7,46.7,['saudi','riyadh']],
+  ['United Arab Emirates',25.2,55.3,['uae','dubai','abu dhabi']],
+  ['India',28.6,77.2,['india','delhi','modi']],
+  ['China',39.9,116.4,['china','beijing','xi jinping','taiwan','chinese']],
+  ['Japan',35.7,139.7,['japan','tokyo']],
+  ['South Korea',37.57,126.98,['south korea','seoul','korea']],
+  ['Taiwan',25.03,121.57,['taiwan']],
+  ['Australia',-33.9,151.2,['australia','sydney','canberra']],
+  ['Egypt',30.0,31.2,['egypt','cairo']],
+  ['Nigeria',6.5,3.4,['nigeria','lagos']],
+  ['Kenya',-1.3,36.8,['kenya','nairobi']],
+  ['South Africa',-26.2,28.0,['south africa','johannesburg']],
+];
+let _map=null, _mapMarkers=[];
+function hubRe(kws){ return new RegExp('\\b('+kws.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\\b'); }
+function ensureMap(){
+  if(_map || typeof L==='undefined') return _map;
+  const el=$('#worldmap'); if(!el) return null;
+  _map = L.map('worldmap',{ zoomControl:true, worldCopyJump:true, minZoom:2, maxZoom:8 });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains:'abcd', maxZoom:8
+  }).addTo(_map);
+  _map.setView([24,10],2);
+  return _map;
+}
+function updateMapSignals(){
+  const map=ensureMap(); if(!map) return;
+  const titles=(S.news||[]).map(n=>(n.title||'').toLowerCase());
+  _mapMarkers.forEach(m=>m.remove()); _mapMarkers=[];
+  let liveCount=0;
+  HUBS.forEach(([name,lat,lng,kws])=>{
+    const re=hubRe(kws);
+    const idx=titles.map((t,i)=>({i,t})).filter(o=>re.test(o.t));
+    const count=idx.length;
+    if(count>0) liveCount++;
+    const color = count===0?'#31435f':(count<=2?'#3ee6ff':(count<=4?'#ffc24b':'#ff5d73'));
+    const radius = 6 + Math.min(count,7)*2.3;
+    const top = S.news[idx.length?idx[0].i:0];
+    const m = L.circleMarker([lat,lng],{
+      radius, color: count===0?'#31435f':'#ffffff', weight:1,
+      fillColor:color, fillOpacity: count===0?0.5:0.85
+    }).addTo(map);
+    m.bindPopup(`<div class="mp-title">${esc(name)}</div>`+
+      `<div class="mp-meta">${count} matching headline${count===1?'':'s'} in live feed</div>`+
+      (top?`<div style="margin-top:5px">${esc(top.title)}</div><div class="mp-meta" style="margin-top:2px"><a href="${esc(top.link)}" target="_blank" rel="noopener">open story ↗</a></div>`:''));
+    _mapMarkers.push(m);
+  });
+  $('#mapCount').textContent = (liveCount||0)+' signal'+(liveCount===1?'':'s')+' live';
+  $('#mapLegend').innerHTML =
+    `<span class="li"><span class="sw" style="background:#31435f"></span>quiet</span>`+
+    `<span class="li"><span class="sw" style="background:#3ee6ff"></span>active</span>`+
+    `<span class="li"><span class="sw" style="background:#ffc24b"></span>heightened</span>`+
+    `<span class="li"><span class="sw" style="background:#ff5d73"></span>elevated</span>`;
+}
+function wakeMap(){ ensureMap(); if(_map){ _map.invalidateSize(); } updateMapSignals(); }
 
 /* ══════════════ WELCOME GUIDE ══════════════ */
 const GUIDE=[
@@ -420,6 +495,7 @@ function bindTabs(){
       t.classList.add('is-active');t.setAttribute('aria-selected','true');
       const v=t.dataset.view;
       $$('.view').forEach(s=>s.classList.toggle('is-active', s.id==='view-'+v));
+      if(v==='world') setTimeout(wakeMap, 60);   // init/resize map once its container is visible
       try{ history.replaceState(null,'','#'+v); }catch(e){}
       window.scrollTo({top:0,behavior:'smooth'});
     });
@@ -436,6 +512,7 @@ function boot(){
     if(t){ $$('.tab').forEach(x=>{x.classList.remove('is-active');x.setAttribute('aria-selected','false')});
       t.classList.add('is-active');t.setAttribute('aria-selected','true');
       $$('.view').forEach(s=>s.classList.toggle('is-active', s.id==='view-'+want)); }
+    if(want==='world') setTimeout(wakeMap, 80);
   }
   $('#guideNext').addEventListener('click',nextGuide);
   $('#closeGuide').addEventListener('click',closeGuide);
