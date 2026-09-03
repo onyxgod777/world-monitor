@@ -445,14 +445,18 @@ function updateMapSignals(){
     if(count>0) liveCount++;
     const color = count===0?'#31435f':(count<=2?'#3ee6ff':(count<=4?'#ffc24b':'#ff5d73'));
     const radius = 6 + Math.min(count,7)*2.3;
-    const top = S.news[idx.length?idx[0].i:0];
+    const top = count>0 ? S.news[idx[0].i] : null;
     const m = L.circleMarker([lat,lng],{
       radius, color: count===0?'#31435f':'#ffffff', weight:1,
       fillColor:color, fillOpacity: count===0?0.5:0.85
     }).addTo(map);
-    m.bindPopup(`<div class="mp-title">${esc(name)}</div>`+
-      `<div class="mp-meta">${count} matching headline${count===1?'':'s'} in live feed</div>`+
-      (top?`<div style="margin-top:5px">${esc(top.title)}</div><div class="mp-meta" style="margin-top:2px"><a href="${esc(top.link)}" target="_blank" rel="noopener">open story ↗</a></div>`:''));
+    m.bindPopup(count>0
+      ? `<div class="mp-title">${esc(name)}</div>`+
+        `<div class="mp-meta">${count} matching headline${count===1?'':'s'} in live feed</div>`+
+        `<div style="margin-top:5px">${esc(top.title)}</div>`+
+        `<div class="mp-meta" style="margin-top:2px"><a href="${esc(top.link)}" target="_blank" rel="noopener">open story ↗</a></div>`
+      : `<div class="mp-title">${esc(name)}</div>`+
+        `<div class="mp-meta">No ${esc(name)}-specific signal in the current feed.</div>`);
     _mapMarkers.push(m);
   });
   $('#mapCount').textContent = (liveCount||0)+' signal'+(liveCount===1?'':'s')+' live';
