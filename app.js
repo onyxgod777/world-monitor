@@ -1,0 +1,431 @@
+/* ═══════════════════════════════════════════════════════════
+   WORLD MONITOR — app.js
+   Real live feeds where easy (crypto markets, world clocks, news
+   RSS via CORS proxy). Heuristic/illustrative panels are labelled.
+   Every fetch degrades gracefully to a fallback so the dashboard
+   always renders. Refresh cycle: clocks 1s, crypto 60s, news 6m.
+   ═══════════════════════════════════════════════════════════ */
+
+'use strict';
+
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+/* ───────── helpers ───────── */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const mono = (n, d=2) => Number(n).toLocaleString('en-US', {minimumFractionDigits:d, maximumFractionDigits:d});
+const signed = n => (n>0?'+':'') + mono(n);
+const clsDelta = n => n>0?'up':(n<0?'dn':'flat');
+const pct = n => (n>0?'+':'') + mono(n,2) + '%';
+
+const PROXIES = [
+  'https://api.allorigins.win/raw?url=',
+  'https://api.codetabs.com/v1/proxy?quest=',
+  'https://api.corsproxy.io/?url=',
+];
+// remember the first proxy that works this session
+let _activeProxy = 0;
+async function fetchTimeout(url, ms=8000){
+  const ctl = new AbortController();
+  const t = setTimeout(()=>ctl.abort(), ms);
+  try{ return await fetch(url, {signal:ctl.signal}); }
+  finally{ clearTimeout(t); }
+}
+async function proxied(url){
+  let lastErr;
+  for(let i=0;i<PROXIES.length;i++){
+    const idx=(_activeProxy+i)%PROXIES.length;
+    try{
+      const res = await fetchTimeout(PROXIES[idx]+encodeURIComponent(url));
+      if(!res.ok) throw new Error('proxy '+idx+' '+res.status);
+      _activeProxy=idx; return res;
+    }catch(e){ lastErr=e; }
+  }
+  throw lastErr || new Error('no proxy');
+}
+
+/* ───────── app state ───────── */
+const S = { coins: [], news: [], online: false, lastFetch: 0 };
+
+function setStatus(ok, label){
+  const el = $('#connStatus');
+  el.className = 'conn mono ' + (ok?'ok':'bad');
+  el.innerHTML = `<span class="dot"></span>${label}`;
+  S.online = ok;
+}
+
+/* ══════════════ 1. WORLD CLOCKS (real, client-side) ══════════════ */
+const ZONES = [
+  ['UTC','UTC'], ['New York','America/New_York'], ['Toronto','America/Toronto'],
+  ['Los Angeles','America/Los_Angeles'], ['Sao Paulo','America/Sao_Paulo'],
+  ['London','Europe/London'], ['Frankfurt','Europe/Berlin'], ['Moscow','Europe/Moscow'],
+  ['Istanbul','Europe/Istanbul'], ['Dubai','Asia/Dubai'], ['New Delhi','Asia/Kolkata'],
+  ['Singapore','Asia/Singapore'], ['Beijing','Asia/Shanghai'], ['Tokyo','Asia/Tokyo'],
+  ['Sydney','Australia/Sydney'], ['Auckland','Pacific/Auckland'],
+];
+function zoneFmt(zone, now){
+  const opts = { timeZone: zone, hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false };
+  const time = new Intl.DateTimeFormat('en-GB', opts).format(now);
+  const day = new Intl.DateTimeFormat('en-GB', { timeZone: zone, weekday:'short' }).format(now);
+  return { time, day };
+}
+function tickClocks(){
+  const now = new Date();
+  $('#utcClock').textContent = new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now) + ' UTC';
+  const g = $('#clockgrid');
+  g.innerHTML = ZONES.map(([city,zone])=>{
+    const {time,day} = zoneFmt(zone, now);
+    const off = (zone==='UTC') ? '' : `<span class="utc-tag">${utcOffsetLabel(zone,now)}</span>`;
+    return `<div class="clock"><div class="city">${city}</div><div class="ct">${time}</div><div class="cd">${day} ${off}</div></div>`;
+  }).join('');
+}
+function utcOffsetLabel(zone, now){
+  try{
+    const dtf = new Intl.DateTimeFormat('en-US',{timeZone:zone,timeZoneName:'shortOffset'});
+    const parts = dtf.formatToParts(now).find(p=>p.type==='timeZoneName');
+    return (parts && parts.value) || '';
+  }catch(e){ return ''; }
+}
+
+/* ══════════════ 2. CRYPTO MARKETS (real, CoinGecko) ══════════════ */
+const COINS = ['bitcoin','ethereum','solana','binancecoin','ripple','cardano','dogecoin','avalanche-2','chainlink','polkadot','polygon-ecosystem-token','litecoin'];
+const COIN_NAME = {bitcoin:'BTC',ethereum:'ETH',solana:'SOL',binancecoin:'BNB',ripple:'XRP',cardano:'ADA',dogecoin:'DOGE','avalanche-2':'AVAX',chainlink:'LINK',polkadot:'DOT','polygon-ecosystem-token':'POL',litecoin:'LTC'};
+
+async function loadMarkets(){
+  const ids = COINS.join(',');
+  const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=50&sparkline=true&price_change_percentage=24h%2C7d`;
+  let coins=[];
+  try{
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('cg '+res.status);
+    coins = await res.json();
+  }catch(e){
+    // CoinGecko can rate-limit; retry via proxy once
+    try{ coins = await (await proxied(url)).json(); }catch(e2){}
+  }
+  if(!coins || !coins.length){ renderMarketsOffline(); return; }
+  S.coins = coins.filter(c=>COIN_NAME[c.id]);
+  S.online = true;
+  renderMarkets();
+  renderEcon();
+  renderRisk();
+}
+function renderMarkets(){
+  const coins = S.coins;
+  $('#mktSrc').textContent = 'COINGECKO · LIVE';
+  // ticker
+  const tk = coins.map(c=>{
+    const cls = clsDelta(c.price_change_percentage_24h);
+    return `<span class="tk">${COIN_NAME[c.id]} <b>$${mono(c.current_price)}</b> <span class="${cls}">${pct(c.price_change_percentage_24h)}</span></span><span class="sep"></span>`;
+  }).join('');
+  $('#ticker').innerHTML = `<span class="ticker-inner">${tk}${tk}</span>`;
+  // watch tiles with sparkline
+  const max = coins.reduce((m,c)=>Math.max(m,...(c.sparkline_in_7d?.price||[])),1);
+  const min = coins.reduce((m,c)=>Math.min(m,...(c.sparkline_in_7d?.price||[])),0);
+  $('#watchgrid').innerHTML = coins.map(c=>{
+    const d1 = c.price_change_percentage_24h ?? 0;
+    const spark = sparkSVG(c.sparkline_in_7d?.price, min, max, d1>=0?'#2fe6a0':'#ff5d73');
+    return `<div class="tile">
+      <div class="symrow"><span class="sym">${COIN_NAME[c.id]}</span><span class="nm">${esc(c.name)} · #${c.market_cap_rank||''}</span></div>
+      <div class="px">$${mono(c.current_price)}</div>
+      <div class="chg"><span class="delta ${clsDelta(d1)}">${pct(d1)}</span>${spark}<span style="margin-left:auto;font-size:9px;color:var(--faint)">7D</span></div>
+    </div>`;
+  }).join('');
+}
+function sparkSVG(arr,min,max,col){
+  if(!arr||!arr.length) return '';
+  const W=72,H=18; const span=(max-min)||1;
+  const pts=arr.map((v,i)=>`${(i/(arr.length-1)*W).toFixed(1)},${(H-2-((v-min)/span)*(H-4)).toFixed(1)}`).join(' ');
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" opacity=".9"/></svg>`;
+}
+function renderMarketsOffline(){
+  $('#mktSrc').textContent = 'OFFLINE · SAMPLE';
+  setStatus(false,'STATUS: MARKETS OFFLINE');
+  const tpl=['BTC','ETH','SOL','XRP'];
+  $('#ticker').innerHTML = `<span class="ticker-inner">${tpl.map(s=>`<span class="tk">${s} <span class="flat">— offline —</span></span><span class="sep"></span>`).join('')}${tpl.map(s=>`<span class="tk">${s} <span class="flat">— offline —</span></span><span class="sep"></span>`).join('')}</span>`;
+  $('#watchgrid').innerHTML = `<div class="ph mono" style="grid-column:1/-1;padding:20px;text-align:center">Live price feed unreachable — showing sample tiles. Markets panel will recover automatically when the API responds.</div>`;
+}
+
+/* ══════════════ 3. ECONOMIC SNAPSHOT (crypto-derived, real) ══════════════ */
+function renderEcon(){
+  const c = S.coins; if(!c.length) return;
+  const totalMCap = c.reduce((s,x)=>s+(x.market_cap||0),0);
+  const avg24 = c.reduce((s,x)=>s+(x.price_change_percentage_24h||0),0)/c.length;
+  const avg7d = c.reduce((s,x)=>s+(x.price_change_percentage_7d||0),0)/c.length;
+  const adv = c.filter(x=>(x.price_change_percentage_24h||0)>0).length;
+  const btc = c.find(x=>x.id==='bitcoin');
+  const eth = c.find(x=>x.id==='ethereum');
+  const rows = [
+    ['BTC dominance','Global', btc? pctDisp(btc.market_cap, totalMCap):'—', signed(btc?btc.price_change_percentage_24h:0)+'%', btc&&btc.price_change_percentage_24h>0?'up':'dn'],
+    ['Bitcoin 24h','BTC', '$'+mono(btc?btc.current_price:0), pct(btc?btc.price_change_percentage_24h:0), btc&&btc.price_change_percentage_24h>0?'up':'dn'],
+    ['Ethereum 24h','ETH', '$'+mono(eth?eth.current_price:0), pct(eth?eth.price_change_percentage_24h:0), eth&&eth.price_change_percentage_24h>0?'up':'dn'],
+    ['Sector avg 24h','Watchlist', signed(avg24)+'%', avg24>=0?'broad gain':'broad loss', avg24>0?'up':'dn'],
+    ['Sector avg 7d','Watchlist', signed(avg7d)+'%', avg7d>=0?'uptrend':'downtrend', avg7d>0?'up':'dn'],
+    ['Advancers / total','24h', `${adv}/${c.length}`, adv>c.length/2?'risk-on tilt':'risk-off tilt', adv>=c.length/2?'up':'dn'],
+    ['Total market cap','Watchlist', '$'+(totalMCap/1e9).toFixed(1)+'B', '', 'watch'],
+  ];
+  $('#econRows').innerHTML = rows.map(r=>`<tr><td>${r[0]}</td><td class="mono" style="font-size:11px">${r[1]}</td><td class="num">${r[2]}</td><td class="num ${clsDelta(parseFloat(r[3])||0)}">${r[3]}</td><td class="right"><span class="pill ${r[4]==='up'?'up':r[4]==='dn'?'dn':'watch'}">${r[4]==='up'?'BULLISH':r[4]==='dn'?'BEARISH':'NEUTRAL'}</span></td></tr>`).join('');
+  $('#econSrc').textContent = 'CRYPTO-DERIVED · LIVE';
+}
+function pctDisp(part,total){ return (total? (part/total*100):0).toFixed(1)+'%'; }
+
+/* ───────── Risk gauge (heuristic, labelled) ───────── */
+function renderRisk(){
+  const c=S.coins; if(!c.length){return;}
+  const avg = c.reduce((s,x)=>s+Math.abs(x.price_change_percentage_24h||0),0)/c.length;
+  const btc7 = (c.find(x=>x.id==='bitcoin')||{}).price_change_percentage_7d||0;
+  // low avg move + steady 7d = calm
+  let score = Math.round(Math.min(100, Math.max(4, avg*5 - btc7*0.4 + 22)));
+  score = Math.max(2, Math.min(98, score));
+  const val = score<40?'ok':(score<70?'warn':'crit');
+  $('#riskblock').innerHTML = `
+    <div class="risklabel"><span>Risk Appetite</span><span class="mono">composite</span></div>
+    <div class="riskbar"><div class="riskfill" style="width:${score}%"></div></div>
+    <div class="risksub">
+      <span class="gauge-tag">${val==='ok'?'Calm':val==='warn'?'Caution':'Elevated'}</span>
+      <span class="gauge-val ${val}">${score}<span style="font-size:11px">/100</span></span>
+    </div>
+    <div class="riskmeta">
+      <b>Volatility score</b> derived from live 24h move magnitude &amp; 7-day BTC trend.
+      Illustrative heuristic — not investment advice.
+    </div>`;
+}
+
+/* ══════════════ 4. INTEL FEED (news RSS, best-effort) ══════════════ */
+const NEWS_FEEDS = [
+  { region:'World', src:'Google News', url:'https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en' },
+  { region:'Markets', src:'Google News', url:'https://news.google.com/rss/search?q=global%20markets%20economy&hl=en-US&gl=US&ceid=US:en' },
+  { region:'Cyber', src:'Google News', url:'https://news.google.com/rss/search?q=cybersecurity%20hack%20breach&hl=en-US&gl=US&ceid=US:en' },
+  { region:'Geo', src:'Google News', url:'https://news.google.com/rss/search?q=geopolitics%20diplomacy&hl=en-US&gl=US&ceid=US:en' },
+  { region:'Energy', src:'Google News', url:'https://news.google.com/rss/search?q=oil%20energy%20commodities&hl=en-US&gl=US&ceid=US:en' },
+];
+const SAMPLE_ITEMS = [
+  {title:'Live feeds unreachable — sample item. Markets &amp; clocks remain live.', when:'now', region:'World', src:'SAMPLE', cat:'flat'},
+];
+
+async function loadNews(){
+  $('#intelSrc').textContent = 'CONTACTING…';
+  const results = await Promise.all(NEWS_FEEDS.map(f=>fetchFeed(f).catch(()=>null)));
+  const items=[];
+  results.forEach((batch,i)=>{ if(batch&&batch.length){ items.push(...batch.map(it=>({...it, region:NEWS_FEEDS[i].region, src:NEWS_FEEDS[i].src}))); } });
+  if(!items.length){
+    S.news = SAMPLE_ITEMS.map(it=>({...it,when:'now',ago:'0m'}));
+    $('#intelSrc').textContent = 'RSS UNREACHABLE · SAMPLE';
+  }else{
+    items.sort((a,b)=>b.ts-a.ts);
+    S.news = items.slice(0,50);
+    $('#intelSrc').textContent = 'PUBLIC RSS · LIVE';
+    setStatus(true, 'STATUS: ONLINE — MARKETS + INTEL LIVE');
+  }
+  $('#feedFresh').textContent = 'updated '+new Date().toLocaleTimeString('en-GB');
+  renderFeed();
+  renderAlerts();
+  renderBrief();
+  renderWorld();
+}
+async function fetchFeed(f){
+  const res = await proxied(f.url);
+  const xml = await res.text();
+  const doc = new DOMParser().parseFromString(xml,'text/xml');
+  const items = Array.from(doc.getElementsByTagName('item')).slice(0,15);
+  const now = Date.now();
+  return items.map(it=>{
+    let title=(it.querySelector('title')||{}).textContent||'';
+    let source=(it.querySelector('source')||{}).textContent||'';
+    const m=title.match(/\s-\s([^-]+)$/);
+    if(m && !source){ source=m[1].trim(); title=title.slice(0,m.index).trim(); }
+    const link=(it.querySelector('link')||{}).textContent||'';
+    const pub=(it.querySelector('pubDate')||{}).textContent||'';
+    const ts = pub? Date.parse(pub): now;
+    const ago = Math.max(0, Math.round((now-(ts||now))/60000));
+    return { title, source: source||'RSS', link, ts, ago: ago<1?'now':(ago<60?ago+'m':Math.round(ago/60)+'h') };
+  });
+}
+function renderFeed(){
+  const list = S.news.slice(0,30);
+  $('#feedCount').textContent = list.length + (S.news.length>30?'+':list.length===1?' item':' items');
+  $('#feed').innerHTML = list.map(it=>`
+    <a class="fitem" href="${esc(it.link)}" target="_blank" rel="noopener">
+      <span class="when">${it.ago}</span>
+      <span class="felem">
+        <div class="ftitle">${esc(it.title)}</div>
+        <div class="fmeta">
+          <span class="tag region">${esc(it.region||'News')}</span>
+          <span class="tag src">${esc(it.source||'')}</span>
+        </div>
+      </span>
+    </a>`).join('');
+}
+
+/* ══════════════ 5. ALERTS ══════════════ */
+const ALERT_KEYWORDS = [
+  {k:'cyber|hack|breach|ransom|leak', sev:'high', label:'CYBER'},
+  {k:'war|milit|conflict|attack|strike|invasion', sev:'high', label:'SECURITY'},
+  {k:'sanction|tariff|trade war|embargo', sev:'mid', label:'TRADE'},
+  {k:'energy|oil|gas|supply', sev:'mid', label:'ENERGY'},
+  {k:'crash|plunge|slump|rout|tumble', sev:'high', label:'MARKET'},
+  {k:'rally|surge|record high', sev:'low', label:'MARKET'},
+  {k:'rate|inflation|central bank', sev:'mid', label:'MACRO'},
+];
+function renderAlerts(){
+  const alerts=[];
+  S.news.forEach(it=>{
+    const t=(it.title||'').toLowerCase()+' '+(it.region||'').toLowerCase();
+    for(const a of ALERT_KEYWORDS){
+      if(new RegExp(a.k).test(t)){
+        alerts.push({sev:a.sev,label:a.label,title:it.title,when:it.ago,src:it.source});
+        break;
+      }
+    }
+  });
+  const sevRank={high:0,mid:1,low:2};
+  const top = alerts.slice(0,14).sort((x,y)=>sevRank[x.sev]-sevRank[y.sev]);
+  const sevTxt={high:'HIGH',mid:'MED',low:'LOW'};
+  $('#alertCount').textContent = top.length ? top.length+' active' : '0 active';
+  $('#alertlist').innerHTML = top.length? top.map(a=>`
+    <div class="alert sev-${a.sev}">
+      <span class="sev">${a.label}</span>
+      <span class="at">${a.when}</span>
+      <div class="ab">
+        <div class="atitle">${esc(a.title)}</div>
+        <div class="asrc">${sevTxt[a.sev]} PRIORITY · ${esc(a.src||'')}</div>
+      </div>
+    </div>`).join('') : `<div class="ph mono" style="padding:18px">No priority alerts in current feed.</div>`;
+}
+
+/* ══════════════ 6. AI SITUATION BRIEF (synthesis, labelled) ══════════════ */
+function renderBrief(){
+  const c=S.coins; const coins=c.length? c:[];
+  const btc = coins.find(x=>x.id==='bitcoin');
+  const eth = coins.find(x=>x.id==='ethereum');
+  const adv = c.filter(x=>(x.price_change_percentage_24h||0)>0).length;
+  const topNews = S.news.slice(0,3).map(n=>n.title).filter(Boolean);
+  const mktLine = coins.length? `Markets are <b>${adv>coins.length/2?'risk-on':'risk-off'}</b>: ${adv}/${coins.length} watchlist assets up over 24h. BTC trades <b>$${mono(btc?btc.current_price:0)}</b> (${pct(btc?btc.price_change_percentage_24h:0)} 24h), ETH <b>$${mono(eth?eth.current_price:0)}</b>.`
+    : 'Markets feed offline — no live synthesis available.';
+  const newsLine = topNews.length? 'Headline signals this cycle: '+topNews.map((t,i)=>`<b>${i+1}</b>) ${esc(t)}`).join(' ') + '.' : 'No live headlines — news feed unreachable.';
+  $('#briefSrc').textContent = 'SYNTHESIS · ' + (coins.length&&S.news.length?'LIVE':'PARTIAL');
+  $('#briefBody').innerHTML = `
+    <h3>Market posture</h3>
+    <p style="margin:4px 0 0">${mktLine}</p>
+    <h3>Intel roundup</h3>
+    <p style="margin:4px 0 0">${newsLine}</p>
+    <h3>Composition</h3>
+    <div class="kv"><span class="k">Coverage</span><span>${coins.length} live assets · ${S.news.length} headlines · ${ZONES.length} time zones</span></div>
+    <div class="kv"><span class="k">Method</span><span>Heuristic synthesis of live price + public news RSS</span></div>
+    <div class="brief-note">AI-generated summary from live data. Illustrative — verify critical items at the source.</div>`;
+}
+
+/* ══════════════ 7. WORLD VIEW ══════════════ */
+function renderWorld(){
+  // Status board derived from alert keywords on live news (best effort)
+  const t = (S.news.map(n=>(n.title||'')).join(' ')+' '+(S.news.map(n=>n.region).join(' '))).toLowerCase();
+  const chk=(rx)=>new RegExp(rx).test(t);
+  const rows=[
+    ['Geopolitical', chk('war|invasion|conflict|milit')?'a':'g', chk('war|invasion')?'Elevated regional tension in coverage':'No conflict alerts in current feed'],
+    ['Markets', chk('crash|plunge|rout|record high|surge')?'a':'g', advRatio()],
+    ['Cyber', chk('cyber|hack|breach|ransom')?'r':'g', chk('cyber|hack|breach')?'Active breach/ransom reporting':'No cyber incident in current feed'],
+    ['Trade / Macro', chk('sanction|tariff|trade war|inflation|rate')?'a':'g', chk('sanction|tariff|trade war')?'Trade action coverage present':'Quiet in current feed'],
+    ['Energy', chk('oil|energy|gas|supply')?'a':'g', chk('oil|energy')?'Energy/commodity coverage present':'Quiet in current feed'],
+  ];
+  $('#statusboard').innerHTML = rows.map(r=>{
+    const st = r[1]==='g'?'NOMINAL':(r[1]==='a'?'ELEVATED':'ALERT');
+    return `<div class="srowline"><span class="led ${r[1]}"></span><span class="k">${r[0]}</span><span class="v">${r[2]}</span><span class="tag" style="color:${r[1]==='g'?'var(--green)':r[1]==='a'?'var(--amber)':'var(--red)'}">${st}</span></div>`;
+  }).join('');
+  // cyber grid (best-effort from feed + nominal baseline)
+  const cyber=[
+    ['Global DNS','NOMINAL','g','monitored'],['Web transport','NOMINAL','g','latency nominal'],
+    ['Email / comms','NOMINAL','g','filtered'],['Network ops','NOMINAL','g','no incident'],
+    ['Critical infra','WATCH','a', chk('energy|grid')?'energy coverage up':'no outage reported'],
+    ['Zero-days','WATCH','a', chk('zero-day|exploit')?'exploit coverage':'no public exploit'],
+  ];
+  $('#cybergrid').innerHTML = cyber.map(x=>`
+    <div class="cyb"><div class="cn"><span>${x[0]}</span><span style="color:${x[2]==='g'?'var(--green)':x[2]==='a'?'var(--amber)':'var(--red)'};font-size:10px">${x[1]}</span></div>
+    <div class="cst" style="color:${x[2]==='g'?'var(--text)':'var(--amber)'}">${x[1]}</div><div class="cmeta">${x[3]}</div></div>`).join('');
+  // Region pulse (derived keyword heat)
+  const regions=[
+    ['Americas', ['america','washington','canada','brazil','us ','mexico']],
+    ['Europe', ['europe','germany','france','uk','ukraine','russia','eu ','nato','brussels']],
+    ['Middle East', ['iran','israel','gaza','saudi','qatar','iraq','syria','lebanon','middle east']],
+    ['Asia-Pacific', ['china','japan','korea','taiwan','india','indonesia','australia','asia']],
+    ['Africa', ['africa','niger','sudan','nigeria','kenya','ethiopia','sahel']],
+    ['Global Markets', ['market','stock','fed','oil','inflation','dollar','bond','crypto']],
+  ];
+  $('#regionrow').innerHTML = regions.map(([name,kws])=>{
+    const hits = S.news.filter(n=>kws.some(k=>(n.title||'').toLowerCase().includes(k))).length;
+    const sev = hits===0?'':hits<=2?'warn':'crit';
+    const temp = hits;
+    const tags = S.news.filter(n=>kws.some(k=>(n.title||'').toLowerCase().includes(k))).slice(0,3)
+      .map(n=>`<span class="tag region">${esc(n.region||'')}</span>`).join('') || '<span class="tag">quiet</span>';
+    return `<div class="region ${sev}"><div class="rn"><span class="dot"></span>${name}</div>
+      <div class="rtemp">${temp}<small> signals</small></div>
+      <div class="rl">${temp? temp+' matching headline(s) in the live feed this cycle.':'No region-specific signal in current feed.'}</div>
+      <div class="rtags">${tags}</div></div>`;
+  }).join('');
+}
+function advRatio(){
+  const c=S.coins; if(!c.length) return '—';
+  const adv=c.filter(x=>(x.price_change_percentage_24h||0)>0).length;
+  return `${adv}/${c.length} watchlist assets higher on the day`;
+}
+
+/* ══════════════ WELCOME GUIDE ══════════════ */
+const GUIDE=[
+  {icon:'🛰️',h:'Welcome to World Monitor',p:'Your global intelligence workspace — live markets, geopolitical headlines, world clocks and risk signals synthesized into one screen.'},
+  {icon:'📈',h:'Markets',p:'A live watchlist of major crypto assets with real prices, 24h changes and 7-day sparklines — pulled straight from public market data. The top ticker scrolls the full watchlist.'},
+  {icon:'🕐',h:'World Clocks',p:'Real-time local time across 16 global cities and UTC — so you always know what hour it is in any major market or capital.'},
+  {icon:'📰',h:'Intel Feed',p:'Live news headlines streamed from public RSS across world, markets, cyber, geopolitics and energy. Alerts auto-classify high-priority items.'},
+  {icon:'🧭',h:'Use it',p:'Switch sections with the tabs (Markets · Intel · World · Alerts). Live data refreshes automatically. Beta — data may be delayed; verify critical intelligence independently.'},
+];
+let guideIdx=0;
+function openGuide(){ $('#welcome').hidden=false; renderGuide(); }
+function renderGuide(){
+  const g=GUIDE[guideIdx];
+  $('#guideBody').innerHTML=`<div class="gicon">${g.icon}</div><h3>${g.h}</h3><p>${g.p}</p>`;
+  $('#guidePag').textContent=(guideIdx+1)+' / '+GUIDE.length;
+  $('#guideDots').innerHTML=GUIDE.map((_,i)=>`<i class="${i===guideIdx?'on':''}"></i>`).join('');
+  $('#guideNext').textContent = guideIdx===GUIDE.length-1?'Start':'Next';
+}
+function nextGuide(){
+  if(guideIdx<GUIDE.length-1){guideIdx++;renderGuide();}
+  else closeGuide();
+}
+function closeGuide(){ $('#welcome').hidden=true; }
+
+/* ══════════════ TABS ══════════════ */
+function bindTabs(){
+  $$('.tab').forEach(t=>{
+    t.addEventListener('click',()=>{
+      $$('.tab').forEach(x=>{x.classList.remove('is-active');x.setAttribute('aria-selected','false')});
+      t.classList.add('is-active');t.setAttribute('aria-selected','true');
+      const v=t.dataset.view;
+      $$('.view').forEach(s=>s.classList.toggle('is-active', s.id==='view-'+v));
+      try{ history.replaceState(null,'','#'+v); }catch(e){}
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+  });
+}
+
+/* ══════════════ BOOT ══════════════ */
+function boot(){
+  bindTabs();
+  // honor #view hash for initial section
+  const want = (location.hash||'').replace('#','');
+  if(['markets','intel','world','alerts'].includes(want)){
+    const t=$(`.tab[data-view=${want}]`);
+    if(t){ $$('.tab').forEach(x=>{x.classList.remove('is-active');x.setAttribute('aria-selected','false')});
+      t.classList.add('is-active');t.setAttribute('aria-selected','true');
+      $$('.view').forEach(s=>s.classList.toggle('is-active', s.id==='view-'+want)); }
+  }
+  $('#guideNext').addEventListener('click',nextGuide);
+  $('#closeGuide').addEventListener('click',closeGuide);
+  tickClocks(); setInterval(tickClocks,1000);
+  loadMarkets(); setInterval(loadMarkets,60000);
+  loadNews(); setInterval(loadNews,360000);
+  // guide on first visit (skip when arriving via a section deep-link)
+  if(!location.hash && !localStorage.getItem('wm_seen')){ openGuide(); localStorage.setItem('wm_seen','1'); }
+  $('#helpBtn').addEventListener('click',openGuide);
+  // page visibility keeps data honest on reload/tab-return
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ tickClocks(); } });
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+else boot();
