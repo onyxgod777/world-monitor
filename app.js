@@ -90,6 +90,8 @@ function utcOffsetLabel(zone, now){
 /* ══════════════ 2. CRYPTO MARKETS (real, CoinGecko) ══════════════ */
 const COINS = ['bitcoin','ethereum','solana','binancecoin','ripple','cardano','dogecoin','avalanche-2','chainlink','polkadot','polygon-ecosystem-token','litecoin'];
 const COIN_NAME = {bitcoin:'BTC',ethereum:'ETH',solana:'SOL',binancecoin:'BNB',ripple:'XRP',cardano:'ADA',dogecoin:'DOGE','avalanche-2':'AVAX',chainlink:'LINK',polkadot:'DOT','polygon-ecosystem-token':'POL',litecoin:'LTC'};
+const COIN_BRAND = {bitcoin:'#F7931A',ethereum:'#627EEA',solana:'#14F195',binancecoin:'#F3BA2F',ripple:'#23A8DF',dogecoin:'#C2A633',chainlink:'#2A5ADA',litecoin:'#3D7BD6'};
+const brandOf=id=>COIN_BRAND[id]||null;
 
 async function loadMarkets(){
   const ids = COINS.join(',');
@@ -116,7 +118,8 @@ function renderMarkets(){
   // ticker
   const tk = coins.map(c=>{
     const cls = clsDelta(c.price_change_percentage_24h);
-    return `<span class="tk">${COIN_NAME[c.id]} <b>$${mono(c.current_price)}</b> <span class="${cls}">${pct(c.price_change_percentage_24h)}</span></span><span class="sep"></span>`;
+    const bc = brandOf(c.id);
+    return `<span class="tk"><span class="c" style="color:${bc||'var(--text-dim)'}">${COIN_NAME[c.id]}</span> <b>$${mono(c.current_price)}</b> <span class="${cls}">${pct(c.price_change_percentage_24h)}</span></span><span class="sep"></span>`;
   }).join('');
   $('#ticker').innerHTML = `<span class="ticker-inner">${tk}${tk}</span>`;
   // watch tiles with sparkline
@@ -124,9 +127,10 @@ function renderMarkets(){
   const min = coins.reduce((m,c)=>Math.min(m,...(c.sparkline_in_7d?.price||[])),0);
   $('#watchgrid').innerHTML = coins.map(c=>{
     const d1 = c.price_change_percentage_24h ?? 0;
-    const spark = sparkSVG(c.sparkline_in_7d?.price, min, max, d1>=0?'#2fe6a0':'#ff5d73');
+    const bc = brandOf(c.id);
+    const spark = sparkSVG(c.sparkline_in_7d?.price, min, max, d1>=0?'#22c55e':'#ef4444');
     return `<div class="tile">
-      <div class="symrow"><span class="sym">${COIN_NAME[c.id]}</span><span class="nm">${esc(c.name)} · #${c.market_cap_rank||''}</span></div>
+      <div class="symrow"><span class="sym" style="color:${bc||'var(--text)'}">${COIN_NAME[c.id]}</span><span class="nm">${esc(c.name)} · #${c.market_cap_rank||''}</span></div>
       <div class="px">$${mono(c.current_price)}</div>
       <div class="chg"><span class="delta ${clsDelta(d1)}">${pct(d1)}</span>${spark}<span style="margin-left:auto;font-size:9px;color:var(--faint)">7D</span></div>
     </div>`;
@@ -443,12 +447,12 @@ function updateMapSignals(){
     const idx=titles.map((t,i)=>({i,t})).filter(o=>re.test(o.t));
     const count=idx.length;
     if(count>0) liveCount++;
-    const color = count===0?'#31435f':(count<=2?'#3ee6ff':(count<=4?'#ffc24b':'#ff5d73'));
+    const color = count===0?'#334155':(count<=2?'#22c55e':(count<=4?'#f59e0b':'#ef4444'));
     const radius = 6 + Math.min(count,7)*2.3;
     const top = count>0 ? S.news[idx[0].i] : null;
     const m = L.circleMarker([lat,lng],{
-      radius, color: count===0?'#31435f':'#ffffff', weight:1,
-      fillColor:color, fillOpacity: count===0?0.5:0.85
+      radius, color: count===0?'#334155':'#ffffff', weight:1,
+      fillColor:color, fillOpacity: count===0?0.45:0.85
     }).addTo(map);
     m.bindPopup(count>0
       ? `<div class="mp-title">${esc(name)}</div>`+
@@ -461,10 +465,10 @@ function updateMapSignals(){
   });
   $('#mapCount').textContent = (liveCount||0)+' signal'+(liveCount===1?'':'s')+' live';
   $('#mapLegend').innerHTML =
-    `<span class="li"><span class="sw" style="background:#31435f"></span>quiet</span>`+
-    `<span class="li"><span class="sw" style="background:#3ee6ff"></span>active</span>`+
-    `<span class="li"><span class="sw" style="background:#ffc24b"></span>heightened</span>`+
-    `<span class="li"><span class="sw" style="background:#ff5d73"></span>elevated</span>`;
+    `<span class="li"><span class="sw" style="background:#334155"></span>quiet</span>`+
+    `<span class="li"><span class="sw" style="background:#22c55e"></span>active</span>`+
+    `<span class="li"><span class="sw" style="background:#f59e0b"></span>heightened</span>`+
+    `<span class="li"><span class="sw" style="background:#ef4444"></span>elevated</span>`;
 }
 function wakeMap(){ ensureMap(); if(_map){ _map.invalidateSize(); } updateMapSignals(); }
 
