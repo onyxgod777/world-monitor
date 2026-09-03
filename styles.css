@@ -258,6 +258,8 @@ a{color:var(--accent);text-decoration:none}
 
 /* ═══ MODAL / GUIDE ═══ */
 .overlay{position:fixed;inset:0;background:rgba(3,6,12,.72);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
+/* `hidden` must win over .overlay's display:flex, else the modal can't be dismissed */
+.overlay[hidden]{display:none}
 .modal{width:min(560px,94vw);background:linear-gradient(180deg,#0d1424,#0a0f1c);border:1px solid var(--line2);border-radius:14px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.55)}
 .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line)}
 .iconbtn{background:transparent;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px 8px;border-radius:6px}
