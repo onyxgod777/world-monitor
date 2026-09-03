@@ -195,6 +195,84 @@ function renderRisk(){
     </div>`;
 }
 
+/* ══════════════ 3b. PREDICTION MARKETS (Polymarket) & FX/METALS ══════════════ */
+async function loadPrediction(){
+  const url='https://gamma-api.polymarket.com/markets?active=true&closed=false&order=volume24hr&ascending=false&limit=15';
+  try{
+    const res=await fetchTimeout(url,15000);
+    if(!res.ok) throw new Error('pm '+res.status);
+    const d=await res.json();
+    const list=(Array.isArray(d)?d:[]).filter(m=>{
+      try{ const o=JSON.parse(m.outcomes||'[]'); return o.length===2 && (parseFloat(m.liquidity)>0); }catch(e){ return false; }
+    });
+    if(!list.length) throw new Error('empty');
+    renderPrediction(list.slice(0,10));
+    $('#predCount').textContent=list.length+' markets';
+    $('#predSrc').textContent='POLYMARKET · LIVE';
+  }catch(e){
+    $('#predSrc').textContent='POLYMARKET · OFFLINE';
+    $('#predlist').innerHTML=`<div class="ph mono" style="padding:18px">Prediction feed unreachable — retrying automatically. Markets &amp; clocks stay live.</div>`;
+  }
+}
+function renderPrediction(list){
+  $('#predlist').innerHTML=list.map(m=>{
+    const prices=JSON.parse(m.outcomePrices||'[0]');
+    const yes=parseFloat(prices[0]); const prob=Math.round((isFinite(yes)?yes:0)*100);
+    const dy=parseFloat(m.oneDayPriceChange)||0; const dyCls=dy>0?'up':(dy<0?'dn':'');
+    const vol=$vol(m.volume24hr);
+    const end=m.endDate? new Date(m.endDate).toISOString().slice(0,10):'';
+    const pcol=prob>=60?'var(--green)':(prob<=40?'var(--red)':'var(--amber)');
+    return `<div class="prow">
+      <div class="pq"><span class="p" style="color:${pcol}">${prob}%</span><span>${esc(m.question||'')}</span></div>
+      <div class="pbar"><span class="yes" style="width:${Math.max(0,Math.min(100,prob))}%"></span><span class="no"></span></div>
+      <div class="pmeta"><span>24h vol <b class="vol">${vol}</b></span><span>${end?'ends '+end:''}</span>${dy?`<span class="dy ${dyCls}">${dy>0?'+':''}${(dy*100).toFixed(1)} pts 24h</span>`:''}</div>
+    </div>`;
+  }).join('');
+}
+const $vol=v=>{ v=parseFloat(v)||0; return v>=1e9?'$'+(v/1e9).toFixed(2)+'B':(v>=1e6?'$'+(v/1e6).toFixed(1)+'M':(v>=1e3?'$'+(v/1e3).toFixed(1)+'K':'$'+Math.round(v).toLocaleString())); };
+
+const FXDEF=[['EUR/USD','EUR',0],['GBP/USD','GBP',0],['USD/JPY','JPY',1],['USD/CHF','CHF',1],['USD/CAD','CAD',1],['AUD/USD','AUD',0]];
+async function loadFX(){
+  const to=FXDEF.map(x=>x[1]).join(',');
+  const now=new Date(); const start=new Date(Date.now()-7*864e5).toISOString().slice(0,10);
+  const end=now.toISOString().slice(0,10);
+  let fx=null, hist=null, gold=null;
+  try{
+    const [lr,hr,gr]=await Promise.all([
+      fetchTimeout(`https://api.frankfurter.dev/v1/latest?base=USD&symbols=${to}`,12000).then(r=>r.ok?r.json():null).catch(()=>null),
+      fetchTimeout(`https://api.frankfurter.dev/v1/${start}..${end}?base=USD&symbols=${to}`,12000).then(r=>r.ok?r.json():null).catch(()=>null),
+      fetchTimeout('https://api.gold-api.com/price/XAU',10000).then(r=>r.ok?r.json():null).catch(()=>null)
+    ]);
+    fx=lr; hist=hr; gold=gr;
+  }catch(e){}
+  if(!fx || !fx.rates){
+    $('#fxSrc').textContent='OFFLINE · SAMPLE';
+    $('#fxgold').innerHTML=`<div class="ph mono" style="padding:18px">FX/metals unreachable — retrying automatically.</div>`;
+    return;
+  }
+  renderFX(fx,hist,gold);
+  $('#fxSrc').textContent='ECB + GOLDAPI · LIVE';
+}
+function fxVal(r,direct){ return direct? r : 1/r; }
+function fxFmt(v){ return v>=100? v.toFixed(1) : v>=10? v.toFixed(3) : v>=1? v.toFixed(4) : v.toFixed(4); }
+function renderFX(fx,hist,gold){
+  const dates=hist&&hist.rates? Object.keys(hist.rates).sort():[];
+  const prevDate= dates.length>=2? dates[dates.length-2]: null;
+  const prevRates= prevDate&&hist? hist.rates[prevDate]: null;
+  const goldHtml= gold&&gold.price
+    ? `<div class="goldtile"><div class="gn">Gold · XAU/USD</div><div class="gp">$${mono(gold.price)}</div><div class="gmeta">${esc(gold.updatedAtReadable||gold.updatedAt||'')} · per troy oz</div></div>`
+    : `<div class="ph mono">Gold offline</div>`;
+  const rows=FXDEF.map(([pair,cur,direct])=>{
+    const r=parseFloat(fx.rates[cur]); if(!isFinite(r)||!r) return '';
+    const v=fxVal(r,direct);
+    let chg=0;
+    if(prevRates && prevRates[cur]!=null){ const pv=fxVal(parseFloat(prevRates[cur]),direct); chg=(v-pv)/pv*100; }
+    const cls=chg>0.0001?'up':(chg<-0.0001?'dn':'flat');
+    return `<div class="fxrow"><span class="c">${pair}</span><span class="r">${fxFmt(v)}</span><span class="ch ${cls}">${chg!==0?(chg>0?'+':'')+chg.toFixed(2)+'%':''}</span></div>`;
+  }).filter(Boolean).join('');
+  $('#fxgold').innerHTML=`${goldHtml}<div class="fxrows">${rows}</div>`;
+}
+
 /* ══════════════ 4. INTEL FEED (news RSS, best-effort) ══════════════ */
 const NEWS_FEEDS = [
   { region:'World', src:'Google News', url:'https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en' },
@@ -527,6 +605,8 @@ function boot(){
   tickClocks(); setInterval(tickClocks,1000);
   loadMarkets(); setInterval(loadMarkets,60000);
   loadNews(); setInterval(loadNews,360000);
+  loadPrediction(); setInterval(loadPrediction,300000);
+  loadFX(); setInterval(loadFX,300000);
   // guide on first visit (skip when arriving via a section deep-link)
   if(!location.hash && !localStorage.getItem('wm_seen')){ openGuide(); localStorage.setItem('wm_seen','1'); }
   $('#helpBtn').addEventListener('click',openGuide);

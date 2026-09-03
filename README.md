@@ -5,16 +5,17 @@ A self-hosted global intelligence dashboard — live markets, geopolitical headl
 Live: **https://onyxgod777.github.io/world-monitor/**
 
 ## Views
-- **Markets** — live watchlist (BTC/ETH/SOL/XRP…) with prices, ±24h and 7d sparklines, an economic snapshot and a volatility/risk gauge. Data: [CoinGecko](https://www.coingecko.com) (free public API).
+- **Markets** — live crypto watchlist (BTC/ETH/SOL/XRP…) with prices, ±24h and sparklines ([CoinGecko](https://www.coingecko.com)); **Prediction Signals** from live Polymarket markets (Yes/No probabilities, 24h volume); **FX & Metals** (ECB/Frankfurter forex + real-time gold); an economic snapshot and volatility/risk gauge.
 - **World** — 16 real-time city clocks + UTC.
 - **Intel** — live headlines streamed from public RSS (world, markets, cyber, geopolitics, energy), tagged and auto-aged.
 - **Alerts** — headlines auto-classified HIGH / MED / LOW priority.
-- **World (board)** — status board, cyber-health grid and regional pulse derived from the live feed.
+- **World (board)** — a live world signal map (Leaflet/CARTO) plus status board, cyber grid and regional pulse derived from the live feed.
 
 ## Data honesty
-- Crypto prices & clocks are **real-time**.
-- The intel feed streams live Google News headlines via the rss2json API (CORS-enabled, no key), falling back to a public CORS proxy, then to clearly-labelled sample items if every source is unreachable. It recovers automatically on the next refresh.
-- AI brief and risk gauge are labelled illustrative heuristics.
+- Crypto prices, forex, gold, prediction markets & clocks are **real-time** (all keyless, CORS-enabled public APIs).
+- The intel feed streams live Google News headlines via rss2json (CORS, no key), falling back to a public CORS proxy, then to clearly-labelled sample items if every source is unreachable. It recovers automatically on refresh.
+- Risk gauge and AI brief are labelled illustrative heuristics.
+- Prediction-market probabilities are opinion data from Polymarket traders — not forecasts. Verify critical intelligence independently.
 
 ## Local run
 ```
