@@ -13,7 +13,7 @@ Live: **https://onyxgod777.github.io/world-monitor/**
 
 ## Data honesty
 - Crypto prices & clocks are **real-time**.
-- The intel feed rides free public CORS proxies (allorigins / codetabs / corsproxy) — best-effort. When none respond it shows clearly-labelled sample items and recovers automatically. A reliable always-up feed needs a small server-side proxy (outside static hosting).
+- The intel feed streams live Google News headlines via the rss2json API (CORS-enabled, no key), falling back to a public CORS proxy, then to clearly-labelled sample items if every source is unreachable. It recovers automatically on the next refresh.
 - AI brief and risk gauge are labelled illustrative heuristics.
 
 ## Local run

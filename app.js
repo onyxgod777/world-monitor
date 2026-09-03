@@ -96,7 +96,7 @@ async function loadMarkets(){
   const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=50&sparkline=true&price_change_percentage=24h%2C7d`;
   let coins=[];
   try{
-    const res = await fetch(url);
+    const res = await fetchTimeout(url, 15000);
     if(!res.ok) throw new Error('cg '+res.status);
     coins = await res.json();
   }catch(e){
@@ -203,18 +203,57 @@ const SAMPLE_ITEMS = [
   {title:'Live feeds unreachable — sample item. Markets &amp; clocks remain live.', when:'now', region:'World', src:'SAMPLE', cat:'flat'},
 ];
 
+// fetch one feed through the rss2json API (direct, CORS-enabled, no proxy)
+async function fetchFeedJSON(f){
+  const u = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(f.url);
+  const res = await fetchTimeout(u);
+  if(!res.ok) throw new Error('rss2json '+res.status);
+  const d = await res.json();
+  if(d.status!=='ok') throw new Error('rss2json status');
+  const now = Date.now();
+  return (d.items||[]).map(it=>{
+    let title=(it.title||'').trim(); let source=(it.source||'').trim();
+    if(!source){ const m=title.match(/\s-\s([^-]+)$/); if(m){ source=m[1].trim(); title=title.slice(0,m.index).trim(); } }
+    const ts = it.pubDate? Date.parse(it.pubDate): now;
+    const ago = Math.max(0, Math.round((now-(ts||now))/60000));
+    return { title, source: source||'RSS', link: it.link||'', ts, ago: ago<1?'now':(ago<60?ago+'m':Math.round(ago/60)+'h') };
+  }).filter(x=>x.title);
+}
+// fallback: raw RSS through a public CORS proxy
+async function fetchFeedProxy(f){
+  const res = await proxied(f.url);
+  const doc = new DOMParser().parseFromString(await res.text(),'text/xml');
+  const now = Date.now();
+  return Array.from(doc.getElementsByTagName('item')).slice(0,15).map(it=>{
+    let title=(it.querySelector('title')||{}).textContent||'';
+    let source=(it.querySelector('source')||{}).textContent||'';
+    const m=title.match(/\s-\s([^-]+)$/);
+    if(m && !source){ source=m[1].trim(); title=title.slice(0,m.index).trim(); }
+    const pub=(it.querySelector('pubDate')||{}).textContent||'';
+    const ts = pub? Date.parse(pub): now;
+    const ago = Math.max(0, Math.round((now-(ts||now))/60000));
+    return { title, source: source||'RSS', link:(it.querySelector('link')||{}).textContent||'', ts, ago: ago<1?'now':(ago<60?ago+'m':Math.round(ago/60)+'h') };
+  }).filter(x=>x.title);
+}
 async function loadNews(){
   $('#intelSrc').textContent = 'CONTACTING…';
-  const results = await Promise.all(NEWS_FEEDS.map(f=>fetchFeed(f).catch(()=>null)));
+  let method='JSON';
+  let results = await Promise.all(NEWS_FEEDS.map(f=>fetchFeedJSON(f).catch(()=>null)));
+  let okCount = results.filter(Boolean).length;
+  if(!okCount){
+    method='PROXY';
+    results = await Promise.all(NEWS_FEEDS.map(f=>fetchFeedProxy(f).catch(()=>null)));
+    okCount = results.filter(Boolean).length;
+  }
   const items=[];
   results.forEach((batch,i)=>{ if(batch&&batch.length){ items.push(...batch.map(it=>({...it, region:NEWS_FEEDS[i].region, src:NEWS_FEEDS[i].src}))); } });
-  if(!items.length){
+  if(!okCount){
     S.news = SAMPLE_ITEMS.map(it=>({...it,when:'now',ago:'0m'}));
     $('#intelSrc').textContent = 'RSS UNREACHABLE · SAMPLE';
   }else{
     items.sort((a,b)=>b.ts-a.ts);
     S.news = items.slice(0,50);
-    $('#intelSrc').textContent = 'PUBLIC RSS · LIVE';
+    $('#intelSrc').textContent = 'LIVE · ' + method;
     setStatus(true, 'STATUS: ONLINE — MARKETS + INTEL LIVE');
   }
   $('#feedFresh').textContent = 'updated '+new Date().toLocaleTimeString('en-GB');
@@ -222,24 +261,6 @@ async function loadNews(){
   renderAlerts();
   renderBrief();
   renderWorld();
-}
-async function fetchFeed(f){
-  const res = await proxied(f.url);
-  const xml = await res.text();
-  const doc = new DOMParser().parseFromString(xml,'text/xml');
-  const items = Array.from(doc.getElementsByTagName('item')).slice(0,15);
-  const now = Date.now();
-  return items.map(it=>{
-    let title=(it.querySelector('title')||{}).textContent||'';
-    let source=(it.querySelector('source')||{}).textContent||'';
-    const m=title.match(/\s-\s([^-]+)$/);
-    if(m && !source){ source=m[1].trim(); title=title.slice(0,m.index).trim(); }
-    const link=(it.querySelector('link')||{}).textContent||'';
-    const pub=(it.querySelector('pubDate')||{}).textContent||'';
-    const ts = pub? Date.parse(pub): now;
-    const ago = Math.max(0, Math.round((now-(ts||now))/60000));
-    return { title, source: source||'RSS', link, ts, ago: ago<1?'now':(ago<60?ago+'m':Math.round(ago/60)+'h') };
-  });
 }
 function renderFeed(){
   const list = S.news.slice(0,30);
