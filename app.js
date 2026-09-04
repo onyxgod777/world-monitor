@@ -284,6 +284,22 @@ const NEWS_FEEDS = [
 const SAMPLE_ITEMS = [
   {title:'Live feeds unreachable — sample item. Markets &amp; clocks remain live.', when:'now', region:'World', src:'SAMPLE', cat:'flat'},
 ];
+// Outlets that hard-paywall their articles. Drop their items so every feed & alert
+// link opens a source you can actually read. Matched word-boundary against the
+// outlet name Google News attaches to each item.
+const PAYWALLED = [
+  'new york times','nytimes','nyt','wall street journal','wsj','bloomberg','financial times',
+  'the economist','washington post','the atlantic','barron','the information',
+  'foreign policy','harvard business review','wired','new yorker','los angeles times',
+  'chicago tribune','the times','sunday times','the telegraph','nikkei','caixin',
+  'the australian','business insider','sydney morning herald','the age','forbes','ft.com'
+];
+const _pwRe = PAYWALLED.map(w=>new RegExp('(^|[^a-z0-9])'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'([^a-z0-9]|$)'));
+function isPaywalled(src){
+  const s=(src||'').toLowerCase().trim();
+  if(!s) return false;
+  return _pwRe.some(r=>r.test(s));
+}
 
 // fetch one feed fresh through a public CORS proxy (hits Google live => freshest)
 async function fetchFeedProxy(f){
@@ -299,7 +315,7 @@ async function fetchFeedProxy(f){
     const ts = pub? Date.parse(pub): now;
     const ago = Math.max(0, Math.round((now-(ts||now))/60000));
     return { title, source: source||'RSS', link:(it.querySelector('link')||{}).textContent||'', ts, ago: ago<1?'now':(ago<60?ago+'m':Math.round(ago/60)+'h') };
-  }).filter(x=>x.title);
+  }).filter(x=>x.title && !isPaywalled(x.source));
 }
 // fallback: Google News through the rss2json gateway (CORS, no key) if every proxy fails
 async function fetchFeedJSON(f){
@@ -315,7 +331,7 @@ async function fetchFeedJSON(f){
     const ts = it.pubDate? Date.parse(it.pubDate): now;
     const ago = Math.max(0, Math.round((now-(ts||now))/60000));
     return { title, source: source||'RSS', link: it.link||'', ts, ago: ago<1?'now':(ago<60?ago+'m':Math.round(ago/60)+'h') };
-  }).filter(x=>x.title);
+  }).filter(x=>x.title && !isPaywalled(x.source));
 }
 async function loadNews(){
   $('#intelSrc').textContent = 'CONTACTING…';

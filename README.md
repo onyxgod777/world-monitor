@@ -13,7 +13,7 @@ Live: **https://onyxgod777.github.io/world-monitor/**
 
 ## Data honesty
 - Crypto prices, forex, gold, prediction markets & clocks are **real-time** (all keyless, CORS-enabled public APIs).
-- The intel feed streams live Google News headlines via rss2json (CORS, no key), falling back to a public CORS proxy, then to clearly-labelled sample items if every source is unreachable. It recovers automatically on refresh.
+- The intel feed streams live Google News headlines via a public CORS proxy (falling back to rss2json, then clearly-labelled sample items if every source is unreachable), auto-dropping known paywalled outlets so links open readable articles. It recovers automatically on refresh.
 - Risk gauge and AI brief are labelled illustrative heuristics.
 - Prediction-market probabilities are opinion data from Polymarket traders — not forecasts. Verify critical intelligence independently.
 
