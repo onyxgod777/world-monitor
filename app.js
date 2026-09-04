@@ -387,7 +387,7 @@ async function loadNews(){
   }
   $('#feedFresh').textContent = 'updated '+new Date().toLocaleTimeString('en-GB');
   // Render each dependent panel independently so one panel bug never blanks the rest.
-  [renderFeed, renderAlerts, renderBrief, renderWorld].forEach(fn=>{ try{ fn(); }catch(e){ /* isolate */ } });
+  [renderFeed, renderAlerts, renderBrief, renderWorld, renderProphecy].forEach(fn=>{ try{ fn(); }catch(e){ /* isolate */ } });
 }
 function renderFeed(){
   const list = S.news.slice(0,30);
@@ -604,6 +604,60 @@ function updateMapSignals(){
 }
 function wakeMap(){ ensureMap(); if(_map){ _map.invalidateSize(); } updateMapSignals(); }
 
+/* ══════════════ 8. PROPHECY (News & Prophecy causal analyses) ══════════════ */
+function propCoverage(p){
+  // how many live headlines currently match this prophecy's cause keywords
+  if(!S.news || !p.kw) return 0;
+  const rx = new RegExp('\\b('+p.kw.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\\b','i');
+  return S.news.filter(n=>rx.test((n.title||'')+' '+(n.region||''))).length;
+}
+function verseToSect(v){ return (v||'').replace(/^Chapter /,'Ch. '); }
+// render markdown **bold** to <b> after escaping (data is trusted; esc() neutralizes raw HTML)
+function fmt(s){ return esc(s).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>'); }
+function renderProphecy(){
+  const list = window.PROPHECIES || [];
+  if(!list.length){ $('#proplist').innerHTML = `<div class="ph mono" style="padding:20px">Prophecy data not loaded.</div>`; return; }
+  const track = list.filter(p=>propCoverage(p)>0).length;
+  $('#propCount').textContent = list.length+' prophecies · '+track+' tracked live';
+  $('#propSrc').textContent = 'UPDATED '+list._updated;
+  $('#proplist').innerHTML = list.map((p,i)=>{
+    const cov = propCoverage(p);
+    const covCls = cov===0?'quiet':(cov<=2?'active':'hot');
+    const covTxt = cov===0 ? 'no live headline yet' : (cov+' headline'+(cov===1?'':'s')+' tracking');
+    const tagTone = p.cls==='red'?'var(--tx-red)/var(--bg-red)':(p.cls==='amber'?'var(--tx-amber)/var(--bg-amber)':'var(--tx-blue)/var(--bg-blue)');
+    const [tc,tb]=tagTone.split('/');
+    const bullets = (p.bullets||[]).map(b=>`<li>${fmt(b)}</li>`).join('');
+    return `<details class="prop" ${i===0?'open':''}>
+      <summary>
+        <span class="pflag">${p.emoji||''}</span>
+        <span class="phead">
+          <span class="ptitle">${esc(p.short||p.title||'')}</span>
+          <span class="pmeta-line">
+            <span class="tag ptone" style="color:${tc};background:${tb}">${esc(p.tag||'')}</span>
+            <span class="pcov ${covCls}"><i class="dot"></i>${covTxt}</span>
+          </span>
+        </span>
+        <span class="chev">▾</span>
+      </summary>
+      <div class="pbody">
+        <div class="psec cause">
+          <div class="psec-h"><span class="badge dang">OBSERVED CAUSE</span><span class="psec-note">what is happening now</span></div>
+          <p class="ptext">${fmt(p.cause)}</p>
+        </div>
+        <div class="psec">
+          <div class="psec-h"><span class="badge warn">PROJECTED EFFECT · if cause persists</span></div>
+          <ul class="pbullet">${bullets}</ul>
+          <blockquote class="pverse">“${fmt(p.verse||'')}” <cite>— ${esc(verseToSect(p.verseSrc))}</cite></blockquote>
+        </div>
+        <div class="psec hinge">
+          <div class="psec-h"><span class="badge hinge">THE HINGE · the choice that rewrites it</span></div>
+          <p class="ptext">${fmt(p.hinge)}</p>
+        </div>
+      </div>
+    </details>`;
+  }).join('');
+}
+
 /* ══════════════ WELCOME GUIDE ══════════════ */
 const GUIDE=[
   {icon:'🛰️',h:'Welcome to World Monitor',p:'Your global intelligence workspace — live markets, geopolitical headlines, world clocks and risk signals synthesized into one screen.'},
@@ -647,7 +701,7 @@ function boot(){
   bindTabs();
   // honor #view hash for initial section
   const want = (location.hash||'').replace('#','');
-  if(['markets','intel','world','alerts'].includes(want)){
+  if(['markets','intel','prophecy','world','alerts'].includes(want)){
     const t=$(`.tab[data-view=${want}]`);
     if(t){ $$('.tab').forEach(x=>{x.classList.remove('is-active');x.setAttribute('aria-selected','false')});
       t.classList.add('is-active');t.setAttribute('aria-selected','true');

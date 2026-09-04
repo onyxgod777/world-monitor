@@ -24,6 +24,7 @@
     <nav class="tabs" role="tablist" aria-label="Dashboard sections">
       <button class="tab is-active" data-view="markets" role="tab" aria-selected="true">Markets</button>
       <button class="tab" data-view="intel" role="tab">Intel</button>
+      <button class="tab" data-view="prophecy" role="tab">Prophecy</button>
       <button class="tab" data-view="world" role="tab">World</button>
       <button class="tab" data-view="alerts" role="tab">Alerts</button>
     </nav>
@@ -120,6 +121,24 @@
       </div>
     </section>
 
+    <!-- ── PROPHECY view ── -->
+    <section class="view" id="view-prophecy">
+      <div class="grid">
+        <div class="card intelnote span12">
+          <div class="card-head">
+            <h2>Causal Prophecies · News &amp; Prophecy</h2>
+            <span class="count mono" id="propCount">—</span>
+            <span class="src mono" id="propSrc">WECHSEUWIRKUNG</span>
+          </div>
+          <div class="propnote">
+            Each prophecy tracks a live <b>observed cause</b> and projects its <b>necessary effect if the cause persists</b> — then names the <b>hinge</b>: the human choice that changes the cause and rewrites the effect. Not fortune-telling — causal inference, from the
+            <a href="https://pi.thealpha-secret.xyz/news/" target="_blank" rel="noopener">News &amp; Prophecy</a> page. Feed counts below reflect how many live headlines currently track each cause.
+          </div>
+          <div class="proplist" id="proplist"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- ── WORLD view ── -->
     <section class="view" id="view-world">
       <div class="grid">
@@ -190,6 +209,7 @@
     </div>
   </div>
 
+  <script src="prophecies.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
