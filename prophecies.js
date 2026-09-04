@@ -5,7 +5,7 @@ const PROPHECIES = [
  {
   "emoji": "🇮🇷",
   "title": "Iran War, Seventh Month: The June Ceasefire Deal Expires as the US Imposes a \"Sweeping Economic Blockade\" on Iran and Its Trading Partners — Iran Answers With Missile and Drone Attacks on US Bases in Kuwait and the UAE — While Washington Probes the Sirik Wedding Strike Iran Calls a War Crime",
-  "short": "The June Ceasefire Deal Expires as the US Imposes a \"Sweeping Economic Blockade\" on Iran and Its Trading Partners",
+  "short": "Iran War, Seventh Month: The June Ceasefire Deal Expires as the US Imposes a \"Sweeping Economic Blockade\" on Iran and…",
   "tag": "SECURITY · GEOPOLITICS",
   "cls": "red",
   "kw": [
@@ -33,7 +33,7 @@ const PROPHECIES = [
  {
   "emoji": "🇺🇦",
   "title": "Ukraine: Zelenskyy Declares Russian Airspace \"Becoming Completely Dangerous\" as Foreign Airlines Suspend Russia Flights and Ukraine Urges a UN Aviation Ban — the Escalation Spiral Reaches the Sky Above — Even as Kyiv's Former Spy Chief Now Advocates a Negotiated Settlement and Talks Are Expected to Resume This Month",
-  "short": "Zelenskyy Declares Russian Airspace \"Becoming Completely Dangerous\" as Foreign Airlines Suspend Russia Flights and Ukraine Urges a UN Aviation Ban",
+  "short": "Ukraine: Zelenskyy Declares Russian Airspace \"Becoming Completely Dangerous\" as Foreign Airlines Suspend Russia…",
   "tag": "CONFLICT · AIRSPACE",
   "cls": "red",
   "kw": [
@@ -59,7 +59,7 @@ const PROPHECIES = [
  {
   "emoji": "🌍",
   "title": "'Supersized' El Niño: UN Chief Warns the World Has Entered a \"Danger Zone of Extreme Weather\" as WMO Data Show the Event on Track to Be the Strongest in More Than 70 Years — While a UN Report Admits the World Will Overshoot the 1.5°C Limit and Must Now Remove Carbon at Scale",
-  "short": "UN Chief Warns the World Has Entered a \"Danger Zone of Extreme Weather\" as WMO Data Show the Event on Track to Be the Strongest in More Than 70 Years",
+  "short": "'Supersized' El Niño: UN Chief Warns the World Has Entered a \"Danger Zone of Extreme Weather\" as WMO Data Show the…",
   "tag": "CLIMATE · WEATHER",
   "cls": "amber",
   "kw": [
@@ -115,7 +115,7 @@ const PROPHECIES = [
  {
   "emoji": "🇮🇱",
   "title": "Israel–West Bank: Israel Overturns a 20-Year Ban and Re-Establishes the Kadim Settlement Around Jenin — Far-Right Ministers Preside as \"Pioneer Families\" Return Under Military Escort, Defying International Law — Amid a Continuing Surge of Settler Violence in Which Two Palestinian Teenagers Were Killed in al-Mughayyir",
-  "short": "Israel Overturns a 20-Year Ban and Re-Establishes the Kadim Settlement Around Jenin",
+  "short": "Israel–West Bank: Israel Overturns a 20-Year Ban and Re-Establishes the Kadim Settlement Around Jenin",
   "tag": "WEST BANK · JUSTICE",
   "cls": "red",
   "kw": [

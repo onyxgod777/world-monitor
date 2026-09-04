@@ -97,25 +97,21 @@ def split_emoji_title(headline):
     return '', headline
 
 def make_short(title):
-    # concise one-line display title: strip any leading "Region: " label, then cut
-    # at the first hard break (a ' — ' em dash or a standalone ':') to keep a tidy
-    # clause; fall back to a word-boundary truncation for long run-on titles.
-    t = title
-    # drop a leading "Region: " / "Region, x: " preamble so the label isn't the whole line
-    m = re.match(r'^([^:]{2,60}?):\s*(.{20,})$', t)
-    if m:
-        t = m.group(2)
-    # cut at first em-dash sentence break if the remainder is still long
-    if ' — ' in t:
-        head = t.split(' — ', 1)[0]
-        if len(head) >= 40:
-            return head.rstrip()
-    # word-boundary truncation cap
-    if len(t) > 150:
-        cut = t[:150]
+    # Concise one-line card header derived from the full headline. These headlines
+    # are long run-on clauses, so aim for a clean ~110-char line: pick a clause
+    # break (': ', ' — ') that yields 60..120 chars, else word-boundary truncate.
+    t = title.strip()
+    best = t
+    for sep in (': ', ' — '):
+        if sep in t:
+            cand = t.split(sep, 1)[0].rstrip()
+            if 60 <= len(cand) <= 120:
+                best = cand
+    if len(best) > 118:
+        cut = best[:118]
         sp = cut.rfind(' ')
-        return (cut[:sp] if sp > 60 else cut).rstrip() + '…'
-    return t.rstrip()
+        best = (cut[:sp] if sp > 50 else cut).rstrip() + '…'
+    return best or title
 
 def build_record(s):
     emoji, title = split_emoji_title(s['headline'])
