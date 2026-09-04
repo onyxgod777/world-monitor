@@ -25,23 +25,26 @@ const PROXIES = [
 ];
 // remember the first proxy that works this session
 let _activeProxy = 0;
-async function fetchTimeout(url, ms=8000){
+async function fetchTimeout(url, ms=5000){
   const ctl = new AbortController();
   const t = setTimeout(()=>ctl.abort(), ms);
   try{ return await fetch(url, {signal:ctl.signal}); }
   finally{ clearTimeout(t); }
 }
 async function proxied(url){
-  let lastErr;
-  for(let i=0;i<PROXIES.length;i++){
-    const idx=(_activeProxy+i)%PROXIES.length;
-    try{
-      const res = await fetchTimeout(PROXIES[idx]+encodeURIComponent(url));
-      if(!res.ok) throw new Error('proxy '+idx+' '+res.status);
-      _activeProxy=idx; return res;
-    }catch(e){ lastErr=e; }
-  }
-  throw lastErr || new Error('no proxy');
+  const target = encodeURIComponent(url);
+  // Fire all proxies in parallel and take the first that succeeds. A slow or dead
+  // proxy must never stall the dashboard, so each attempt is short and the whole
+  // call resolves in ~4s worst case instead of 3 x 8s sequentially.
+  const attempts = PROXIES.map((p,i)=>
+    fetchTimeout(p+target, 4200)
+      .then(res=>{ if(!res.ok) throw new Error('proxy '+i+' '+res.status); _activeProxy=i; return res; })
+  );
+  const settled = await Promise.allSettled(attempts);
+  const ok = settled.find(r=>r.status==='fulfilled');
+  if(ok) return ok.value;
+  const bad = settled.find(r=>r.status==='rejected');
+  throw (bad? bad.reason : new Error('no proxy'));
 }
 
 /* ───────── app state ───────── */
@@ -98,7 +101,7 @@ async function loadMarkets(){
   const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=50&sparkline=true&price_change_percentage=24h%2C7d`;
   let coins=[];
   try{
-    const res = await fetchTimeout(url, 15000);
+    const res = await fetchTimeout(url, 9000);
     if(!res.ok) throw new Error('cg '+res.status);
     coins = await res.json();
   }catch(e){
@@ -199,7 +202,7 @@ function renderRisk(){
 async function loadPrediction(){
   const url='https://gamma-api.polymarket.com/markets?active=true&closed=false&order=volume24hr&ascending=false&limit=15';
   try{
-    const res=await fetchTimeout(url,15000);
+    const res=await fetchTimeout(url,9000);
     if(!res.ok) throw new Error('pm '+res.status);
     const d=await res.json();
     const list=(Array.isArray(d)?d:[]).filter(m=>{
@@ -239,9 +242,9 @@ async function loadFX(){
   let fx=null, hist=null, gold=null;
   try{
     const [lr,hr,gr]=await Promise.all([
-      fetchTimeout(`https://api.frankfurter.dev/v1/latest?base=USD&symbols=${to}`,12000).then(r=>r.ok?r.json():null).catch(()=>null),
-      fetchTimeout(`https://api.frankfurter.dev/v1/${start}..${end}?base=USD&symbols=${to}`,12000).then(r=>r.ok?r.json():null).catch(()=>null),
-      fetchTimeout('https://api.gold-api.com/price/XAU',10000).then(r=>r.ok?r.json():null).catch(()=>null)
+      fetchTimeout(`https://api.frankfurter.dev/v1/latest?base=USD&symbols=${to}`,7000).then(r=>r.ok?r.json():null).catch(()=>null),
+      fetchTimeout(`https://api.frankfurter.dev/v1/${start}..${end}?base=USD&symbols=${to}`,7000).then(r=>r.ok?r.json():null).catch(()=>null),
+      fetchTimeout('https://api.gold-api.com/price/XAU',6000).then(r=>r.ok?r.json():null).catch(()=>null)
     ]);
     fx=lr; hist=hr; gold=gr;
   }catch(e){}
@@ -335,17 +338,21 @@ async function fetchFeedJSON(f){
 }
 async function loadNews(){
   $('#intelSrc').textContent = 'CONTACTING…';
-  // Fresh-first, per feed: hit the CORS proxy first (rss2json serves stale/cached
-  // Google News), and fall back to rss2json only for the individual feeds whose
-  // proxy fetch failed. So we add freshness when a proxy works and never lose the
-  // working stream when proxies are down.
-  const prox = await Promise.all(NEWS_FEEDS.map(f=>fetchFeedProxy(f).catch(()=>null)));
-  const anyProxy = prox.some(Boolean);
-  const json = await Promise.all(NEWS_FEEDS.map((f,i)=> (prox[i] && prox[i].length) ? Promise.resolve(null) : fetchFeedJSON(f).catch(()=>null)));
-  let items=[]; let okCount=0;
-  NEWS_FEEDS.forEach((f,i)=>{
-    const batch = (prox[i] && prox[i].length) ? prox[i] : json[i];
-    if(batch && batch.length){ okCount++; items.push(...batch.map(it=>({...it, region:f.region, src:f.src}))); }
+  // Per feed, race a fresh CORS-proxy fetch against the rss2json fallback at the
+  // same time (both bounded individually) and prefer the fresh proxy result when
+  // it yields items. Everything runs in parallel, so the whole pass resolves in a
+  // few seconds rather than one slow channel holding up the panel.
+  const settled = await Promise.all(NEWS_FEEDS.map(async f=>{
+    const [proxyRes, jsonRes] = await Promise.all([
+      fetchFeedProxy(f).catch(()=>null),
+      fetchFeedJSON(f).catch(()=>null)
+    ]);
+    const useProxy = proxyRes && proxyRes.length;
+    return { via: useProxy?'PROXY':'JSON', list: (useProxy?proxyRes:jsonRes) || [] };
+  }));
+  let items=[]; let okCount=0; let proxFeeds=0;
+  settled.forEach((r,i)=>{
+    if(r.list && r.list.length){ okCount++; if(r.via==='PROXY') proxFeeds++; items.push(...r.list.map(it=>({...it, region:NEWS_FEEDS[i].region, src:NEWS_FEEDS[i].src}))); }
   });
   if(!okCount){
     S.news = SAMPLE_ITEMS.map(it=>({...it,when:'now',ago:'0m'}));
@@ -358,7 +365,7 @@ async function loadNews(){
       .sort((a,b)=>b.ts-a.ts)
       .filter(it=>{ const k=(it.title||'').toLowerCase().trim(); if(!k||seen.has(k)) return false; seen.add(k); return true; });
     S.news = (recent.length ? recent : items.slice().sort((a,b)=>b.ts-a.ts)).slice(0,50);
-    $('#intelSrc').textContent = 'LIVE · ' + (anyProxy?'PROXY':'JSON');
+    $('#intelSrc').textContent = 'LIVE · ' + (proxFeeds?'PROXY':'JSON');
     setStatus(true, 'STATUS: ONLINE — MARKETS + INTEL LIVE');
   }
   $('#feedFresh').textContent = 'updated '+new Date().toLocaleTimeString('en-GB');
