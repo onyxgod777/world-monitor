@@ -22,6 +22,9 @@ const PROXIES = [
   'https://api.allorigins.win/raw?url=',
   'https://api.codetabs.com/v1/proxy?quest=',
   'https://api.corsproxy.io/?url=',
+  'https://test.cors.workers.dev/?url=',
+  'https://cors.eu.org/',
+  'https://api.cors.lol/?url=',
 ];
 // remember the first proxy that works this session
 let _activeProxy = 0;
@@ -33,18 +36,23 @@ async function fetchTimeout(url, ms=5000){
 }
 async function proxied(url){
   const target = encodeURIComponent(url);
-  // Fire all proxies in parallel and take the first that succeeds. A slow or dead
-  // proxy must never stall the dashboard, so each attempt is short and the whole
-  // call resolves in ~4s worst case instead of 3 x 8s sequentially.
-  const attempts = PROXIES.map((p,i)=>
-    fetchTimeout(p+target, 4200)
-      .then(res=>{ if(!res.ok) throw new Error('proxy '+i+' '+res.status); _activeProxy=i; return res; })
-  );
-  const settled = await Promise.allSettled(attempts);
-  const ok = settled.find(r=>r.status==='fulfilled');
-  if(ok) return ok.value;
-  const bad = settled.find(r=>r.status==='rejected');
-  throw (bad? bad.reason : new Error('no proxy'));
+  // Fire all proxies in parallel and resolve on the FIRST success, so a slow or
+  // dead proxy can't stall the dashboard and a working one answers immediately.
+  return new Promise((resolve,reject)=>{
+    let settled=0; let lastErr;
+    for(let i=0;i<PROXIES.length;i++){
+      (async (idx)=>{
+        try{
+          const res = await fetchTimeout(PROXIES[idx]+target, 4200);
+          if(!res.ok) throw new Error('proxy '+idx+' '+res.status);
+          _activeProxy=idx; resolve(res);
+        }catch(e){
+          lastErr=e;
+          if(++settled===PROXIES.length) reject(lastErr||new Error('no proxy'));
+        }
+      })(i);
+    }
+  });
 }
 
 /* ───────── app state ───────── */
