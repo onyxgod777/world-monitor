@@ -3,7 +3,7 @@
    Real live feeds where easy (crypto markets, world clocks, news
    RSS via CORS proxy). Heuristic/illustrative panels are labelled.
    Every fetch degrades gracefully to a fallback so the dashboard
-   always renders. Refresh cycle: clocks 1s, crypto 60s, news 6m.
+   always renders. Refresh cycle: clocks 1s, crypto 60s, news 2m.
    ═══════════════════════════════════════════════════════════ */
 
 'use strict';
@@ -285,7 +285,23 @@ const SAMPLE_ITEMS = [
   {title:'Live feeds unreachable — sample item. Markets &amp; clocks remain live.', when:'now', region:'World', src:'SAMPLE', cat:'flat'},
 ];
 
-// fetch one feed through the rss2json API (direct, CORS-enabled, no proxy)
+// fetch one feed fresh through a public CORS proxy (hits Google live => freshest)
+async function fetchFeedProxy(f){
+  const res = await proxied(f.url);
+  const doc = new DOMParser().parseFromString(await res.text(),'text/xml');
+  const now = Date.now();
+  return Array.from(doc.getElementsByTagName('item')).slice(0,20).map(it=>{
+    let title=(it.querySelector('title')||{}).textContent||'';
+    let source=(it.querySelector('source')||{}).textContent||'';
+    const m=title.match(/\s-\s([^-]+)$/);
+    if(m && !source){ source=m[1].trim(); title=title.slice(0,m.index).trim(); }
+    const pub=(it.querySelector('pubDate')||{}).textContent||'';
+    const ts = pub? Date.parse(pub): now;
+    const ago = Math.max(0, Math.round((now-(ts||now))/60000));
+    return { title, source: source||'RSS', link:(it.querySelector('link')||{}).textContent||'', ts, ago: ago<1?'now':(ago<60?ago+'m':Math.round(ago/60)+'h') };
+  }).filter(x=>x.title);
+}
+// fallback: Google News through the rss2json gateway (CORS, no key) if every proxy fails
 async function fetchFeedJSON(f){
   const u = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(f.url);
   const res = await fetchTimeout(u);
@@ -301,41 +317,32 @@ async function fetchFeedJSON(f){
     return { title, source: source||'RSS', link: it.link||'', ts, ago: ago<1?'now':(ago<60?ago+'m':Math.round(ago/60)+'h') };
   }).filter(x=>x.title);
 }
-// fallback: raw RSS through a public CORS proxy
-async function fetchFeedProxy(f){
-  const res = await proxied(f.url);
-  const doc = new DOMParser().parseFromString(await res.text(),'text/xml');
-  const now = Date.now();
-  return Array.from(doc.getElementsByTagName('item')).slice(0,15).map(it=>{
-    let title=(it.querySelector('title')||{}).textContent||'';
-    let source=(it.querySelector('source')||{}).textContent||'';
-    const m=title.match(/\s-\s([^-]+)$/);
-    if(m && !source){ source=m[1].trim(); title=title.slice(0,m.index).trim(); }
-    const pub=(it.querySelector('pubDate')||{}).textContent||'';
-    const ts = pub? Date.parse(pub): now;
-    const ago = Math.max(0, Math.round((now-(ts||now))/60000));
-    return { title, source: source||'RSS', link:(it.querySelector('link')||{}).textContent||'', ts, ago: ago<1?'now':(ago<60?ago+'m':Math.round(ago/60)+'h') };
-  }).filter(x=>x.title);
-}
 async function loadNews(){
   $('#intelSrc').textContent = 'CONTACTING…';
-  let method='JSON';
-  let results = await Promise.all(NEWS_FEEDS.map(f=>fetchFeedJSON(f).catch(()=>null)));
-  let okCount = results.filter(Boolean).length;
-  if(!okCount){
-    method='PROXY';
-    results = await Promise.all(NEWS_FEEDS.map(f=>fetchFeedProxy(f).catch(()=>null)));
-    okCount = results.filter(Boolean).length;
-  }
-  const items=[];
-  results.forEach((batch,i)=>{ if(batch&&batch.length){ items.push(...batch.map(it=>({...it, region:NEWS_FEEDS[i].region, src:NEWS_FEEDS[i].src}))); } });
+  // Fresh-first, per feed: hit the CORS proxy first (rss2json serves stale/cached
+  // Google News), and fall back to rss2json only for the individual feeds whose
+  // proxy fetch failed. So we add freshness when a proxy works and never lose the
+  // working stream when proxies are down.
+  const prox = await Promise.all(NEWS_FEEDS.map(f=>fetchFeedProxy(f).catch(()=>null)));
+  const anyProxy = prox.some(Boolean);
+  const json = await Promise.all(NEWS_FEEDS.map((f,i)=> (prox[i] && prox[i].length) ? Promise.resolve(null) : fetchFeedJSON(f).catch(()=>null)));
+  let items=[]; let okCount=0;
+  NEWS_FEEDS.forEach((f,i)=>{
+    const batch = (prox[i] && prox[i].length) ? prox[i] : json[i];
+    if(batch && batch.length){ okCount++; items.push(...batch.map(it=>({...it, region:f.region, src:f.src}))); }
+  });
   if(!okCount){
     S.news = SAMPLE_ITEMS.map(it=>({...it,when:'now',ago:'0m'}));
     $('#intelSrc').textContent = 'RSS UNREACHABLE · SAMPLE';
   }else{
-    items.sort((a,b)=>b.ts-a.ts);
-    S.news = items.slice(0,50);
-    $('#intelSrc').textContent = 'LIVE · ' + method;
+    // dedupe by title; sort newest-first; drop ancient leftovers so feed & map are live
+    const cutoff = Date.now() - 48*60*60*1000;
+    const seen = new Set();
+    const recent = items.filter(it=> it.ts>=cutoff)
+      .sort((a,b)=>b.ts-a.ts)
+      .filter(it=>{ const k=(it.title||'').toLowerCase().trim(); if(!k||seen.has(k)) return false; seen.add(k); return true; });
+    S.news = (recent.length ? recent : items.slice().sort((a,b)=>b.ts-a.ts)).slice(0,50);
+    $('#intelSrc').textContent = 'LIVE · ' + (anyProxy?'PROXY':'JSON');
     setStatus(true, 'STATUS: ONLINE — MARKETS + INTEL LIVE');
   }
   $('#feedFresh').textContent = 'updated '+new Date().toLocaleTimeString('en-GB');
@@ -376,7 +383,7 @@ function renderAlerts(){
     const t=(it.title||'').toLowerCase()+' '+(it.region||'').toLowerCase();
     for(const a of ALERT_KEYWORDS){
       if(new RegExp(a.k).test(t)){
-        alerts.push({sev:a.sev,label:a.label,title:it.title,when:it.ago,src:it.source});
+        alerts.push({sev:a.sev,label:a.label,title:it.title,when:it.ago,src:it.source,link:it.link||''});
         break;
       }
     }
@@ -384,16 +391,26 @@ function renderAlerts(){
   const sevRank={high:0,mid:1,low:2};
   const top = alerts.slice(0,14).sort((x,y)=>sevRank[x.sev]-sevRank[y.sev]);
   const sevTxt={high:'HIGH',mid:'MED',low:'LOW'};
+  const open = a.link ? ' · open ↗' : '';
+  const cell = a => a.link
+    ? `<a class="alert sev-${a.sev} alertlink" href="${esc(a.link)}" target="_blank" rel="noopener">
+        <span class="sev">${a.label}</span>
+        <span class="at">${a.when}</span>
+        <div class="ab">
+          <div class="atitle">${esc(a.title)}</div>
+          <div class="asrc">${sevTxt[a.sev]} PRIORITY · ${esc(a.src||'')}${open}</div>
+        </div>
+      </a>`
+    : `<div class="alert sev-${a.sev}">
+        <span class="sev">${a.label}</span>
+        <span class="at">${a.when}</span>
+        <div class="ab">
+          <div class="atitle">${esc(a.title)}</div>
+          <div class="asrc">${sevTxt[a.sev]} PRIORITY · ${esc(a.src||'')}</div>
+        </div>
+      </div>`;
   $('#alertCount').textContent = top.length ? top.length+' active' : '0 active';
-  $('#alertlist').innerHTML = top.length? top.map(a=>`
-    <div class="alert sev-${a.sev}">
-      <span class="sev">${a.label}</span>
-      <span class="at">${a.when}</span>
-      <div class="ab">
-        <div class="atitle">${esc(a.title)}</div>
-        <div class="asrc">${sevTxt[a.sev]} PRIORITY · ${esc(a.src||'')}</div>
-      </div>
-    </div>`).join('') : `<div class="ph mono" style="padding:18px">No priority alerts in current feed.</div>`;
+  $('#alertlist').innerHTML = top.length? top.map(cell).join('') : `<div class="ph mono" style="padding:18px">No priority alerts in current feed.</div>`;
 }
 
 /* ══════════════ 6. AI SITUATION BRIEF (synthesis, labelled) ══════════════ */
@@ -604,7 +621,7 @@ function boot(){
   $('#closeGuide').addEventListener('click',closeGuide);
   tickClocks(); setInterval(tickClocks,1000);
   loadMarkets(); setInterval(loadMarkets,60000);
-  loadNews(); setInterval(loadNews,360000);
+  loadNews(); setInterval(loadNews,120000);   // intel refresh ~2m so headlines stay live
   loadPrediction(); setInterval(loadPrediction,300000);
   loadFX(); setInterval(loadFX,300000);
   // guide on first visit (skip when arriving via a section deep-link)

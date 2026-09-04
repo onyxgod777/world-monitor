@@ -240,6 +240,8 @@ a{color:var(--accent);text-decoration:none}
 /* ═══ ALERTS ═══ */
 .alertlist{display:flex;flex-direction:column;max-height:560px;overflow:auto}
 .alert{display:flex;gap:14px;align-items:flex-start;padding:13px 16px;border-bottom:1px solid rgba(30,42,65,.5);border-left:3px solid var(--line)}
+.alert.alertlink{color:inherit;text-decoration:none;cursor:pointer;transition:background .12s}
+.alert.alertlink:hover{background:var(--panel-hover)}
 .alert.sev-high{border-left-color:var(--red)}
 .alert.sev-mid{border-left-color:var(--amber)}
 .alert.sev-low{border-left-color:var(--green)}
