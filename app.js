@@ -201,11 +201,20 @@ function renderRisk(){
 /* ══════════════ 3b. PREDICTION MARKETS (Polymarket) & FX/METALS ══════════════ */
 async function loadPrediction(){
   const url='https://gamma-api.polymarket.com/markets?active=true&closed=false&order=volume24hr&ascending=false&limit=15';
+  // Polymarket's gamma-api sends no CORS headers, so a direct browser fetch always
+  // fails here. Try direct first (cheap), then retry through a CORS proxy — same
+  // pattern loadMarkets uses for CoinGecko.
+  let d=null;
   try{
     const res=await fetchTimeout(url,9000);
     if(!res.ok) throw new Error('pm '+res.status);
-    const d=await res.json();
-    const list=(Array.isArray(d)?d:[]).filter(m=>{
+    d=await res.json();
+  }catch(e){
+    try{ d=await (await proxied(url)).json(); }catch(e2){ d=null; }
+  }
+  const arr=Array.isArray(d)?d:[];
+  try{
+    const list=arr.filter(m=>{
       try{ const o=JSON.parse(m.outcomes||'[]'); return o.length===2 && (parseFloat(m.liquidity)>0); }catch(e){ return false; }
     });
     if(!list.length) throw new Error('empty');
