@@ -378,10 +378,8 @@ async function loadNews(){
     setStatus(true, 'STATUS: ONLINE — MARKETS + INTEL LIVE');
   }
   $('#feedFresh').textContent = 'updated '+new Date().toLocaleTimeString('en-GB');
-  renderFeed();
-  renderAlerts();
-  renderBrief();
-  renderWorld();
+  // Render each dependent panel independently so one panel bug never blanks the rest.
+  [renderFeed, renderAlerts, renderBrief, renderWorld].forEach(fn=>{ try{ fn(); }catch(e){ /* isolate */ } });
 }
 function renderFeed(){
   const list = S.news.slice(0,30);
@@ -423,14 +421,13 @@ function renderAlerts(){
   const sevRank={high:0,mid:1,low:2};
   const top = alerts.slice(0,14).sort((x,y)=>sevRank[x.sev]-sevRank[y.sev]);
   const sevTxt={high:'HIGH',mid:'MED',low:'LOW'};
-  const open = a.link ? ' · open ↗' : '';
   const cell = a => a.link
     ? `<a class="alert sev-${a.sev} alertlink" href="${esc(a.link)}" target="_blank" rel="noopener">
         <span class="sev">${a.label}</span>
         <span class="at">${a.when}</span>
         <div class="ab">
           <div class="atitle">${esc(a.title)}</div>
-          <div class="asrc">${sevTxt[a.sev]} PRIORITY · ${esc(a.src||'')}${open}</div>
+          <div class="asrc">${sevTxt[a.sev]} PRIORITY · ${esc(a.src||'')} · open ↗</div>
         </div>
       </a>`
     : `<div class="alert sev-${a.sev}">
