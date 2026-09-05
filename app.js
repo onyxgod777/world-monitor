@@ -394,6 +394,15 @@ const NEWS_FEEDS = [
   { region:'Cyber', src:'Google News', url:'https://news.google.com/rss/search?q=cybersecurity%20hack%20breach&hl=en-US&gl=US&ceid=US:en' },
   { region:'Geo', src:'Google News', url:'https://news.google.com/rss/search?q=geopolitics%20diplomacy&hl=en-US&gl=US&ceid=US:en' },
   { region:'Energy', src:'Google News', url:'https://news.google.com/rss/search?q=oil%20energy%20commodities&hl=en-US&gl=US&ceid=US:en' },
+  // ── Independent / no-paywall outlets (direct feeds) ──
+  // These add journalism you can actually open, without the hard paywalls that
+  // Google News aggregation keeps mixing in. Independent + free, verified RSS.
+  { region:'World', src:'Al Jazeera', url:'https://www.aljazeera.com/xml/rss/all.xml' },
+  { region:'World', src:'France 24', url:'https://www.france24.com/en/rss' },
+  { region:'World', src:'The Conversation', url:'https://theconversation.com/us/articles.atom' },
+  { region:'US', src:'ProPublica', url:'https://www.propublica.org/feeds/propublica/main' },
+  { region:'US', src:'The Intercept', url:'https://theintercept.com/feed/?rss' },
+  { region:'US', src:'Democracy Now', url:'https://www.democracynow.org/democracynow.rss' },
 ];
 const SAMPLE_ITEMS = [
   {title:'Live feeds unreachable — sample item. Markets &amp; clocks remain live.', when:'now', region:'World', src:'SAMPLE', cat:'flat'},
