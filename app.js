@@ -735,26 +735,27 @@ function updateMapSignals(){
     const re=hubRe(kws);
     const idx=titles.map((t,i)=>({i,t})).filter(o=>re.test(o.t));
     const count=idx.length;
-    if(count>0) liveCount++;
-    const color = count===0?'#334155':(count<=2?'#22c55e':(count<=4?'#f59e0b':'#ef4444'));
-    const radius = 6 + Math.min(count,7)*2.3;
-    const top = count>0 ? S.news[idx[0].i] : null;
-    const m = L.circleMarker([lat,lng],{
-      radius, color: count===0?'#334155':'#ffffff', weight:1,
-      fillColor:color, fillOpacity: count===0?0.45:0.85
-    }).addTo(map);
-    m.bindPopup(count>0
-      ? `<div class="mp-title">${esc(name)}</div>`+
+    // Only draw a dot where the live feed actually has signal for that hub.
+    // A quiet hub with no matching headlines is just noise — nothing to show.
+    if(count>0){
+      liveCount++;
+      const color = count<=2?'#22c55e':(count<=4?'#f59e0b':'#ef4444');
+      const radius = 6 + Math.min(count,7)*2.3;
+      const top = S.news[idx[0].i];
+      const m = L.circleMarker([lat,lng],{
+        radius, color:'#ffffff', weight:1,
+        fillColor:color, fillOpacity:0.85
+      }).addTo(map);
+      m.bindPopup(`<div class="mp-title">${esc(name)}</div>`+
         `<div class="mp-meta">${count} matching headline${count===1?'':'s'} in live feed</div>`+
         `<div style="margin-top:5px">${esc(top.title)}</div>`+
-        `<div class="mp-meta" style="margin-top:2px"><a href="${esc(top.link)}" target="_blank" rel="noopener">open story ↗</a></div>`
-      : `<div class="mp-title">${esc(name)}</div>`+
-        `<div class="mp-meta">No ${esc(name)}-specific signal in the current feed.</div>`);
-    _mapMarkers.push(m);
+        `<div class="mp-meta" style="margin-top:2px"><a href="${esc(top.link)}" target="_blank" rel="noopener">open story ↗</a></div>`);
+      _mapMarkers.push(m);
+    }
   });
-  $('#mapCount').textContent = (liveCount||0)+' signal'+(liveCount===1?'':'s')+' live';
+  $('#mapCount').textContent = liveCount ? (liveCount+' signal'+(liveCount===1?'':'s')+' live')
+    : 'no regional activity this cycle';
   $('#mapLegend').innerHTML =
-    `<span class="li"><span class="sw" style="background:#334155"></span>quiet</span>`+
     `<span class="li"><span class="sw" style="background:#22c55e"></span>active</span>`+
     `<span class="li"><span class="sw" style="background:#f59e0b"></span>heightened</span>`+
     `<span class="li"><span class="sw" style="background:#ef4444"></span>elevated</span>`;
