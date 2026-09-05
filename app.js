@@ -463,6 +463,17 @@ async function loadNews(){
     setStatus(true, 'STATUS: ONLINE — MARKETS + INTEL LIVE');
   }
   $('#feedFresh').textContent = 'updated '+new Date().toLocaleTimeString('en-GB');
+  // Derive live causal prophecies from the CURRENT Intel headlines through the
+  // Wechselwirkung framework (live-prophesy.js). Replaces the pi-mirrored
+  // prophecies.js import; recomputed on every intel refresh so the panel always
+  // tracks what is actually on the feed right now.
+  try{
+    const live = (typeof window.buildLiveProphecies === 'function')
+      ? window.buildLiveProphecies(S.news)
+      : [];
+    live._updated = new Date().toLocaleString('en-GB');
+    window.PROPHECIES = live;
+  }catch(e){ /* keep last good list */ }
   // Render each dependent panel independently so one panel bug never blanks the rest.
   [renderFeed, renderAlerts, renderBrief, renderWorld, renderProphecy].forEach(fn=>{ try{ fn(); }catch(e){ /* isolate */ } });
 }
