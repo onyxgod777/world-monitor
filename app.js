@@ -395,14 +395,20 @@ const NEWS_FEEDS = [
   { region:'Geo', src:'Google News', url:'https://news.google.com/rss/search?q=geopolitics%20diplomacy&hl=en-US&gl=US&ceid=US:en' },
   { region:'Energy', src:'Google News', url:'https://news.google.com/rss/search?q=oil%20energy%20commodities&hl=en-US&gl=US&ceid=US:en' },
   // ── Independent / no-paywall outlets (direct feeds) ──
-  // These add journalism you can actually open, without the hard paywalls that
-  // Google News aggregation keeps mixing in. Independent + free, verified RSS.
+  // Journalism you can actually open, without the hard paywalls that Google News
+  // aggregation keeps mixing in. Deliberately diverse: multiple geographies and
+  // editorial stances so no single outlet (or one leaning) owns any story.
   { region:'World', src:'Al Jazeera', url:'https://www.aljazeera.com/xml/rss/all.xml' },
   { region:'World', src:'France 24', url:'https://www.france24.com/en/rss' },
   { region:'World', src:'The Conversation', url:'https://theconversation.com/us/articles.atom' },
+  { region:'World', src:'Middle East Eye', url:'https://www.middleeasteye.net/rss' },
+  { region:'World', src:'RFI', url:'https://www.rfi.fr/en/rss' },
   { region:'US', src:'ProPublica', url:'https://www.propublica.org/feeds/propublica/main' },
   { region:'US', src:'The Intercept', url:'https://theintercept.com/feed/?rss' },
   { region:'US', src:'Democracy Now', url:'https://www.democracynow.org/democracynow.rss' },
+  { region:'US', src:'Reason', url:'https://reason.com/feed/' },
+  { region:'Climate', src:'Grist', url:'https://grist.org/feed/' },
+  { region:'Cyber', src:'404 Media', url:'https://www.404media.co/rss/' },
 ];
 const SAMPLE_ITEMS = [
   {title:'Live feeds unreachable — sample item. Markets &amp; clocks remain live.', when:'now', region:'World', src:'SAMPLE', cat:'flat'},
