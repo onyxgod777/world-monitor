@@ -259,32 +259,74 @@ function renderRisk(){
 }
 
 /* ══════════════ 3b. PREDICTION MARKETS (Polymarket) & FX/METALS ══════════════ */
+const _PRED_CACHE='wm_pred_cache_v1';
+function predCacheGet(){ try{ const r=localStorage.getItem(_PRED_CACHE); return r? JSON.parse(r) : null; }catch(e){ return null; } }
+function predCacheSet(list){ try{ localStorage.setItem(_PRED_CACHE, JSON.stringify(list)); }catch(e){ /* non-fatal */ } }
+
 async function loadPrediction(){
-  const url='https://gamma-api.polymarket.com/markets?active=true&closed=false&order=volume24hr&ascending=false&limit=15';
-  // Polymarket's gamma-api sends no CORS headers, so a direct browser fetch always
-  // fails here. Try direct first (cheap), then retry through a CORS proxy — same
-  // pattern loadMarkets uses for CoinGecko.
-  let d=null;
+  // 1) Polymarket — canonical, but its API sends no CORS headers, so it is only
+  //    reachable from a browser through a working proxy. Try direct, then proxy.
+  const pm = await tryPolymarket();
+  if(pm && pm.length){ commitPred(pm, 'POLYMARKET · LIVE', true); return; }
+  // 2) Manifold Markets — CORS-enabled, reachable directly, so the panel stays
+  //    live even when no public CORS proxy is working. Active binary markets,
+  //    ranked by 24h volume.
+  const mf = await tryManifold();
+  if(mf && mf.length){ commitPred(mf, 'MANIFOLD · LIVE', true); return; }
+  // 3) Last-known snapshot — never blank on a transient failure; recovers next tick.
+  const cached = predCacheGet();
+  if(cached && cached.length){ commitPred(cached, 'LAST KNOWN · STALE', false); return; }
+  // 4) Cold visit + every source down.
+  $('#predSrc').textContent = 'OFFLINE · RETRYING';
+  $('#predlist').innerHTML = `<div class="ph mono" style="padding:18px">Prediction feed unavailable right now — retrying automatically. The rest of the dashboard stays live.</div>`;
+}
+
+function commitPred(list, label, persist){
+  $('#predSrc').textContent = label;
+  $('#predCount').textContent = list.length + ' markets';
+  renderPrediction(list);
+  if(persist) predCacheSet(list);
+}
+
+async function tryPolymarket(){
+  const url = 'https://gamma-api.polymarket.com/markets?active=true&closed=false&order=volume24hr&ascending=false&limit=15';
+  let d = null;
   try{
-    const res=await fetchTimeout(url,9000);
-    if(!res.ok) throw new Error('pm '+res.status);
-    d=await res.json();
+    const res = await fetchTimeout(url, 9000);
+    if(!res.ok) throw new Error('pm ' + res.status);
+    d = await res.json();
   }catch(e){
-    try{ d=await (await proxied(url)).json(); }catch(e2){ d=null; }
+    try{ d = await (await proxied(url)).json(); }catch(e2){ d = null; }
   }
-  const arr=Array.isArray(d)?d:[];
+  const arr = Array.isArray(d) ? d : [];
+  const list = arr.filter(m=>{
+    try{ const o = JSON.parse(m.outcomes || '[]'); return o.length === 2 && parseFloat(m.liquidity) > 0; }
+    catch(e){ return false; }
+  });
+  return list.slice(0, 10);
+}
+
+async function tryManifold(){
   try{
-    const list=arr.filter(m=>{
-      try{ const o=JSON.parse(m.outcomes||'[]'); return o.length===2 && (parseFloat(m.liquidity)>0); }catch(e){ return false; }
-    });
-    if(!list.length) throw new Error('empty');
-    renderPrediction(list.slice(0,10));
-    $('#predCount').textContent=list.length+' markets';
-    $('#predSrc').textContent='POLYMARKET · LIVE';
-  }catch(e){
-    $('#predSrc').textContent='POLYMARKET · OFFLINE';
-    $('#predlist').innerHTML=`<div class="ph mono" style="padding:18px">Prediction feed unreachable — retrying automatically. Markets &amp; clocks stay live.</div>`;
-  }
+    // Manifold list has no volume sort, so pull recently-active markets and rank
+    // the open BINARY ones by 24h volume client-side.
+    const res = await fetchTimeout('https://api.manifold.markets/v0/markets?limit=200&sort=last-bet-time', 9000);
+    if(!res.ok) return null;
+    const arr = await res.json(); if(!Array.isArray(arr)) return null;
+    const bins = arr.filter(m => m.outcomeType === 'BINARY' && m.isResolved === false
+      && typeof m.probability === 'number' && m.probability > 0.03 && m.probability < 0.97
+      && (parseFloat(m.volume24Hours) || 0) > 0);
+    bins.sort((a, b) => (parseFloat(b.volume24Hours) || 0) - (parseFloat(a.volume24Hours) || 0));
+    return bins.slice(0, 10).map(m => ({
+      question: m.question || '',
+      outcomes: ['Yes', 'No'],
+      // renderPrediction JSON.parses outcomePrices, so it must be a JSON string
+      outcomePrices: JSON.stringify([String(m.probability), String(1 - m.probability)]),
+      volume24hr: String(m.volume24Hours || ''),
+      endDate: m.closeTime,   // ms epoch — renderPrediction calls new Date(endDate)
+      liquidity: m.liquidity,
+    }));
+  }catch(e){ return null; }
 }
 function renderPrediction(list){
   $('#predlist').innerHTML=list.map(m=>{
@@ -463,16 +505,28 @@ async function loadNews(){
     setStatus(true, 'STATUS: ONLINE — MARKETS + INTEL LIVE');
   }
   $('#feedFresh').textContent = 'updated '+new Date().toLocaleTimeString('en-GB');
-  // Derive live causal prophecies from the CURRENT Intel headlines through the
-  // Wechselwirkung framework (live-prophesy.js). Replaces the pi-mirrored
-  // prophecies.js import; recomputed on every intel refresh so the panel always
-  // tracks what is actually on the feed right now.
+  // Prophecy source selection: use the richer AUTHORED causal analyses
+  // (prophecy-authors.js, written a few times a day by the scheduled causal
+  // job from this feed) while they are fresh; otherwise fall back to the
+  // always-on in-browser live engine (live-prophesy.js). Coverage counts are
+  // always recomputed live against the current headlines either way.
   try{
-    const live = (typeof window.buildLiveProphecies === 'function')
-      ? window.buildLiveProphecies(S.news)
-      : [];
-    live._updated = new Date().toLocaleString('en-GB');
-    window.PROPHECIES = live;
+    const AUTH = window.PROPHECIES_AUTHORED || null;
+    const STAMP = window.PROPHECIES_AUTHORED_STAMP || '';
+    let fresh = false;
+    if(AUTH && AUTH.length && STAMP){
+      const t = new Date(STAMP.replace(' ', 'T') + (/:00$/.test(STAMP) ? '' : ':00'));
+      fresh = !isNaN(t) && (Date.now() - t.getTime()) < 24 * 60 * 60 * 1000;
+    }
+    if(fresh && AUTH && AUTH.length){
+      window.PROPHECIES = Object.assign(AUTH.slice(), { _updated: STAMP });
+    } else if(typeof window.buildLiveProphecies === 'function'){
+      const live = window.buildLiveProphecies(S.news);
+      live._updated = new Date().toLocaleString('en-GB');
+      window.PROPHECIES = live;
+    } else {
+      window.PROPHECIES = [];
+    }
   }catch(e){ /* keep last good list */ }
   // Render each dependent panel independently so one panel bug never blanks the rest.
   [renderFeed, renderAlerts, renderBrief, renderWorld, renderProphecy].forEach(fn=>{ try{ fn(); }catch(e){ /* isolate */ } });
