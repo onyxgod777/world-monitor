@@ -104,28 +104,81 @@ const COIN_NAME = {bitcoin:'BTC',ethereum:'ETH',solana:'SOL',binancecoin:'BNB',r
 const COIN_BRAND = {bitcoin:'#F7931A',ethereum:'#627EEA',solana:'#14F195',binancecoin:'#F3BA2F',ripple:'#23A8DF',dogecoin:'#C2A633',chainlink:'#2A5ADA',litecoin:'#3D7BD6'};
 const brandOf=id=>COIN_BRAND[id]||null;
 
+// Persist the last good CoinGecko snapshot so a transient throttle / network blip
+// falls back to real (recent) prices instead of a blank "unreachable" panel.
+const _MKT_CACHE_KEY = 'wm_mkt_cache_v1';
+function cacheGet(){
+  try{ const raw = localStorage.getItem(_MKT_CACHE_KEY); return raw ? JSON.parse(raw) : null; }
+  catch(e){ return null; }
+}
+function cacheSet(coins){
+  try{
+    localStorage.setItem(_MKT_CACHE_KEY, JSON.stringify(coins.map(c=>({
+      id:c.id, name:c.name, symbol:c.symbol, image:c.image,
+      current_price:c.current_price, price_change_percentage_24h:c.price_change_percentage_24h,
+      price_change_percentage_7d:c.price_change_percentage_7d, market_cap:c.market_cap,
+      market_cap_rank:c.market_cap_rank,
+      sparkline_in_7d:c.sparkline_in_7d ? {price:c.sparkline_in_7d.price} : undefined
+    }))));
+  }catch(e){ /* localStorage full or blocked — non-fatal */ }
+}
+function markMkt(src){ $('#mktSrc').textContent = src; }
+
 async function loadMarkets(){
+  // 1) Full CoinGecko snapshot (direct, then via any working proxy). Best data.
+  const cg = await tryCoinGecko();
+  if(cg && cg.length){ commitCoins(cg, 'COINGECKO · LIVE', true); return; }
+  // 2) Fresh 24h prices via Binance, merged over the last known snapshot so the
+  //    panel keeps mcap/rank/sparkline. Best-effort: api.binance.com returns 451
+  //    for some regions, in which case this fails cleanly and we move on.
+  const bin = await tryBinance();
+  if(bin && bin.length){ commitCoins(bin, 'BINANCE · LIVE', true); return; }
+  // 3) CoinGecko throttled/down and no fresh overlay: keep the last good snapshot
+  //    (stale but real). Recovers automatically on the next successful live tick.
+  const cached = cacheGet();
+  if(cached && cached.length){ commitCoins(cached, 'LAST KNOWN · STALE', false); return; }
+  // 4) Nothing has ever loaded — genuine offline state (cold visit + every source down).
+  renderMarketsOffline();
+}
+
+async function tryCoinGecko(){
   const ids = COINS.join(',');
   const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=50&sparkline=true&price_change_percentage=24h%2C7d`;
-  let coins=[];
+  let res=null;
+  try{ res = await fetchTimeout(url, 9000); if(!res.ok) res=null; }catch(e){ res=null; }
+  if(!res){ try{ res = await proxied(url); }catch(e){ res=null; } }
+  if(!res) return null;
+  try{ const j = await res.json(); return Array.isArray(j) ? j.filter(c=>COIN_NAME[c.id]) : null; }
+  catch(e){ return null; }
+}
+
+const _SYM2ID = Object.fromEntries(Object.entries(COIN_NAME).map(([id,sym])=>[sym,id]));
+async function tryBinance(){
+  const syms = COINS.map(id=>COIN_NAME[id]+'USDT').filter(Boolean);
+  if(!syms.length) return null;
   try{
-    const res = await fetchTimeout(url, 9000);
-    if(!res.ok) throw new Error('cg '+res.status);
-    coins = await res.json();
-  }catch(e){
-    // CoinGecko can rate-limit; retry via proxy once
-    try{ coins = await (await proxied(url)).json(); }catch(e2){}
-  }
-  if(!coins || !coins.length){ renderMarketsOffline(); return; }
-  S.coins = coins.filter(c=>COIN_NAME[c.id]);
-  S.online = true;
+    const res = await fetchTimeout('https://api.binance.com/api/v3/ticker/24hr?symbols='+encodeURIComponent(JSON.stringify(syms)), 8000);
+    if(!res.ok) return null;
+    const arr = await res.json(); if(!Array.isArray(arr)) return null;
+    const px = {};
+    arr.forEach(t=>{ const id=_SYM2ID[(t.symbol||'').replace(/USDT$/,'')]; if(id) px[id]={ current_price:parseFloat(t.lastPrice), price_change_percentage_24h:parseFloat(t.priceChangePercent) }; });
+    if(!Object.keys(px).length) return null;
+    const base = (S.coins && S.coins.length) ? S.coins : COINS.map(id=>({id, name:COIN_NAME[id]}));
+    return base.map(c=>Object.assign({}, c, px[c.id]||{}));
+  }catch(e){ return null; }
+}
+
+function commitCoins(coins, label, persist){
+  S.coins = coins;
+  S.online = !label.includes('STALE');
+  markMkt(label);
+  if(persist) cacheSet(coins);
   renderMarkets();
   renderEcon();
   renderRisk();
 }
 function renderMarkets(){
   const coins = S.coins;
-  $('#mktSrc').textContent = 'COINGECKO · LIVE';
   // ticker
   const tk = coins.map(c=>{
     const cls = clsDelta(c.price_change_percentage_24h);
@@ -154,11 +207,10 @@ function sparkSVG(arr,min,max,col){
   return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" opacity=".9"/></svg>`;
 }
 function renderMarketsOffline(){
-  $('#mktSrc').textContent = 'OFFLINE · SAMPLE';
-  setStatus(false,'STATUS: MARKETS OFFLINE');
+  $('#mktSrc').textContent = 'OFFLINE · RETRYING';
   const tpl=['BTC','ETH','SOL','XRP'];
   $('#ticker').innerHTML = `<span class="ticker-inner">${tpl.map(s=>`<span class="tk">${s} <span class="flat">— offline —</span></span><span class="sep"></span>`).join('')}${tpl.map(s=>`<span class="tk">${s} <span class="flat">— offline —</span></span><span class="sep"></span>`).join('')}</span>`;
-  $('#watchgrid').innerHTML = `<div class="ph mono" style="grid-column:1/-1;padding:20px;text-align:center">Live price feed unreachable — showing sample tiles. Markets panel will recover automatically when the API responds.</div>`;
+  $('#watchgrid').innerHTML = `<div class="ph mono" style="grid-column:1/-1;padding:20px;text-align:center">Live price feed unavailable right now — retrying automatically. If this persists on this network, the feed is rate-limiting your connection.</div>`;
 }
 
 /* ══════════════ 3. ECONOMIC SNAPSHOT (crypto-derived, real) ══════════════ */
@@ -308,16 +360,41 @@ const SAMPLE_ITEMS = [
 // link opens a source you can actually read. Matched word-boundary against the
 // outlet name Google News attaches to each item.
 const PAYWALLED = [
+  // US national
   'new york times','nytimes','nyt','wall street journal','wsj','bloomberg','financial times',
   'the economist','washington post','the atlantic','barron','the information',
   'foreign policy','harvard business review','wired','new yorker','los angeles times',
-  'chicago tribune','the times','sunday times','the telegraph','nikkei','caixin',
-  'the australian','business insider','sydney morning herald','the age','forbes','ft.com'
+  'chicago tribune','the new republic','american prospect',
+  'the week','the dispatch','punchbowl news','the free press','the bulwark',
+  'cook political report','foreign affairs','commentary',
+  'new york review of books','london review of books','new scientist','spectator',
+  'new statesman','prospect magazine','the times','sunday times','the telegraph',
+  // US regional (mostly hard paywalled)
+  'boston globe','philadelphia inquirer','seattle times','star tribune','st. louis post-dispatch',
+  'post-dispatch','denver post','miami herald','sacramento bee','baltimore banner','news & observer',
+  // US trade / entertainment / media
+  'variety','hollywood reporter','business of fashion','stat news','statnews',
+  // Business
+  'nikkei','caixin','the australian','business insider','sydney morning herald','the age',
+  'forbes','ft.com',
+  // International
+  'south china morning post','scmp','times of india','hindustan times','economic times',
+  'livemint','the hindu','the globe and mail','national post','toronto star','la presse',
+  'le monde','le figaro','handelsblatt','frankfurter allgemeine','der spiegel',
+  'neue zuercher zeitung','il sole 24 ore','corriere della sera','haaretz','japan times',
+  'asahi shimbun'
 ];
+// Free outlets whose name happens to contain a paywalled substring and must
+// never be dropped (e.g. "The Times of Israel" contains the "the times" token,
+// but is a free site). Runs before the paywall match. Only list genuinely free
+// outlets — do NOT list paywalled ones (Times of India, Hindustan Times,
+// Economic Times, etc. are real paywalls and stay blocked).
+const _FREE_SAFE = ['times of israel'];
 const _pwRe = PAYWALLED.map(w=>new RegExp('(^|[^a-z0-9])'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'([^a-z0-9]|$)'));
 function isPaywalled(src){
   const s=(src||'').toLowerCase().trim();
   if(!s) return false;
+  if(_FREE_SAFE.some(g=>s.includes(g))) return false;
   return _pwRe.some(r=>r.test(s));
 }
 
