@@ -655,7 +655,7 @@ function renderWorld(){
   $('#cybergrid').innerHTML = cyber.map(x=>`
     <div class="cyb"><div class="cn"><span>${x[0]}</span><span style="color:${x[2]==='g'?'var(--green)':x[2]==='a'?'var(--amber)':'var(--red)'};font-size:10px">${x[1]}</span></div>
     <div class="cst" style="color:${x[2]==='g'?'var(--text)':'var(--amber)'}">${x[1]}</div><div class="cmeta">${x[3]}</div></div>`).join('');
-  // Region pulse (derived keyword heat)
+  // Region pulse (derived keyword heat) — only show regions with live signal.
   const regions=[
     ['Americas', ['america','washington','canada','brazil','us ','mexico']],
     ['Europe', ['europe','germany','france','uk','ukraine','russia','eu ','nato','brussels']],
@@ -664,17 +664,23 @@ function renderWorld(){
     ['Africa', ['africa','niger','sudan','nigeria','kenya','ethiopia','sahel']],
     ['Global Markets', ['market','stock','fed','oil','inflation','dollar','bond','crypto']],
   ];
-  $('#regionrow').innerHTML = regions.map(([name,kws])=>{
-    const hits = S.news.filter(n=>kws.some(k=>(n.title||'').toLowerCase().includes(k))).length;
-    const sev = hits===0?'':hits<=2?'warn':'crit';
-    const temp = hits;
-    const tags = S.news.filter(n=>kws.some(k=>(n.title||'').toLowerCase().includes(k))).slice(0,3)
-      .map(n=>`<span class="tag region">${esc(n.region||'')}</span>`).join('') || '<span class="tag">quiet</span>';
-    return `<div class="region ${sev}"><div class="rn"><span class="dot"></span>${name}</div>
-      <div class="rtemp">${temp}<small> signals</small></div>
-      <div class="rl">${temp? temp+' matching headline(s) in the live feed this cycle.':'No region-specific signal in current feed.'}</div>
+  const activeRegions = regions
+    .map(([name,kws])=>({
+      name, kws,
+      hits: S.news.filter(n=>kws.some(k=>(n.title||'').toLowerCase().includes(k))).length
+    }))
+    .filter(r=>r.hits>0);
+  $('#regionrow').innerHTML = activeRegions.length
+    ? activeRegions.map(({name,kws,hits})=>{
+        const sev = hits<=2?'warn':'crit';
+        const tags = S.news.filter(n=>kws.some(k=>(n.title||'').toLowerCase().includes(k))).slice(0,3)
+          .map(n=>`<span class="tag region">${esc(n.region||'')}</span>`).join('');
+        return `<div class="region ${sev}"><div class="rn"><span class="dot"></span>${name}</div>
+      <div class="rtemp">${hits}<small> signals</small></div>
+      <div class="rl">${hits} matching headline(s) in the live feed this cycle.</div>
       <div class="rtags">${tags}</div></div>`;
-  }).join('');
+      }).join('')
+    : '<div class="ph mono" style="grid-column:1/-1;padding:14px">No regional signal in the current feed cycle.</div>';
   updateMapSignals();
 }
 function advRatio(){
