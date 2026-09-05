@@ -18,6 +18,28 @@ const signed = n => (n>0?'+':'') + mono(n);
 const clsDelta = n => n>0?'up':(n<0?'dn':'flat');
 const pct = n => (n>0?'+':'') + mono(n,2) + '%';
 
+// Robust feed-date parsing + age label. Feed dates come in two formats:
+//  - RFC822 GMT from live RSS  ("Sat, 05 Sep 2026 21:16:33 GMT")
+//  - naive "YYYY-MM-DD HH:MM:SS" from rss2json (which is GMT under the hood)
+// Date.parse on the naive form is browser-dependent; normalize it to UTC. If a
+// date cannot be parsed at all we return NaN — callers must NEVER treat that as
+// "now": an undatable item is shown with no age and ranked as oldest, not fresh.
+function parseTs(pub){
+  if(!pub) return NaN;
+  const p = String(pub).trim();
+  let t = Date.parse(p);
+  if(isNaN(t)){
+    const m = p.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}(?::\d{2})?)/);
+    if(m) t = Date.parse(m[1] + 'T' + m[2] + 'Z');   // treat naive feed time as UTC/GMT
+  }
+  return t; // may still be NaN -> caller ranks it oldest, no "now"
+}
+function agoLabel(ts, now){
+  if(!(ts > 0)) return '';                 // unknown age -> show nothing, never 'now'
+  const ago = Math.max(0, Math.round((now - ts) / 60000));
+  return ago < 1 ? 'now' : (ago < 60 ? ago + 'm' : Math.round(ago / 60) + 'h');
+}
+
 const PROXIES = [
   'https://api.allorigins.win/raw?url=',
   'https://api.codetabs.com/v1/proxy?quest=',
@@ -455,10 +477,37 @@ function isPaywalled(src){
   return _pwRe.some(r=>r.test(s));
 }
 
-// fetch one feed fresh through a public CORS proxy (hits Google live => freshest)
+// Pull raw RSS/Atom text live: try direct (for any CORS-enabled feed), then via
+// public CORS proxies. allorigins /get wraps the body in {"contents":...} and is
+// currently the most reliable route, so unwrap it. Returns null if unreachable.
+const _RSS_PROXIES = [
+  'https://api.allorigins.win/get?url=',
+  'https://api.allorigins.win/raw?url=',
+  'https://api.codetabs.com/v1/proxy?quest=',
+  'https://corsproxy.io/?url=',
+  'https://api.cors.lol/?url=',
+  'https://cors.eu.org/',
+];
+async function fetchRssLive(url){
+  try{ const r=await fetchTimeout(url,9000); if(r.ok){ const t=await r.text(); if(t && /<(rss|feed|item|entry)\b/.test(t)) return t; } }catch(e){}
+  const target=encodeURIComponent(url);
+  for(const base of _RSS_PROXIES){
+    try{
+      const r=await fetchTimeout(base+target,8000);
+      if(!r.ok) continue;
+      let t=await r.text(); if(!t) continue;
+      const ct=t.trim();
+      if(ct.startsWith('{')){ const j=JSON.parse(ct); t=(j && typeof j.contents==='string')?j.contents:''; }
+      if(t && /<(rss|feed|item|entry)\b/.test(t)) return t;
+    }catch(e){}
+  }
+  return null;
+}
+// fetch one feed fresh through the live route above (hits the outlet live => freshest)
 async function fetchFeedProxy(f){
-  const res = await proxied(f.url);
-  const doc = new DOMParser().parseFromString(await res.text(),'text/xml');
+  const xml = await fetchRssLive(f.url);
+  if(!xml) return [];
+  const doc = new DOMParser().parseFromString(xml,'text/xml');
   const now = Date.now();
   return Array.from(doc.getElementsByTagName('item')).slice(0,20).map(it=>{
     let title=(it.querySelector('title')||{}).textContent||'';
@@ -466,12 +515,13 @@ async function fetchFeedProxy(f){
     const m=title.match(/\s-\s([^-]+)$/);
     if(m && !source){ source=m[1].trim(); title=title.slice(0,m.index).trim(); }
     const pub=(it.querySelector('pubDate')||{}).textContent||'';
-    const ts = pub? Date.parse(pub): now;
-    const ago = Math.max(0, Math.round((now-(ts||now))/60000));
-    return { title, source: source||'RSS', link:(it.querySelector('link')||{}).textContent||'', ts, ago: ago<1?'now':(ago<60?ago+'m':Math.round(ago/60)+'h') };
+    const rawTs=parseTs(pub);
+    const ts = isNaN(rawTs) ? 0 : rawTs;    // undatable -> oldest, no fake 'now'
+    return { title, source: source||'RSS', link:(it.querySelector('link')||{}).textContent||'', ts, ago: agoLabel(ts, now) };
   }).filter(x=>x.title && !isPaywalled(x.source));
 }
-// fallback: Google News through the rss2json gateway (CORS, no key) if every proxy fails
+// fallback: the same feed through the rss2json gateway (CORS, no key) if the live
+// route fails. Note rss2json caches ~hours and caps items, so this is secondary.
 async function fetchFeedJSON(f){
   const u = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(f.url);
   const res = await fetchTimeout(u);
@@ -482,9 +532,9 @@ async function fetchFeedJSON(f){
   return (d.items||[]).map(it=>{
     let title=(it.title||'').trim(); let source=(it.source||'').trim();
     if(!source){ const m=title.match(/\s-\s([^-]+)$/); if(m){ source=m[1].trim(); title=title.slice(0,m.index).trim(); } }
-    const ts = it.pubDate? Date.parse(it.pubDate): now;
-    const ago = Math.max(0, Math.round((now-(ts||now))/60000));
-    return { title, source: source||'RSS', link: it.link||'', ts, ago: ago<1?'now':(ago<60?ago+'m':Math.round(ago/60)+'h') };
+    const rawTs=parseTs(it.pubDate);
+    const ts = isNaN(rawTs) ? 0 : rawTs;    // undatable -> oldest, no fake 'now'
+    return { title, source: source||'RSS', link: it.link||'', ts, ago: agoLabel(ts, now) };
   }).filter(x=>x.title && !isPaywalled(x.source));
 }
 async function loadNews(){
