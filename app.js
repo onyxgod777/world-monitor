@@ -825,7 +825,6 @@ function propCoverage(p){
   const rx = new RegExp('\\b('+p.kw.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\\b','i');
   return S.news.filter(n=>rx.test((n.title||'')+' '+(n.region||''))).length;
 }
-function verseToSect(v){ return (v||'').replace(/^Chapter /,'Ch. '); }
 // render markdown **bold** to <b> after escaping (data is trusted; esc() neutralizes raw HTML)
 function fmt(s){ return esc(s).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>'); }
 function renderProphecy(){
@@ -861,7 +860,6 @@ function renderProphecy(){
         <div class="psec">
           <div class="psec-h"><span class="badge warn">PROJECTED EFFECT · if cause persists</span></div>
           <ul class="pbullet">${bullets}</ul>
-          <blockquote class="pverse">“${fmt(p.verse||'')}” <cite>— ${esc(verseToSect(p.verseSrc))}</cite></blockquote>
         </div>
         <div class="psec hinge">
           <div class="psec-h"><span class="badge hinge">THE HINGE · the choice that rewrites it</span></div>

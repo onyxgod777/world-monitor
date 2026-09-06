@@ -3,9 +3,9 @@
 
    Replaces the pi-mirrored prophecies.js. Derives prophecies/predictions
    DIRECTLY from World Monitor's own live Intel headlines via a deterministic
-   causal-inference algorithm, framed through the Goblet of the Truth
-   Wechselwirkung lens (Chapter 28 §117: cause → accumulated same-kind → effect;
-   the hinge = the free-will choice that rewrites the cause).
+   causal-inference algorithm, applying the Wechselwirkung causal law as the
+   working lens (cause → accumulated same-kind → effect; the hinge = the free-will
+   choice that rewrites the cause). The law is understood and applied — not quoted.
 
    Honest framing: this is causal inference over a live headline feed, NOT
    fortune-telling. Every card names the observed cause (the real headlines now
@@ -18,26 +18,13 @@
 'use strict';
 
 (function () {
-  /* ── Verse bank (verbatim from the Goblet of the Truth) ──────────────── */
-  const V = {
-    V117: { src: 'Chapter 28, Verse 117',
-      text: 'The law of the interaction and hence also your destiny, you human beings of Earth, is triggered by attracting again various same-kinds through the motion of a creation, such as thoughts, feelings, deeds and actions as well as an activity of any kind… the whole accumulates to a great energy with great power which acts as a sender and sends back everything to the former.' },
-    V119: { src: 'Chapter 28, Verse 119',
-      text: 'Your self-created destiny is always and down to the finest and smallest nuance fair and corresponds to the effects of the creational laws, because through the attraction and accumulation of your own thoughts and feelings… you attract the same kind again, and it falls back onto you, and indeed exactly as you have created it as cause, only amplified.' },
-    V122: { src: 'Chapter 10, Verse 122',
-      text: 'And if the time comes when you subject your world to an ordeal (torture), then many will have to leave their homes and lose their goods and chattels, and great throngs will flee from high waters and great storms, and much misery, hardship, affliction and many deaths will spread.' },
-    V105: { src: 'Chapter 28, Verse 105',
-      text: 'The destiny which you determine yourselves through your thoughts and feelings, through your activity and your actions and deeds is based on consequences, i.e. effects which you yourselves create through distinct causes and which you then have to bear as your destiny, both in the good as in the evil.' },
-    V264: { src: 'Chapter 28, Verse 264',
-      text: '…only you can – in accordance with your free will – load guilt onto you and bring about a distinct own destiny, in which case you can however also liberate yourselves from your guilt again and change your destiny in accordance with your own free will.' },
-  };
-
   /* ── Causal themes. Order matters: first regex match wins per headline. ──
      Each theme maps a live cause (the headlines it catches) to its projected
-     necessary effect and its hinge (the reversal condition).                */
+     necessary effect and its hinge (the reversal condition). The framing applies
+     the Wechselwirkung causal law internally; no scripture is rendered.       */
   const THEMES = [
     {
-      key: 'conflict', emoji: '🔥', tag: 'CONFLICT · GEOPOLITICS', cls: 'red', verse: 'V117',
+      key: 'conflict', emoji: '🔥', tag: 'CONFLICT · GEOPOLITICS', cls: 'red',
       kw: ['iran', 'hormuz', 'tehran', 'gulf', 'israel', 'gaza', 'west bank', 'houthi', 'military', 'missile',
            'drone', 'strike', 'war', 'troops', 'invasion', 'ceasefire', 'rebel', 'offensive', 'bomb', 'retali',
            'escalat', 'conflict', 'sanction', 'blockade', 'ukraine', 'russia', 'moscow', 'kyiv', 'putin', 'nato'],
@@ -50,7 +37,7 @@
       hinge: 'The effect is not fixed. It is being written by the choice of the parties to keep escalating — or to de-escalate: a revived ceasefire, a negotiated settlement that addresses the root grievance, and a return to dialogue over force. Because the law is one of attraction of same-kinds, the move that changes the cause — restraint where retaliation is expected — is the move that rewrites the effect. That choice is available now, in every capital on both sides.'
     },
     {
-      key: 'markets', emoji: '📉', tag: 'MARKETS · RATES', cls: 'amber', verse: 'V105',
+      key: 'markets', emoji: '📉', tag: 'MARKETS · RATES', cls: 'amber',
       kw: ['fed', 'rate', 'inflation', 'bond', 'yield', 'treasury', 'recession', 'market', 'stock', 'sell-off',
            'dollar', 'debt', 'gdp', 'tariff', 'trade war', 'central bank', 'stocks', 'oil price', 'crude', 'rally'],
       causeLead: 'financial markets are repricing on the same set of pressures — rate expectations, inflation and geopolitical risk — and that repricing is being reinforced by the very uncertainty it feeds',
@@ -62,7 +49,7 @@
       hinge: 'Markets are not forecasting; they are reacting to a chain of expected moves that are themselves decisions still open. The effect changes with the choice: a central bank that calibrates rather than over-corrects, and trade disputes that move toward agreement rather than retaliation, change the cause and therefore the projected effect. No repricing is inevitable — each is the echo of a decision that can be made differently.'
     },
     {
-      key: 'cyber', emoji: '🛡️', tag: 'CYBER · SECURITY', cls: 'amber', verse: 'V119',
+      key: 'cyber', emoji: '🛡️', tag: 'CYBER · SECURITY', cls: 'amber',
       kw: ['cyber', 'hack', 'breach', 'ransom', 'zero-day', 'malware', 'phishing', 'data leak', 'ransomware', 'exploit'],
       causeLead: 'a digital intrusion or exploit is active — systems are being probed or compromised, and the response will shape whether the damage stays contained or propagates',
       bullets: [
@@ -73,7 +60,7 @@
       hinge: 'A breach is a cause that has already been set in motion, but its effect is still being chosen. Transparent disclosure, rapid patching and treating the lesson as systemic — not blaming a single user — change whether the same-kind is attracted again. The technical fix matters; the institutional response decides how far the effect travels.'
     },
     {
-      key: 'climate', emoji: '🌪️', tag: 'CLIMATE · WEATHER', cls: 'amber', verse: 'V122',
+      key: 'climate', emoji: '🌪️', tag: 'CLIMATE · WEATHER', cls: 'amber',
       kw: ['el nino', 'enso', 'climate', 'warming', 'drought', 'wildfire', 'flood', 'storm', 'typhoon', 'hurricane',
            'heat', 'weather', '1.5c', 'sea level', 'cyclone', 'monsoon'],
       causeLead: 'a climatic extreme is unfolding or intensifying — and because such events are amplified by the conditions that bred them, the present disruption carries the seed of the next',
@@ -85,7 +72,7 @@
       hinge: 'The storm is not the whole cause — the accumulated conditions that made it destructive are. Those conditions are shaped by choices still being made: how fast emissions are cut, how infrastructure and communities are hardened, and whether warnings become action. Changing that longer cause changes the severity of every future effect, even if this event must now be endured.'
     },
     {
-      key: 'energy', emoji: '🛢️', tag: 'ENERGY · COMMODITIES', cls: 'amber', verse: 'V117',
+      key: 'energy', emoji: '🛢️', tag: 'ENERGY · COMMODITIES', cls: 'amber',
       kw: ['oil', 'energy', 'crude', 'gas', 'commodit', 'supply', 'chokepoint', 'shipping', 'cargo', 'refinery', 'opec', 'pipeline', 'tanker', 'red sea', 'hormuz'],
       causeLead: 'an energy-supply pressure is tightening — a chokepoint, a trade restriction or a demand shock is being transmitted through prices and then back through every economy that depends on it',
       bullets: [
@@ -96,7 +83,7 @@
       hinge: 'An energy shock is not destiny. It is the product of choices about how the world moves and powers itself — whether chokepoints are kept open by agreement rather than contested by force, and whether dependence is diversified before the next disruption. Those choices are open now, and they decide whether this pressure compounds into a systemic shock or stays a contained cost.'
     },
     {
-      key: 'diplomacy', emoji: '🤝', tag: 'GEOPOLITICS · SIGNAL', cls: 'blue', verse: 'V264',
+      key: 'diplomacy', emoji: '🤝', tag: 'GEOPOLITICS · SIGNAL', cls: 'blue',
       kw: ['talks', 'summit', 'diplomacy', 'negotiat', 'deal', 'accord', 'treaty', 'ceasefire talks', 'mediation',
            'ambassador', 'foreign minister', 'alliance', 'agreement', 'trade deal', 'dialogue'],
       causeLead: 'a diplomatic process is in motion — and its trajectory will be set less by the talks themselves than by whether the parties treat them as a real off-ramp or as a stalling tactic',
@@ -172,7 +159,6 @@
     // title derives from the strongest live headline so each card is grounded in a real current story
     const top = items.slice().sort((a, b) => (b.ts || 0) - (a.ts || 0))[0];
     const title = `${th.emoji} ${clip(top.title, 160)}`;
-    const verse = V[th.verse];
     return {
       emoji: th.emoji,
       title: title,
@@ -182,8 +168,6 @@
       kw: kw,
       cause: buildCause(th, items),
       bullets: th.bullets,
-      verse: verse.text,
-      verseSrc: verse.src,
       hinge: th.hinge,
       _evidence: items.length,
     };

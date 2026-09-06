@@ -30,8 +30,6 @@ window.PROPHECIES_AUTHORED = [
    "**Same-kind escalation keeps answering itself** — the effect of each strike on tankers or warships is the next retaliation, so the confrontation accumulates energy rather than winding down, raising the odds the conflict widens beyond its current fronts.",
    "**Blockades harden into standing architecture** — the longer shipping lanes are treated as legitimate instruments of war, the more the open sea becomes a permanent chessboard of closures, so even a de-escalation leaves the world more exposed to the next dispute."
   ],
-  "verse": "The law of the interaction and hence also your destiny, you human beings of Earth, is triggered by attracting again various same-kinds through the motion of a creation, such as thoughts, feelings, deeds and actions as well as an activity of any kind… the whole accumulates to a great energy with great power which acts as a sender and sends back everything to the former.",
-  "verseSrc": "Chapter 28, Verse 117",
   "hinge": "No chokepoint was closed by nature; each was closed by a decision to escalate, and each can be reopened by a decision to de-escalate. The hinge is whether the parties choose a revived ceasefire that reopens Hormuz, a settlement that secures the Red Sea by agreement rather than by force, and a maritime order restored instead of blockaded. Because the law attracts same-kinds, the move that changes the cause — restraint at the very moment retaliation is expected — is the move that rewrites the effect. That choice is available now in every capital on both sides of this war."
  },
  {
@@ -61,8 +59,6 @@ window.PROPHECIES_AUTHORED = [
    "**Risk is shared but not evenly** — because the repricing is global, developed and emerging markets transmit it to one another, and the economies with thinner buffers absorb the shock first and hardest.",
    "**A single policy decision becomes the hinge** — the longer markets hang on one expected move, the more one central-bank choice or trade de-escalation can reverse the mood, making the outcome depend on decisions not yet made rather than on any forecast."
   ],
-  "verse": "The destiny which you determine yourselves through your thoughts and feelings, through your activity and your actions and deeds is based on consequences, i.e. effects which you yourselves create through distinct causes and which you then have to bear as your destiny, both in the good as in the evil.",
-  "verseSrc": "Chapter 28, Verse 105",
   "hinge": "Markets are not forecasting; they are reacting to a chain of expected moves that are themselves decisions still open. The hinge is the choice of the institutions that hold the levers — a central bank that calibrates rather than over-corrects, and trade and policy disputes that move toward de-escalation rather than retaliation. Because each effect traces to a distinct cause set by human decision, the repricing is not inevitable: change the decisions, and the projected correction changes with them. No selloff is fated to become a crisis; it becomes one only if the choices that would calm it are not made."
  },
  {
@@ -91,8 +87,6 @@ window.PROPHECIES_AUTHORED = [
    "**Trust is built or burned by every step** — because negotiation is iterative, the effect of each concession, strike or denial is to make the next agreement easier or harder, compounding toward a durable settlement or toward deeper escalation.",
    "**The human and domestic cost shapes the window** — the effect of drone attacks on Kyiv and mobilisation talk inside Russia is rising strain on both populations, and that strain narrows the time in which a settlement can be reached before it hardens into something worse."
   ],
-  "verse": "Your self-created destiny is always and down to the finest and smallest nuance fair and corresponds to the effects of the creational laws, because through the attraction and accumulation of your own thoughts and feelings… you attract the same kind again, and it falls back onto you, and indeed exactly as you have created it as cause, only amplified.",
-  "verseSrc": "Chapter 28, Verse 119",
   "hinge": "The hinge is whether the peace push is real. If the parties negotiate in good faith toward the root grievance and back it with the restraint that proves it — halting the strikes while talks run — the same-kind energy that now feeds escalation begins to feed de-escalation instead. If the table is used only for cover while the drone war continues, the cause is unchanged and the effect amplifies. Diplomacy only works when it changes the cause; that choice — made in Moscow and Kyiv and the capitals pressing them — is the one that decides whether this becomes a settlement or a wider war."
  },
  {
@@ -121,10 +115,8 @@ window.PROPHECIES_AUTHORED = [
    "**One compromised seam can cascade** — the effect of a zero-day in software used everywhere, or an access breach at a data custodian, is not just the direct victim but every organisation downstream that depends on the same code or service.",
    "**The response decides the recurrence** — the effect of an incident met with transparent disclosure, rapid patching and systemic hardening is a contained lesson; met with concealment or blame, it invites the same kind back against the same weakness."
   ],
-  "verse": "…only you can – in accordance with your free will – load guilt onto you and bring about a distinct own destiny, in which case you can however also liberate yourselves from your guilt again and change your destiny in accordance with your own free will.",
-  "verseSrc": "Chapter 28, Verse 264",
   "hinge": "A breach is a cause already set in motion, but its effect is still being chosen. The hinge is the institutional response: transparent disclosure, rapid patching, and treating each incident as a systemic lesson rather than a single user's mistake. That response — the free-will choice to harden rather than conceal — determines whether the same kind is attracted again. The technical fix closes this incident; the choice to treat security as architecture, not as an afterthought, is what changes the cause and therefore every future effect."
  }
 ];
 
-window.PROPHECIES_AUTHORED_STAMP = '2026-09-05 18:00';
+window.PROPHECIES_AUTHORED_STAMP = '2026-09-05 20:02';
