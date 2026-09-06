@@ -413,8 +413,9 @@ a{color:var(--accent);text-decoration:none}
   .span3,.span4,.span5,.span6,.span7,.span8,.span12{grid-column:span 12}
   .watchgrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 }
-@media(max-width:760px){
-  /* header wraps into two rows: brand+meta on row 1, full-width scrollable tabs on row 2 */
+@media(max-width:1199px){
+  /* header wraps: brand+meta on row 1, full-width scrollable tabs on row 2
+     (single fixed row only fits ≥1200px now that the donate button is in the bar) */
   .topbar{flex-wrap:wrap;height:auto;padding:8px 12px;row-gap:6px;gap:10px;column-gap:14px}
   .brand{flex:0 0 auto}
   .topmeta{order:0;margin-left:auto;gap:10px}
