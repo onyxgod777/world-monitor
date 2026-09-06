@@ -427,6 +427,12 @@ a{color:var(--accent);text-decoration:none}
   .tabs::-webkit-scrollbar-thumb{background:var(--line2);border-radius:3px}
   .tab{min-height:34px}
 }
+@media(max-width:480px){
+  /* phones: make tabs share the full width evenly so none are cut off by the
+     container scroll (S10e viewport = 360px; 5 tabs would otherwise overflow) */
+  .tabs{overflow-x:hidden;flex-wrap:nowrap}
+  .tabs .tab{flex:1 1 0%;min-width:0;text-align:center;padding:8px 2px;font-size:12px}
+}
 @media(max-width:540px){
   .brand-name{letter-spacing:.08em;font-size:13px}
   .utc{display:none}
