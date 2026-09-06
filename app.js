@@ -409,6 +409,39 @@ function renderFX(fx,hist,gold){
   $('#fxgold').innerHTML=`${goldHtml}<div class="fxrows">${rows}</div>`;
 }
 
+/* ── FiatLeak movers (fiatleak.js, refreshed hourly by a scraper cron) ── */
+function flPct(v){ return (v>=0?'+':'')+Number(v).toFixed(2)+'%'; }
+function renderFiatleak(){
+  const box=$('#flRows'); if(!box) return;
+  const F=window.FIATLEAK;
+  $('#flSrc').textContent = (F && F._updated) ? 'FIATLEAK · '+F._updated : 'FIATLEAK';
+  if(!F || !F.assets){
+    box.innerHTML='<div class="ph mono">FiatLeak data not loaded yet.</div>';
+    return;
+  }
+  const b=F.breadth||{};
+  $('#flBreadth').textContent = (b.g!=null) ? b.g+'↑ / '+b.l+'↓' : '';
+  const chip=(s,v)=>`<span class="flchip ${v>=0?'up':'dn'}"><span class="fls">${s}</span>${flPct(v)}</span>`;
+  const gain=(F.topGainers||[]).map(([s,v])=>chip(s,v)).join('');
+  const loss=(F.topLosers||[]).map(([s,v])=>chip(s,v)).join('');
+  const marq=Object.keys(F.marquee||{}).map(s=>{ const a=F.marquee[s]; return `<span class="flprice ${a[1]>=0?'up':'dn'}"><span class="fls">${s}</span><b>$${a[0]}</b>${flPct(a[1])}</span>`; }).join('');
+  box.innerHTML =
+    `<div class="flhalf"><div class="flmh">TOP GAINERS</div><div class="flm">${gain||'<span class="muted">none</span>'}</div>`+
+    `<div class="flmh">TOP LOSERS</div><div class="flm">${loss||'<span class="muted">none</span>'}</div></div>`+
+    `<div class="flhalf flp"><div class="flmh">KEY PRICES · CRYPTO + US STOCKS</div><div class="flm marq">${marq||'<span class="muted">n/a</span>'}</div></div>`;
+}
+async function refreshFiatleak(){
+  try{
+    const r=await fetchTimeout('fiatleak.js?t='+Date.now(),8000);
+    if(r.ok){
+      const txt=await r.text();
+      const scope={}; new Function('window', txt)(scope);   // fiatleak.js does window.FIATLEAK=…
+      if(scope.FIATLEAK && scope.FIATLEAK.assets) window.FIATLEAK=scope.FIATLEAK;
+    }
+  }catch(e){ /* keep last */ }
+  renderFiatleak();
+}
+
 /* ══════════════ 4. INTEL FEED (news RSS, best-effort) ══════════════ */
 const NEWS_FEEDS = [
   { region:'World', src:'Google News', url:'https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en' },
@@ -927,6 +960,7 @@ function boot(){
   loadNews(); setInterval(loadNews,120000);   // intel refresh ~2m so headlines stay live
   loadPrediction(); setInterval(loadPrediction,300000);
   loadFX(); setInterval(loadFX,300000);
+  renderFiatleak(); setInterval(refreshFiatleak,1800000);   // refresh fiatleak.js hourly data
   // guide on first visit (skip when arriving via a section deep-link)
   if(!location.hash && !localStorage.getItem('wm_seen')){ openGuide(); localStorage.setItem('wm_seen','1'); }
   $('#helpBtn').addEventListener('click',openGuide);

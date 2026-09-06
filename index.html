@@ -50,6 +50,15 @@
     <!-- ── MARKETS view ── -->
     <section class="view is-active" id="view-markets">
       <div class="grid">
+        <div class="card fiatleak span12">
+          <div class="card-head">
+            <h2>FiatLeak · Market Movers</h2>
+            <span class="count mono" id="flBreadth">—</span>
+            <span class="src mono" id="flSrc">…</span>
+          </div>
+          <div class="flwrap" id="flRows"><div class="ph mono">Loading movers…</div></div>
+        </div>
+
         <div class="card watchlist span8">
           <div class="card-head">
             <h2>Global Markets Watch</h2>
@@ -210,6 +219,7 @@
 
   <script src="live-prophesy.js"></script>
   <script src="prophecy-authors.js"></script>
+  <script src="fiatleak.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -404,3 +404,18 @@ a{color:var(--accent);text-decoration:none}
 ::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-thumb{background:var(--line2);border-radius:6px}
 ::-webkit-scrollbar-track{background:transparent}
+
+/* ── FiatLeak market movers panel ── */
+.flwrap{display:flex;gap:18px;flex-wrap:wrap}
+.flhalf{flex:1 1 300px;min-width:0}
+.flhalf.flp{flex:1 1 360px}
+.flmh{font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--faint);margin:6px 0 8px}
+.flm{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.flchip{display:inline-flex;gap:6px;align-items:center;padding:4px 9px;border-radius:6px;font:600 11px var(--mono);border:1px solid var(--line)}
+.flchip.up{color:var(--green);background:var(--green-dim)}
+.flchip.dn{color:var(--red);background:var(--red-dim)}
+.flchip .fls{font-family:var(--sans);font-weight:700;letter-spacing:.04em}
+.flprice{display:inline-flex;gap:6px;align-items:baseline;padding:5px 9px;border-radius:6px;background:var(--panel2);border:1px solid var(--line);font:600 11px var(--mono)}
+.flprice .fls{font-family:var(--sans);font-weight:700;letter-spacing:.04em}
+.flprice b{color:var(--text);font-weight:600}
+.muted{color:var(--faint)}
