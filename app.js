@@ -627,7 +627,7 @@ async function loadNews(){
     }
   }catch(e){ /* keep last good list */ }
   // Render each dependent panel independently so one panel bug never blanks the rest.
-  [renderFeed, renderAlerts, renderBrief, renderWorld, renderProphecy].forEach(fn=>{ try{ fn(); }catch(e){ /* isolate */ } });
+  [renderFeed, renderAlerts, renderAmber, renderBrief, renderWorld, renderProphecy].forEach(fn=>{ try{ fn(); }catch(e){ /* isolate */ } });
 }
 function renderFeed(){
   const list = S.news.slice(0,30);
@@ -688,6 +688,36 @@ function renderAlerts(){
       </div>`;
   $('#alertCount').textContent = top.length ? top.length+' active' : '0 active';
   $('#alertlist').innerHTML = top.length? top.map(cell).join('') : `<div class="ph mono" style="padding:18px">No priority alerts in current feed.</div>`;
+}
+
+/* ══════════════ 5b. AMBER (NCMEC missing-child alerts, real data) ══════════════ */
+function renderAmber(){
+  const A = window.AMBER;
+  const bar = $('#amberbar');
+  const countEl = $('#amberCount'); const srcEl = $('#amberSrc');
+  if(!bar){ return; }
+  if(!A || !Array.isArray(A.cases) || !A.cases.length){
+    if(countEl) countEl.textContent='0 active';
+    if(srcEl) srcEl.textContent='NCMEC · OFFLINE';
+    bar.innerHTML = `<div class="ph mono" style="padding:16px">Missing-child alert feed unavailable right now — retrying on next refresh. If this persists, the NCMEC feed is unreachable from this network.</div>`;
+    return;
+  }
+  const cases = A.cases;
+  if(countEl) countEl.textContent = cases.length+' active';
+  if(srcEl) srcEl.textContent = 'NCMEC · '+(A._updated||'').split(' ')[0];
+  const item = c => `
+    <div class="amberitem">
+      <div class="amflag">◉</div>
+      <div class="ambody">
+        <div class="amtitle"><b>${esc(c.name)}</b>${c.age!=null?' · age now '+c.age:''}</div>
+        <div class="ammeta">Missing from <b>${esc(c.loc||c.city||'Location undisclosed')}</b>${c.missing?' · '+esc(c.missing):''}</div>
+        <div class="amsrc">Real case · NCMEC missing-children registry · ${c.link?`<a href="${esc(c.link)}" target="_blank" rel="noopener">poster ↗</a>`:'source: NCMEC'} · Report tips: 1-800-THE-LOST</div>
+      </div>
+    </div>`;
+  bar.innerHTML = cases.slice(0,12).map(item).join('');
+  // coverage honesty: never claim this US-anchored feed is worldwide
+  const note = document.getElementById('amberCoverage');
+  if(note) note.textContent = 'Coverage: NCMEC missing-child alert cases (US-anchored registry). Not a global AMBER-activation feed — verify locally.';
 }
 
 /* ══════════════ 6. AI SITUATION BRIEF (synthesis, labelled) ══════════════ */
@@ -844,10 +874,34 @@ function updateMapSignals(){
   });
   $('#mapCount').textContent = liveCount ? (liveCount+' signal'+(liveCount===1?'':'s')+' live')
     : 'no regional activity this cycle';
+  // NCMEC missing-child (AMBER) icons on the map — drawn on top of the signal hubs.
+  const A = window.AMBER && Array.isArray(window.AMBER.cases) ? window.AMBER : null;
+  let amberOnMap = 0;
+  if(A && typeof L !== 'undefined'){
+    const amberIcon = L.divIcon({ className:'amber-marker', html:'<span class="amber-pin">◉</span>', iconSize:[22,22], iconAnchor:[11,11], popupAnchor:[0,-12] });
+    A.cases.forEach(c=>{
+      if(typeof c.lat==='number' && typeof c.lng==='number'){
+        amberOnMap++;
+        const m = L.marker([c.lat,c.lng],{ icon:amberIcon }).addTo(map);
+        const ageTxt = c.age!=null ? 'Age now: <b>'+c.age+'</b>' : 'Age unknown';
+        const missTxt = c.missing ? 'Missing since <b>'+esc(c.missing)+'</b>' : 'Missing';
+        m.bindPopup(
+          `<div class="mp-title" style="color:#f59e0b">◉ Missing-Child Alert</div>`+
+          `<div style="margin:4px 0 2px"><b>${esc(c.name)}</b></div>`+
+          `<div class="mp-meta">${ageTxt} · ${missTxt}</div>`+
+          `<div class="mp-meta">${esc(c.loc||c.city||'Location undisclosed')}</div>`+
+          (c.link?`<div style="margin-top:6px"><a href="${esc(c.link)}" target="_blank" rel="noopener">NCMEC case poster ↗</a></div>`:'')+
+          `<div class="mp-meta" style="margin-top:4px;font-size:10px">Report tips to law enforcement / NCMEC 1-800-THE-LOST</div>`);
+        _mapMarkers.push(m);
+      }
+    });
+  }
   $('#mapLegend').innerHTML =
     `<span class="li"><span class="sw" style="background:#22c55e"></span>active</span>`+
     `<span class="li"><span class="sw" style="background:#f59e0b"></span>heightened</span>`+
-    `<span class="li"><span class="sw" style="background:#ef4444"></span>elevated</span>`;
+    `<span class="li"><span class="sw" style="background:#ef4444"></span>elevated</span>`+
+    `<span class="li"><span class="sw amber-dot"></span>◉ NCMEC missing-child alert</span>`;
+  const amc = $('#amberMapCount'); if(amc && amberOnMap) amc.textContent = amberOnMap+' on map';
 }
 function wakeMap(){ ensureMap(); if(_map){ _map.invalidateSize(); } updateMapSignals(); }
 
@@ -956,6 +1010,7 @@ function boot(){
   $('#guideNext').addEventListener('click',nextGuide);
   $('#closeGuide').addEventListener('click',closeGuide);
   tickClocks(); setInterval(tickClocks,1000);
+  renderAmber();   // NCMEC amber panel renders from committed snapshot — independent of news fetch
   loadMarkets(); setInterval(loadMarkets,60000);
   loadNews(); setInterval(loadNews,120000);   // intel refresh ~2m so headlines stay live
   loadPrediction(); setInterval(loadPrediction,300000);
