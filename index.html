@@ -195,6 +195,7 @@
     <footer class="statusbar">
       <div class="srow">
         <span id="connStatus" class="conn mono">STATUS: CONNECTING</span>
+        <button class="donatebtn" id="donateBtn" title="Support World Monitor with Bitcoin"><span class="btc">₿</span> Donate</button>
         <span class="sep"></span>
         <span class="foot-note">Live where available — crypto prices &amp; clocks are real-time. News feed best-effort via public RSS. AI brief is illustrative. Data may be delayed or incomplete — always verify critical intelligence independently.</span>
       </div>
@@ -217,9 +218,49 @@
     </div>
   </div>
 
+  <!-- ══════════ DONATE MODAL ══════════ -->
+  <div class="overlay" id="donate" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <span class="brand"><span class="brand-name">SUPPORT WORLD MONITOR</span></span>
+        <button class="iconbtn" id="closeDonate" aria-label="Close">✕</button>
+      </div>
+      <div class="guide-body donatebox">
+        <p>Keep the dashboard live &amp; ad-free. Send Bitcoin (BTC) to the address below:</p>
+        <div class="donateaddr">
+          <span class="ad" id="donateAddr">bc1q2wtaue4cyrrvdgjadcns8awp9wxm0z6v02uyy7</span>
+          <button class="btn" id="copyAddr">Copy</button>
+        </div>
+        <p style="font-size:12.5px;color:var(--muted)">Thank you for supporting independent global monitoring. ⚡</p>
+      </div>
+    </div>
+  </div>
+
   <script src="live-prophesy.js"></script>
   <script src="prophecy-authors.js"></script>
   <script src="fiatleak.js"></script>
   <script src="app.js"></script>
+  <script>
+  (function(){
+    var ADDR='bc1q2wtaue4cyrrvdgjadcns8awp9wxm0z6v02uyy7';
+    var ov=document.getElementById('donate');
+    function openD(){ov.hidden=false;}
+    function closeD(){ov.hidden=true;}
+    document.getElementById('donateBtn').addEventListener('click',openD);
+    document.getElementById('closeDonate').addEventListener('click',closeD);
+    ov.addEventListener('click',function(e){if(e.target===ov)closeD();});
+    var cpy=document.getElementById('copyAddr');
+    cpy.addEventListener('click',function(){
+      var done=function(){cpy.textContent='Copied ✓';setTimeout(function(){cpy.textContent='Copy';},1800);};
+      if(navigator.clipboard){navigator.clipboard.writeText(ADDR).then(done,function(){fallback();});}
+      else fallback();
+      function fallback(){
+        var t=document.createElement('textarea');t.value=ADDR;t.style.position='fixed';t.style.opacity='0';
+        document.body.appendChild(t);t.select();try{document.execCommand('copy');done();}catch(e){}document.body.removeChild(t);
+      }
+    });
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!ov.hidden)closeD();});
+  })();
+  </script>
 </body>
 </html>
