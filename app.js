@@ -464,6 +464,10 @@ const NEWS_FEEDS = [
   { region:'US', src:'Reason', url:'https://reason.com/feed/' },
   { region:'Climate', src:'Grist', url:'https://grist.org/feed/' },
   { region:'Cyber', src:'404 Media', url:'https://www.404media.co/rss/' },
+  // Contact/FIGU-adjacent commentary — free, full-text, no paywall. Single-outlet
+  // beat (Plejaren / Billy Meier case reporting), kept as its own region tag so it
+  // reads as one voice rather than generic world coverage.
+  { region:'FIGU',   src:'They Fly Blog', url:'https://theyflyblog.com/feed/' },
 ];
 const SAMPLE_ITEMS = [
   {title:'Live feeds unreachable — sample item. Markets &amp; clocks remain live.', when:'now', region:'World', src:'SAMPLE', cat:'flat'},
@@ -508,6 +512,16 @@ function isPaywalled(src){
   if(!s) return false;
   if(_FREE_SAFE.some(g=>s.includes(g))) return false;
   return _pwRe.some(r=>r.test(s));
+}
+// Outlet label for a feed card. Direct-RSS outlets carry their own name in `src`,
+// while `source` falls back to whatever the feed put in <dc:creator>/<author>
+// (e.g. the blogger's initials or the RFI journalist's byline). Prefer the outlet
+// name for those; keep `source` for the Google News aggregate, where it is the
+// actual publishing outlet.
+function outletLabel(it){
+  const src=(it.src||'').trim();
+  if(src && src!=='Google News') return src;
+  return (it.source||'').trim() || src;
 }
 
 // Pull raw RSS/Atom text live: try direct (for any CORS-enabled feed), then via
@@ -570,25 +584,85 @@ async function fetchFeedJSON(f){
     return { title, source: source||'RSS', link: it.link||'', ts, ago: agoLabel(ts, now) };
   }).filter(x=>x.title && !isPaywalled(x.source));
 }
+// Freshness window for the committed server-side snapshot (news.js). The cron
+// rewrites it every ~30 min, so anything older than this means the scheduler is
+// down or the file is absent — fall back to the live proxy/JSON path then.
+const NEWS_SNAPSHOT_MAX_AGE = 4 * 60 * 60 * 1000;
+function loadNewsFromSnapshot(){
+  // Returns {items, via} from window.NEWS if it is present and fresh enough,
+  // else null. Recomputes per-item 'ago' against now so age labels stay live
+  // even though the snapshot is a committed static file.
+  const N = window.NEWS;
+  if(!N || !Array.isArray(N.items) || !N.items.length) return null;
+  let stamp = 0;
+  if(typeof N._updated === 'string'){
+    const m = N._updated.replace('UTC','').trim().match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})/);
+    if(m) stamp = Date.parse(m[1]+'T'+m[2]+':00Z');
+  }
+  if(!(stamp > 0) || (Date.now() - stamp) > NEWS_SNAPSHOT_MAX_AGE) return null;
+  const now = Date.now();
+  const items = N.items
+    .map(it => ({ title: it.title, source: it.source, link: it.link,
+                  ts: it.ts, region: it.region, src: it.src,
+                  ago: agoLabel(it.ts, now) }))
+    .filter(x => x.title && !isPaywalled(x.source));
+  return { items, via: 'SNAPSHOT' };
+}
+// Balanced feed selection. A flat newest-N slice lets the highest-volume wire
+// (Google News runs ~100 items/day) own the whole panel: a low-volume outlet —
+// a blog that posts twice a week — never survives the cut, no matter how fresh
+// its latest post is. Round-robin by source with a per-source cap keeps the
+// panel genuinely multi-outlet; any slots left over are filled by pure recency.
+function balancedFeed(list, perSource, max){
+  const bySrc = new Map();
+  for(const it of list){
+    const k = it.src || it.source || 'News';
+    if(!bySrc.has(k)) bySrc.set(k, []);
+    bySrc.get(k).push(it);
+  }
+  const out=[], taken=new Set();
+  // pass 1: every source gets its first slot before any source gets a second
+  for(let round=0; round<perSource && out.length<max; round++){
+    for(const arr of bySrc.values()){
+      if(round < arr.length && out.length < max){ out.push(arr[round]); taken.add(arr[round]); }
+    }
+  }
+  // pass 2: fill remaining slots by recency
+  for(const it of list){
+    if(out.length>=max) break;
+    if(!taken.has(it)){ out.push(it); taken.add(it); }
+  }
+  return out.sort((a,b)=>b.ts-a.ts);
+}
 async function loadNews(){
   $('#intelSrc').textContent = 'CONTACTING…';
-  // Per feed, race a fresh CORS-proxy fetch against the rss2json fallback at the
-  // same time (both bounded individually) and prefer the fresh proxy result when
-  // it yields items. Everything runs in parallel, so the whole pass resolves in a
-  // few seconds rather than one slow channel holding up the panel.
-  const settled = await Promise.all(NEWS_FEEDS.map(async f=>{
-    const [proxyRes, jsonRes] = await Promise.all([
-      fetchFeedProxy(f).catch(()=>null),
-      fetchFeedJSON(f).catch(()=>null)
-    ]);
-    const useProxy = proxyRes && proxyRes.length;
-    return { via: useProxy?'PROXY':'JSON', list: (useProxy?proxyRes:jsonRes) || [] };
-  }));
-  let items=[]; let okCount=0; let proxFeeds=0;
-  settled.forEach((r,i)=>{
-    if(r.list && r.list.length){ okCount++; if(r.via==='PROXY') proxFeeds++; items.push(...r.list.map(it=>({...it, region:NEWS_FEEDS[i].region, src:NEWS_FEEDS[i].src}))); }
-  });
-  if(!okCount){
+  let items=[]; let via='';
+  // Preferred path: committed server-side snapshot (news.js) — instant and
+  // independent of flaky public CORS proxies. Only if it is absent/stale do we
+  // race the live proxy/JSON channels.
+  const snap = loadNewsFromSnapshot();
+  if(snap){
+    items = snap.items; via = 'SNAPSHOT';
+  }else{
+    // Per feed, race a fresh CORS-proxy fetch against the rss2json fallback at the
+    // same time (both bounded individually) and prefer the fresh proxy result when
+    // it yields items. Everything runs in parallel, so the whole pass resolves in a
+    // few seconds rather than one slow channel holding up the panel.
+    const settled = await Promise.all(NEWS_FEEDS.map(async f=>{
+      const [proxyRes, jsonRes] = await Promise.all([
+        fetchFeedProxy(f).catch(()=>null),
+        fetchFeedJSON(f).catch(()=>null)
+      ]);
+      const useProxy = proxyRes && proxyRes.length;
+      return { via: useProxy?'PROXY':'JSON', list: (useProxy?proxyRes:jsonRes) || [] };
+    }));
+    let proxFeeds=0;
+    settled.forEach((r,i)=>{
+      if(r.list && r.list.length){ if(r.via==='PROXY') proxFeeds++; items.push(...r.list.map(it=>({...it, region:NEWS_FEEDS[i].region, src:NEWS_FEEDS[i].src}))); }
+    });
+    via = items.length ? (proxFeeds?'PROXY':'JSON') : '';
+  }
+  if(!items.length){
     S.news = SAMPLE_ITEMS.map(it=>({...it,when:'now',ago:'0m'}));
     $('#intelSrc').textContent = 'RSS UNREACHABLE · SAMPLE';
   }else{
@@ -598,8 +672,8 @@ async function loadNews(){
     const recent = items.filter(it=> it.ts>=cutoff)
       .sort((a,b)=>b.ts-a.ts)
       .filter(it=>{ const k=(it.title||'').toLowerCase().trim(); if(!k||seen.has(k)) return false; seen.add(k); return true; });
-    S.news = (recent.length ? recent : items.slice().sort((a,b)=>b.ts-a.ts)).slice(0,50);
-    $('#intelSrc').textContent = 'LIVE · ' + (proxFeeds?'PROXY':'JSON');
+    S.news = balancedFeed(recent.length ? recent : items.slice().sort((a,b)=>b.ts-a.ts), 3, 50);
+    $('#intelSrc').textContent = 'LIVE · ' + (via || 'FEED');
     setStatus(true, 'STATUS: ONLINE — MARKETS + INTEL LIVE');
   }
   $('#feedFresh').textContent = 'updated '+new Date().toLocaleTimeString('en-GB');
@@ -630,7 +704,11 @@ async function loadNews(){
   [renderFeed, renderAlerts, renderAmber, renderBrief, renderWorld, renderProphecy].forEach(fn=>{ try{ fn(); }catch(e){ /* isolate */ } });
 }
 function renderFeed(){
-  const list = S.news.slice(0,30);
+  // Slot guarantee: take one (newest) item per source first, then fill the rest
+  // by recency, then sort the selection newest-first so the list still reads
+  // chronologically. Without this a two-posts-a-week outlet can never outrank
+  // the wire on a 30-slot panel, so it silently never appears.
+  const list = balancedFeed(S.news, 1, 30);
   $('#feedCount').textContent = list.length + (S.news.length>30?'+':list.length===1?' item':' items');
   $('#feed').innerHTML = list.map(it=>`
     <a class="fitem" href="${esc(it.link)}" target="_blank" rel="noopener">
@@ -639,7 +717,7 @@ function renderFeed(){
         <div class="ftitle">${esc(it.title)}</div>
         <div class="fmeta">
           <span class="tag region">${esc(it.region||'News')}</span>
-          <span class="tag src">${esc(it.source||'')}</span>
+          <span class="tag src">${esc(outletLabel(it))}</span>
         </div>
       </span>
     </a>`).join('');
