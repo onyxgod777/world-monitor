@@ -463,7 +463,47 @@ const NEWS_FEEDS = [
   { region:'US', src:'Democracy Now', url:'https://www.democracynow.org/democracynow.rss' },
   { region:'US', src:'Reason', url:'https://reason.com/feed/' },
   { region:'Climate', src:'Grist', url:'https://grist.org/feed/' },
-  { region:'Cyber', src:'404 Media', url:'https://www.404media.co/rss/' },
+  { region:'Cyber',   src:'404 Media',       url:'https://www.404media.co/rss/' },
+  // ── Expanded coverage (every URL below verified reachable with items) ──
+  // Europe / Russia / ANZ
+  { region:'Europe',  src:'DW',               url:'https://rss.dw.com/rdf/rss-en-all' },
+  { region:'Europe',  src:'The Guardian',     url:'https://www.theguardian.com/world/rss' },
+  { region:'Europe',  src:'El País',          url:'https://feeds.elpais.com/mrss-s/pages/ep/site/english.elpais.com/portada' },
+  { region:'Europe',  src:'Meduza',           url:'https://meduza.io/rss/en/all' },
+  { region:'Europe',  src:'The Moscow Times', url:'https://www.themoscowtimes.com/rss/news' },
+  { region:'Europe',  src:'TASS',             url:'https://tass.com/rss/v2.xml' },
+  { region:'Europe',  src:'CBC World',        url:'https://www.cbc.ca/webfeed/rss/rss-world' },
+  { region:'Europe',  src:'ABC Australia',    url:'https://www.abc.net.au/news/feed/51120/rss.xml' },
+  { region:'World',   src:'NPR',              url:'https://feeds.npr.org/1004/rss.xml' },
+  // Middle East / South & East Asia / Africa
+  { region:'Mideast', src:'Times of Israel',  url:'https://www.timesofisrael.com/feed/' },
+  { region:'Mideast', src:'Al-Monitor',       url:'https://www.al-monitor.com/rss' },
+  { region:'Mideast', src:'Tehran Times',     url:'https://www.tehrantimes.com/rss' },
+  { region:'Mideast', src:'Anadolu Agency',   url:'https://www.aa.com.tr/en/rss/default?cat=guncel' },
+  { region:'Asia',    src:'Dawn',             url:'https://www.dawn.com/feeds/home' },
+  { region:'Asia',    src:'Channel NewsAsia', url:'https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml' },
+  { region:'Asia',    src:'Bangkok Post',     url:'https://www.bangkokpost.com/rss/data/topstories.xml' },
+  { region:'Africa',  src:'Premium Times',    url:'https://www.premiumtimesng.com/feed' },
+  // Humanitarian / disaster / health — these also feed the World map
+  { region:'Disaster',src:'ReliefWeb',        url:'https://reliefweb.int/updates/rss.xml' },
+  { region:'Disaster',src:'GDACS',            url:'https://www.gdacs.org/xml/rss.xml' },
+  { region:'Disaster',src:'FloodList',        url:'https://floodlist.com/feed' },
+  { region:'Disaster',src:'Smithsonian GVP',  url:'https://volcano.si.edu/news/WeeklyVolcanoRSS.xml' },
+  { region:'Health',  src:'WHO',              url:'https://www.who.int/rss-feeds/news-english.xml' },
+  { region:'World',   src:'UN News',          url:'https://news.un.org/feed/subscribe/en/news/all/rss.xml' },
+  // Security / cyber incident reporting
+  { region:'Security',src:'Bellingcat',       url:'https://www.bellingcat.com/feed/' },
+  { region:'Security',src:'The Record',       url:'https://therecord.media/feed' },
+  { region:'Cyber',   src:'Krebs on Security',url:'https://krebsonsecurity.com/feed/' },
+  { region:'Cyber',   src:'BleepingComputer', url:'https://www.bleepingcomputer.com/feed/' },
+  { region:'Cyber',   src:'CISA Advisories',  url:'https://www.cisa.gov/cybersecurity-advisories/all.xml' },
+  { region:'Cyber',   src:'SANS ISC',         url:'https://isc.sans.edu/rssfeed.xml' },
+  // Energy / shipping / climate / space
+  { region:'Energy',  src:'OilPrice',         url:'https://oilprice.com/rss/main' },
+  { region:'Energy',  src:'gCaptain',         url:'https://gcaptain.com/feed/' },
+  { region:'Climate', src:'Carbon Brief',     url:'https://www.carbonbrief.org/feed' },
+  { region:'Space',   src:'Spaceflight Now',  url:'https://spaceflightnow.com/feed/' },
+  { region:'Space',   src:'NASA',             url:'https://www.nasa.gov/rss/dyn/breaking_news.rss' },
   // Contact/FIGU-adjacent commentary — free, full-text, no paywall. Single-outlet
   // beat (Plejaren / Billy Meier case reporting), kept as its own region tag so it
   // reads as one voice rather than generic world coverage.
@@ -608,6 +648,25 @@ function loadNewsFromSnapshot(){
     .filter(x => x.title && !isPaywalled(x.source));
   return { items, via: 'SNAPSHOT' };
 }
+// ── Public social signals (Telegram / Reddit / X) ────────────────────────────
+// Fetched server-side by fetch_social.py into social.js (window.SOCIAL) and read
+// same-origin here. These are UNVERIFIED first reports, not edited journalism:
+// Telegram comes from public channel previews, Reddit from public Atom feeds, and
+// X from Twitter's own public timeline widget — which is cached per handle, so a
+// stale handle simply contributes nothing. Everything is freshness-gated below so
+// a cached post is never presented as new.
+const SOCIAL_MAX_AGE = { TELEGRAM: 72*60*60*1000, REDDIT: 48*60*60*1000, X: 7*24*60*60*1000 };
+function loadSocialFromSnapshot(){
+  const D = window.SOCIAL;
+  if(!D || !Array.isArray(D.items) || !D.items.length) return [];
+  const now = Date.now();
+  return D.items
+    .filter(it => it && it.title)
+    .filter(it => (now - (it.ts||0)) <= (SOCIAL_MAX_AGE[it.region] || 48*60*60*1000))
+    .map(it => ({ title: it.title, source: it.source, link: it.link, ts: it.ts,
+                  region: it.region || 'SOCIAL', src: it.src || it.source || 'Social',
+                  platform: it.platform || it.region || 'SOCIAL', ago: agoLabel(it.ts, now) }));
+}
 // Balanced feed selection. A flat newest-N slice lets the highest-volume wire
 // (Google News runs ~100 items/day) own the whole panel: a low-volume outlet —
 // a blog that posts twice a week — never survives the cut, no matter how fresh
@@ -662,6 +721,14 @@ async function loadNews(){
     });
     via = items.length ? (proxFeeds?'PROXY':'JSON') : '';
   }
+  // Merge the committed public social snapshot (Telegram / Reddit / X) into the
+  // same pool so those outlets appear as ordinary feed cards, tagged by platform.
+  // Each platform has already been freshness-gated on its own window.
+  const social = loadSocialFromSnapshot();
+  if(social.length){
+    items = items.concat(social);
+    via = via ? via + '+SOCIAL' : 'SOCIAL';
+  }
   if(!items.length){
     S.news = SAMPLE_ITEMS.map(it=>({...it,when:'now',ago:'0m'}));
     $('#intelSrc').textContent = 'RSS UNREACHABLE · SAMPLE';
@@ -669,10 +736,12 @@ async function loadNews(){
     // dedupe by title; sort newest-first; drop ancient leftovers so feed & map are live
     const cutoff = Date.now() - 48*60*60*1000;
     const seen = new Set();
-    const recent = items.filter(it=> it.ts>=cutoff)
+    // social items carry their own (longer) platform freshness window — don't
+    // re-cut them at the 48h news horizon.
+    const recent = items.filter(it=> it.platform || it.ts>=cutoff)
       .sort((a,b)=>b.ts-a.ts)
       .filter(it=>{ const k=(it.title||'').toLowerCase().trim(); if(!k||seen.has(k)) return false; seen.add(k); return true; });
-    S.news = balancedFeed(recent.length ? recent : items.slice().sort((a,b)=>b.ts-a.ts), 3, 50);
+    S.news = balancedFeed(recent.length ? recent : items.slice().sort((a,b)=>b.ts-a.ts), 3, 90);
     $('#intelSrc').textContent = 'LIVE · ' + (via || 'FEED');
     setStatus(true, 'STATUS: ONLINE — MARKETS + INTEL LIVE');
   }
@@ -707,17 +776,19 @@ function renderFeed(){
   // Slot guarantee: take one (newest) item per source first, then fill the rest
   // by recency, then sort the selection newest-first so the list still reads
   // chronologically. Without this a two-posts-a-week outlet can never outrank
-  // the wire on a 30-slot panel, so it silently never appears.
-  const list = balancedFeed(S.news, 1, 30);
-  $('#feedCount').textContent = list.length + (S.news.length>30?'+':list.length===1?' item':' items');
+  // the wire on a 30-slot panel, so it silently never appears. The cap is set
+  // above the outlet count so every configured source gets a slot each cycle.
+  const list = balancedFeed(S.news, 3, 60);
+  $('#feedCount').textContent = list.length + (S.news.length>list.length?'+':list.length===1?' item':' items');
   $('#feed').innerHTML = list.map(it=>`
-    <a class="fitem" href="${esc(it.link)}" target="_blank" rel="noopener">
+    <a class="fitem${it.platform?' social':''}" href="${esc(it.link)}" target="_blank" rel="noopener">
       <span class="when">${it.ago}</span>
       <span class="felem">
         <div class="ftitle">${esc(it.title)}</div>
         <div class="fmeta">
           <span class="tag region">${esc(it.region||'News')}</span>
           <span class="tag src">${esc(outletLabel(it))}</span>
+          ${it.platform?`<span class="tag unverified" title="Unverified public ${esc(it.platform)} post — first report, not edited journalism">unverified</span>`:''}
         </div>
       </span>
     </a>`).join('');
@@ -735,6 +806,20 @@ const ALERT_KEYWORDS = [
 ];
 function renderAlerts(){
   const alerts=[];
+  // Real seismic events first: measured magnitude/depth from USGS, not keyword
+  // inference. M4.5+ within 48h, strongest first — a quake is a fact with a
+  // timestamp, so it outranks anything derived from a headline.
+  const Q = window.QUAKES;
+  if(Q && Array.isArray(Q.quakes)){
+    const qcut = Date.now() - 48*60*60*1000;
+    Q.quakes.filter(q=>q.mag>=4.5 && (q.ts||0)>=qcut)
+      .sort((a,b)=>b.mag-a.mag).slice(0,6).forEach(q=>{
+        alerts.push({sev: q.mag>=6?'high':'mid', label:'SEISMIC', fast:true,
+                     title:'M'+q.mag+' — '+q.place+(q.depth!=null?' · depth '+q.depth+' km':'')+
+                           (q.tsunami?' · TSUNAMI FLAG':''),
+                     when: agoLabel(q.ts, Date.now()), src:'USGS', link:q.url||''});
+      });
+  }
   S.news.forEach(it=>{
     const t=(it.title||'').toLowerCase()+' '+(it.region||'').toLowerCase();
     for(const a of ALERT_KEYWORDS){
@@ -745,7 +830,8 @@ function renderAlerts(){
     }
   });
   const sevRank={high:0,mid:1,low:2};
-  const top = alerts.slice(0,14).sort((x,y)=>sevRank[x.sev]-sevRank[y.sev]);
+  // Measured events (seismic) lead the list within their severity band.
+  const top = alerts.slice(0,20).sort((x,y)=>(sevRank[x.sev]-sevRank[y.sev]) || ((y.fast?1:0)-(x.fast?1:0))).slice(0,14);
   const sevTxt={high:'HIGH',mid:'MED',low:'LOW'};
   const cell = a => a.link
     ? `<a class="alert sev-${a.sev} alertlink" href="${esc(a.link)}" target="_blank" rel="noopener">
@@ -950,8 +1036,6 @@ function updateMapSignals(){
       _mapMarkers.push(m);
     }
   });
-  $('#mapCount').textContent = liveCount ? (liveCount+' signal'+(liveCount===1?'':'s')+' live')
-    : 'no regional activity this cycle';
   // NCMEC missing-child (AMBER) icons on the map — drawn on top of the signal hubs.
   const A = window.AMBER && Array.isArray(window.AMBER.cases) ? window.AMBER : null;
   let amberOnMap = 0;
@@ -974,11 +1058,51 @@ function updateMapSignals(){
       }
     });
   }
+  // ── Seismic (USGS) ────────────────────────────────────────────────────────
+  // Real measured events, drawn as dashed rings so they never read as a news
+  // signal hub. Size = magnitude, colour = magnitude band, opacity = age.
+  const Q = window.QUAKES && Array.isArray(window.QUAKES.quakes) ? window.QUAKES : null;
+  let quakeOnMap = 0, quakeMax = 0;
+  if(Q && typeof L !== 'undefined'){
+    const week = Date.now() - 7*24*60*60*1000;
+    const band = q => q.mag >= 5.5 ? '#ef4444' : (q.mag >= 4.2 ? '#f59e0b' : '#38bdf8');
+    Q.quakes.slice()
+      .filter(q => typeof q.lat==='number' && typeof q.lng==='number' && (q.ts||0)>=week)
+      .sort((a,b)=>a.mag-b.mag)          // draw strong events last => on top
+      .forEach(q=>{
+        quakeOnMap++;
+        if(q.mag > quakeMax) quakeMax = q.mag;
+        const ageH = (Date.now()-(q.ts||0))/3600000;
+        const m = L.circleMarker([q.lat,q.lng],{
+          radius: Math.min(4 + (q.mag-2.5)*2.6, 18),
+          color: band(q), weight: 1.6, dashArray: '3,3',
+          fillColor: band(q), fillOpacity: ageH<=6?0.42:(ageH<=24?0.3:0.18)
+        }).addTo(map);
+        const utc = new Date(q.ts).toISOString().replace('T',' ').slice(0,16)+' UTC';
+        m.bindPopup(
+          `<div class="mp-title" style="color:${band(q)}">M${q.mag} earthquake</div>`+
+          `<div style="margin:3px 0 2px">${esc(q.place)}</div>`+
+          `<div class="mp-meta">Depth <b>${q.depth!=null?q.depth+' km':'unknown'}</b> · ${esc(utc)}</div>`+
+          `<div class="mp-meta">${agoLabel(q.ts, Date.now())} ago · USGS event ${esc(q.id||'')}</div>`+
+          (q.tsunami?`<div class="mp-meta" style="color:#ef4444;font-weight:600">⚠ TSUNAMI FLAG SET BY USGS</div>`:'')+
+          (q.alert?`<div class="mp-meta">USGS impact alert: ${esc(q.alert).toUpperCase()}</div>`:'')+
+          (q.url?`<div style="margin-top:6px"><a href="${esc(q.url)}" target="_blank" rel="noopener">USGS event page ↗</a></div>`:''));
+        _mapMarkers.push(m);
+      });
+  }
   $('#mapLegend').innerHTML =
     `<span class="li"><span class="sw" style="background:#22c55e"></span>active</span>`+
     `<span class="li"><span class="sw" style="background:#f59e0b"></span>heightened</span>`+
     `<span class="li"><span class="sw" style="background:#ef4444"></span>elevated</span>`+
+    `<span class="li"><span class="sw quake-sw qk-minor"></span>M2.5–4.2 quake</span>`+
+    `<span class="li"><span class="sw quake-sw qk-mid"></span>M4.2–5.5 quake</span>`+
+    `<span class="li"><span class="sw quake-sw qk-major"></span>M5.5+ quake · USGS</span>`+
     `<span class="li"><span class="sw amber-dot"></span>◉ NCMEC missing-child alert</span>`;
+  const qtxt = quakeOnMap
+    ? ' · '+quakeOnMap+' quake'+(quakeOnMap===1?'':'s')+(quakeMax?' (max M'+quakeMax+')':'')
+    : (Q ? ' · no quakes in window' : '');
+  $('#mapCount').textContent =
+    (liveCount ? liveCount+' signal'+(liveCount===1?'':'s')+' live' : 'no regional activity this cycle') + qtxt;
   const amc = $('#amberMapCount'); if(amc && amberOnMap) amc.textContent = amberOnMap+' on map';
 }
 function wakeMap(){ ensureMap(); if(_map){ _map.invalidateSize(); } updateMapSignals(); }
@@ -1040,7 +1164,7 @@ const GUIDE=[
   {icon:'🛰️',h:'Welcome to World Monitor',p:'Your global intelligence workspace — live markets, geopolitical headlines, world clocks and risk signals synthesized into one screen.'},
   {icon:'📈',h:'Markets',p:'A live watchlist of major crypto assets with real prices, 24h changes and 7-day sparklines — pulled straight from public market data. The top ticker scrolls the full watchlist.'},
   {icon:'🕐',h:'World Clocks',p:'Real-time local time across 16 global cities and UTC — so you always know what hour it is in any major market or capital.'},
-  {icon:'📰',h:'Intel Feed',p:'Live news headlines streamed from public RSS across world, markets, cyber, geopolitics and energy. Alerts auto-classify high-priority items.'},
+  {icon:'📰',h:'Intel Feed',p:'Live headlines from public RSS plus public Telegram, Reddit and X posts — social entries are labelled unverified first reports. Alerts auto-classify high-priority items and lead with measured USGS seismic events.'},
   {icon:'🧭',h:'Use it',p:'Switch sections with the tabs (Markets · Intel · World · Alerts). Live data refreshes automatically. Beta — data may be delayed; verify critical intelligence independently.'},
 ];
 let guideIdx=0;

@@ -331,6 +331,18 @@ a{color:var(--accent);text-decoration:none}
 .amber-marker{z-index:1000}
 .amber-pin{color:var(--amber);font-size:20px;line-height:1;text-shadow:0 0 8px rgba(245,158,11,.85),0 0 2px #000;animation:ambpulse 1.6s infinite}
 .map-legend .amber-dot{width:8px;height:8px;border-radius:2px;transform:rotate(45deg)}
+/* ═══ SEISMIC (USGS) — legend swatches are dashed rings, matching the map markers
+   (a filled disc means a news signal hub; a dashed ring means a measured quake) ═══ */
+.map-legend .quake-sw{background:transparent!important;border:1.6px dashed;border-radius:50%}
+.map-legend .qk-minor{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,.16)}
+.map-legend .qk-mid{border-color:#f59e0b;box-shadow:0 0 0 2px rgba(245,158,11,.16)}
+.map-legend .qk-major{border-color:#ef4444;box-shadow:0 0 0 2px rgba(239,68,68,.18)}
+/* Unverified social items (Telegram / Reddit / X) in the Intel feed: an amber
+   left rule + an explicit 'unverified' chip so they can never be mistaken for
+   edited journalism. */
+.tag.unverified{color:var(--tx-amber);background:var(--bg-amber);letter-spacing:.04em}
+.fitem.social{border-left:2px solid var(--amber);background:linear-gradient(90deg,rgba(245,158,11,.07),transparent 45%)}
+.fitem.social:hover{background:linear-gradient(90deg,rgba(245,158,11,.12),transparent 45%)}
 
 /* ═══ STATUS BAR / FOOTER ═══ */
 .statusbar{max-width:1680px;margin:0 auto;padding:6px 16px 18px}
