@@ -39,16 +39,18 @@ X_MAX_AGE = 7 * 24 * HOUR     # x widget caches vary wildly; 7d keeps the honest
 TG_PER_CH, RD_PER_SUB, X_PER_HANDLE = 6, 4, 5
 
 # ── Telegram: public channels with working t.me/s previews (verified reachable) ──
+# region is always TELEGRAM so the panel labels the platform explicitly; the
+# channel label carries the outlet identity.
 TELEGRAM = [
-    ('intelslava',       'Intel Slava',        'World'),
-    ('rybar',            'Rybar',              'World'),
-    ('nexta_tv',         'NEXTA',              'Europe'),
-    ('DeepStateUA',      'DeepState UA',       'Europe'),
-    ('UNITED24media',    'UNITED24',           'Europe'),
-    ('UkraineNow',       'Ukraine Now',        'Europe'),
-    ('wartranslated',    'War Translated',     'Europe'),
-    ('ClashReport',      'Clash Report',       'World'),
-    ('DDGeopolitics',    'DD Geopolitics',     'World'),
+    ('intelslava',       'Intel Slava',        'TELEGRAM'),
+    ('rybar',            'Rybar',              'TELEGRAM'),
+    ('nexta_tv',         'NEXTA',              'TELEGRAM'),
+    ('DeepStateUA',      'DeepState UA',       'TELEGRAM'),
+    ('UNITED24media',    'UNITED24',           'TELEGRAM'),
+    ('UkraineNow',       'Ukraine Now',        'TELEGRAM'),
+    ('wartranslated',    'War Translated',     'TELEGRAM'),
+    ('ClashReport',      'Clash Report',       'TELEGRAM'),
+    ('DDGeopolitics',    'DD Geopolitics',     'TELEGRAM'),
 ]
 # ── Reddit: one request per combo keeps us far under the public rate limit ──
 REDDIT_COMBOS = [
@@ -85,6 +87,20 @@ def clean(s):
 
 def now_ms():
     return int(time.time() * 1000)
+
+
+# Same narrow topic filter as fetch_news.py: reddit front pages carry sport and
+# showbiz alongside the security/geopolitics beats we want here.
+NOISE_RE = re.compile(
+    r'\b(cricket|football|soccer|nba|nfl|nhl|mlb|tennis|golf|olympics?|ipl|'
+    r'box office|celebrity|horoscope|astrology|beauty pageant|recipe)\b', re.I)
+
+
+def is_noise(title):
+    t = (title or '').strip()
+    if len(t) < 18 or re.fullmatch(r'[\d\s.,%:/\-–—]+', t):
+        return True
+    return bool(NOISE_RE.search(t))
 
 
 # ────────────────────────── TELEGRAM ──────────────────────────
@@ -133,7 +149,7 @@ def fetch_reddit(combo):
                 if lm:
                     link = lm.group(1)
                 um = re.search(r'<updated>(.*?)</updated>', e, re.S)
-                if not title or not um:
+                if not title or not um or is_noise(title):
                     continue
                 try:
                     ts = int(datetime.datetime.strptime(um.group(1)[:19], '%Y-%m-%dT%H:%M:%S')
@@ -196,7 +212,7 @@ def fetch_x(handle):
             continue
         tid = str(t.get('id_str') or t.get('id') or '')
         text = clean(t.get('full_text') or '')
-        if not tid or tid in seen or len(text) < 12:
+        if not tid or tid in seen or len(text) < 12 or NOISE_RE.search(text):
             continue
         seen.add(tid)
         out.append({'title': text[:280], 'source': '@' + handle,

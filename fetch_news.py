@@ -92,6 +92,27 @@ NEWS_FEEDS = [
 # so <published>/<updated> are reachable regardless of ns prefix.
 RSS_NS = '{http://www.w3.org/2005/Atom}'
 
+# Topic noise. The expanded outlet list includes general-interest home feeds (for
+# example Dawn's), whose front page carries sport and showbiz alongside world
+# news. Those items are real, just not intelligence — drop them here so the panel
+# stays an intel board. Deliberately narrow: only unambiguous non-intel beats.
+NOISE_RE = re.compile(
+    r'\b(cricket|football|soccer|nba|nfl|nhl|mlb|tennis|golf|olympics?|ipl|'
+    r'box office|celebrity|horoscope|astrology|beauty pageant|recipe|'
+    r'movie review|tv review|royal wedding)\b', re.I)
+
+
+def is_noise(title):
+    """True for items we never want on an intelligence board: junk/short titles
+    (bare numbers, nav text) and unambiguous sport/showbiz filler."""
+    t = (title or '').strip()
+    if len(t) < 18:
+        return True
+    if re.fullmatch(r'[\d\s.,%:/\-–—]+', t):
+        return True
+    return bool(NOISE_RE.search(t))
+
+
 def fetch(url):
     req = urllib.request.Request(url, headers=UA)
     with urllib.request.urlopen(req, timeout=25) as r:
@@ -175,6 +196,7 @@ def main():
             parsed = []   # a dead feed must not kill the pass
             if verbose:
                 print('  DEAD  %-18s %s' % (f['src'], str(e)[:60]))
+        parsed = [p for p in parsed if not is_noise(p['title'])]
         if parsed:
             src_ok += 1
         elif verbose:
