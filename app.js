@@ -80,6 +80,132 @@ async function proxied(url){
 /* ───────── app state ───────── */
 const S = { coins: [], news: [], online: false, lastFetch: 0 };
 
+/* ══════════════ 0. SETTINGS (localStorage, client-side only) ══════════════ */
+// Every option lives in the browser — no account, no backend, nothing to sync.
+// Display options are applied as classes on <body>; content and map-layer options
+// are read directly by the render functions, so flipping one never has to re-fetch
+// anything. This block is deliberately first so SET exists before any render runs.
+const SETTINGS_KEY = 'wm_settings_v1';
+const SETTINGS_DEFS = [
+  { group:'Display', opts:[
+    { k:'fx',     lab:'HUD effects',     hint:'Corner brackets, glows and the header scan sweep' },
+    { k:'motion', lab:'Motion',          hint:'Animated live pulse and scrolling market ticker' },
+    { k:'grid',   lab:'Grid backdrop',   hint:'44px technical grid behind the panels' },
+    { k:'dense',  lab:'Compact density', hint:'Tighter feed, alert and tile spacing' },
+  ]},
+  { group:'Intel sources', opts:[
+    { k:'tg',     lab:'Telegram',    hint:'Public channel previews · unverified first reports' },
+    { k:'reddit', lab:'Reddit',      hint:'Public subreddit feeds · unverified first reports' },
+    { k:'x',      lab:'X / Twitter', hint:'Public timeline widget — cached per handle' },
+  ]},
+  { group:'Map layers', opts:[
+    { k:'quakes', lab:'Seismic activity',   hint:'Live USGS — dashed magnitude rings, M2.5+' },
+    { k:'amber',  lab:'Missing-child pins', hint:'NCMEC alert cases (US-anchored registry)' },
+  ]},
+];
+const SETTINGS_SEGS = [
+  { k:'view',    lab:'Default view',    hint:'Section shown when the page opens', vals:[
+      ['markets','Markets'],['intel','Intel'],['prophecy','Prophecy'],['world','World'],['alerts','Alerts'] ] },
+  { k:'clock24', lab:'Clock format',    hint:'World clocks and the UTC readout', vals:[
+      [true,'24h'],[false,'12h'] ] },
+  { k:'refresh', lab:'Intel refresh',   hint:'How often the feed re-reads the snapshot', vals:[
+      [0,'Off'],[120000,'2 min'],[300000,'5 min'],[900000,'15 min'] ] },
+];
+const SETTINGS_DEFAULTS = { fx:true, motion:true, grid:true, dense:false,
+  tg:true, reddit:true, x:true, quakes:true, amber:true,
+  regions:[], view:'markets', clock24:true, refresh:120000 };
+let SET = (function(){
+  try{ return Object.assign({}, SETTINGS_DEFAULTS, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
+  catch(e){ return Object.assign({}, SETTINGS_DEFAULTS); }   // corrupt/blocked storage -> defaults
+})();
+function saveSettings(){ try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(SET)); }catch(e){} }
+// a platform toggle silences that whole source (region tag doubles as the platform id)
+function platformEnabled(region){
+  if(region === 'TELEGRAM') return !!SET.tg;
+  if(region === 'REDDIT')   return !!SET.reddit;
+  if(region === 'X')        return !!SET.x;
+  return true;
+}
+function regionOptions(){
+  return [...new Set(NEWS_FEEDS.map(f=>f.region).concat(['TELEGRAM','REDDIT','X']))];
+}
+let _refreshTimer = null;
+function restartRefresh(){
+  if(_refreshTimer){ clearInterval(_refreshTimer); _refreshTimer = null; }
+  if(SET.refresh > 0) _refreshTimer = setInterval(loadNews, SET.refresh);
+}
+function applySettings(){
+  const b = document.body;
+  b.classList.toggle('fx-off',     !SET.fx);
+  b.classList.toggle('motion-off', !SET.motion);
+  b.classList.toggle('grid-off',   !SET.grid);
+  b.classList.toggle('dense',      !!SET.dense);
+  try{ loadNews(); }catch(e){ /* panel not built yet */ }
+  try{ if(_map) updateMapSignals(); }catch(e){}
+  try{ tickClocks(); }catch(e){}
+  restartRefresh();
+  const st = $('#settingsSaved');
+  if(st) st.textContent = 'saved ' + new Date().toLocaleTimeString('en-GB');
+}
+function renderSettings(){
+  const sw = o => `<label class="switch">
+      <span class="setlab"><b>${esc(o.lab)}</b><i>${esc(o.hint)}</i></span>
+      <input type="checkbox" data-opt="${o.k}" ${SET[o.k] ? 'checked' : ''}>
+      <span class="track" aria-hidden="true"></span>
+    </label>`;
+  let html = SETTINGS_DEFS.map(g =>
+    `<div class="setgrp"><h3>${esc(g.group)}</h3>${g.opts.map(sw).join('')}</div>`).join('');
+  html += `<div class="setgrp"><h3>Focus regions</h3>
+    <div class="chips">${regionOptions().map(r =>
+      `<button class="chip${SET.regions.indexOf(r) >= 0 ? ' on' : ''}" data-region="${esc(r)}">${esc(r)}</button>`).join('')}</div>
+    <div class="sethint">Nothing selected = every region. A selection filters the Intel feed and the map's news signals.</div></div>`;
+  html += `<div class="setgrp"><h3>Behaviour</h3>` + SETTINGS_SEGS.map(s =>
+    `<div class="setrow"><span class="setlab"><b>${esc(s.lab)}</b><i>${esc(s.hint)}</i></span>
+      <span class="seg" data-seg="${s.k}">${s.vals.map(([v, l]) =>
+        `<button data-val="${v}" class="${String(SET[s.k]) === String(v) ? 'on' : ''}">${esc(l)}</button>`).join('')}</span>
+    </div>`).join('') + `</div>`;
+  $('#settingsBody').innerHTML = html;
+}
+function bindSettings(){
+  const modal = $('#settings'), panel = $('#settingsBody');
+  const close = () => { modal.hidden = true; };
+  const open  = () => { renderSettings(); modal.hidden = false; };
+  $('#settingsBtn').addEventListener('click', open);
+  $('#closeSettings').addEventListener('click', close);
+  $('#doneSettings').addEventListener('click', close);
+  modal.addEventListener('click', e => { if(e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && !modal.hidden) close(); });
+  $('#resetSettings').addEventListener('click', () => {
+    SET = Object.assign({}, SETTINGS_DEFAULTS);
+    saveSettings(); renderSettings(); applySettings();
+  });
+  panel.addEventListener('change', e => {
+    const k = e.target && e.target.dataset ? e.target.dataset.opt : null;
+    if(!k) return;
+    SET[k] = e.target.checked;
+    saveSettings(); applySettings();
+  });
+  panel.addEventListener('click', e => {
+    const chip = e.target.closest && e.target.closest('.chip');
+    if(chip){
+      const r = chip.dataset.region, i = SET.regions.indexOf(r);
+      if(i >= 0) SET.regions.splice(i, 1); else SET.regions.push(r);
+      chip.classList.toggle('on', SET.regions.indexOf(r) >= 0);
+      saveSettings(); applySettings();
+      return;
+    }
+    const segBtn = e.target.closest && e.target.closest('.seg button');
+    if(segBtn){
+      const seg = segBtn.closest('.seg'), k = seg.dataset.seg, raw = segBtn.dataset.val;
+      const d = SETTINGS_DEFAULTS[k];
+      SET[k] = (typeof d === 'boolean') ? (raw === 'true') : (typeof d === 'number' ? Number(raw) : raw);
+      saveSettings();
+      seg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === segBtn));
+      applySettings();
+    }
+  });
+}
+
 function setStatus(ok, label){
   const el = $('#connStatus');
   el.className = 'conn mono ' + (ok?'ok':'bad');
@@ -97,14 +223,16 @@ const ZONES = [
   ['Sydney','Australia/Sydney'], ['Auckland','Pacific/Auckland'],
 ];
 function zoneFmt(zone, now){
-  const opts = { timeZone: zone, hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false };
-  const time = new Intl.DateTimeFormat('en-GB', opts).format(now);
+  const h12 = !SET.clock24;
+  const opts = { timeZone: zone, hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:h12 };
+  const time = new Intl.DateTimeFormat(h12 ? 'en-US' : 'en-GB', opts).format(now);
   const day = new Intl.DateTimeFormat('en-GB', { timeZone: zone, weekday:'short' }).format(now);
   return { time, day };
 }
 function tickClocks(){
   const now = new Date();
-  $('#utcClock').textContent = new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now) + ' UTC';
+  $('#utcClock').textContent = new Intl.DateTimeFormat(SET.clock24 ? 'en-GB' : 'en-US',
+    {timeZone:'UTC',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:!SET.clock24}).format(now) + ' UTC';
   const g = $('#clockgrid');
   g.innerHTML = ZONES.map(([city,zone])=>{
     const {time,day} = zoneFmt(zone, now);
@@ -662,6 +790,7 @@ function loadSocialFromSnapshot(){
   const now = Date.now();
   return D.items
     .filter(it => it && it.title)
+    .filter(it => platformEnabled(it.region))      // Settings: per-platform switches
     .filter(it => (now - (it.ts||0)) <= (SOCIAL_MAX_AGE[it.region] || 48*60*60*1000))
     .map(it => ({ title: it.title, source: it.source, link: it.link, ts: it.ts,
                   region: it.region || 'SOCIAL', src: it.src || it.source || 'Social',
@@ -741,8 +870,16 @@ async function loadNews(){
     const recent = items.filter(it=> it.platform || it.ts>=cutoff)
       .sort((a,b)=>b.ts-a.ts)
       .filter(it=>{ const k=(it.title||'').toLowerCase().trim(); if(!k||seen.has(k)) return false; seen.add(k); return true; });
-    S.news = balancedFeed(recent.length ? recent : items.slice().sort((a,b)=>b.ts-a.ts), 3, 90);
-    $('#intelSrc').textContent = 'LIVE · ' + (via || 'FEED');
+    // Region focus (Settings): filtered before the balanced selection so a chosen
+    // subset still gets one slot per source rather than surviving on luck. An empty
+    // selection means "everything".
+    const pool = SET.regions.length ? recent.filter(it=>SET.regions.indexOf(it.region || 'News') >= 0) : recent;
+    S.news = balancedFeed(pool.length ? pool : recent, 3, 90);
+    if(SET.regions.length && !pool.length){
+      $('#intelSrc').textContent = 'LIVE · NO ITEMS IN FOCUS REGIONS';
+    }else{
+      $('#intelSrc').textContent = 'LIVE · ' + (via || 'FEED') + (SET.regions.length ? ' · FOCUS' : '');
+    }
     setStatus(true, 'STATUS: ONLINE — MARKETS + INTEL LIVE');
   }
   $('#feedFresh').textContent = 'updated '+new Date().toLocaleTimeString('en-GB');
@@ -1037,7 +1174,7 @@ function updateMapSignals(){
     }
   });
   // NCMEC missing-child (AMBER) icons on the map — drawn on top of the signal hubs.
-  const A = window.AMBER && Array.isArray(window.AMBER.cases) ? window.AMBER : null;
+  const A = (SET.amber && window.AMBER && Array.isArray(window.AMBER.cases)) ? window.AMBER : null;
   let amberOnMap = 0;
   if(A && typeof L !== 'undefined'){
     const amberIcon = L.divIcon({ className:'amber-marker', html:'<span class="amber-pin">◉</span>', iconSize:[22,22], iconAnchor:[11,11], popupAnchor:[0,-12] });
@@ -1061,7 +1198,7 @@ function updateMapSignals(){
   // ── Seismic (USGS) ────────────────────────────────────────────────────────
   // Real measured events, drawn as dashed rings so they never read as a news
   // signal hub. Size = magnitude, colour = magnitude band, opacity = age.
-  const Q = window.QUAKES && Array.isArray(window.QUAKES.quakes) ? window.QUAKES : null;
+  const Q = (SET.quakes && window.QUAKES && Array.isArray(window.QUAKES.quakes)) ? window.QUAKES : null;
   let quakeOnMap = 0, quakeMax = 0;
   if(Q && typeof L !== 'undefined'){
     const week = Date.now() - 7*24*60*60*1000;
@@ -1090,17 +1227,25 @@ function updateMapSignals(){
         _mapMarkers.push(m);
       });
   }
-  $('#mapLegend').innerHTML =
-    `<span class="li"><span class="sw" style="background:#22c55e"></span>active</span>`+
-    `<span class="li"><span class="sw" style="background:#f59e0b"></span>heightened</span>`+
-    `<span class="li"><span class="sw" style="background:#ef4444"></span>elevated</span>`+
-    `<span class="li"><span class="sw quake-sw qk-minor"></span>M2.5–4.2 quake</span>`+
-    `<span class="li"><span class="sw quake-sw qk-mid"></span>M4.2–5.5 quake</span>`+
-    `<span class="li"><span class="sw quake-sw qk-major"></span>M5.5+ quake · USGS</span>`+
-    `<span class="li"><span class="sw amber-dot"></span>◉ NCMEC missing-child alert</span>`;
-  const qtxt = quakeOnMap
-    ? ' · '+quakeOnMap+' quake'+(quakeOnMap===1?'':'s')+(quakeMax?' (max M'+quakeMax+')':'')
-    : (Q ? ' · no quakes in window' : '');
+  // Legend is assembled from whichever layers are actually switched on (Settings).
+  const leg = [
+    `<span class="li"><span class="sw" style="background:#22c55e"></span>active</span>`,
+    `<span class="li"><span class="sw" style="background:#f59e0b"></span>heightened</span>`,
+    `<span class="li"><span class="sw" style="background:#ef4444"></span>elevated</span>`,
+  ];
+  if(SET.quakes){
+    leg.push(`<span class="li"><span class="sw quake-sw qk-minor"></span>M2.5–4.2 quake</span>`,
+             `<span class="li"><span class="sw quake-sw qk-mid"></span>M4.2–5.5 quake</span>`,
+             `<span class="li"><span class="sw quake-sw qk-major"></span>M5.5+ quake · USGS</span>`);
+  }
+  if(SET.amber){
+    leg.push(`<span class="li"><span class="sw amber-dot"></span>◉ NCMEC missing-child alert</span>`);
+  }
+  $('#mapLegend').innerHTML = leg.join('');
+  const qtxt = !SET.quakes ? ''
+    : (quakeOnMap
+        ? ' · '+quakeOnMap+' quake'+(quakeOnMap===1?'':'s')+(quakeMax?' (max M'+quakeMax+')':'')
+        : (Q ? ' · no quakes in window' : ''));
   $('#mapCount').textContent =
     (liveCount ? liveCount+' signal'+(liveCount===1?'':'s')+' live' : 'no regional activity this cycle') + qtxt;
   const amc = $('#amberMapCount'); if(amc && amberOnMap) amc.textContent = amberOnMap+' on map';
@@ -1165,7 +1310,7 @@ const GUIDE=[
   {icon:'📈',h:'Markets',p:'A live watchlist of major crypto assets with real prices, 24h changes and 7-day sparklines — pulled straight from public market data. The top ticker scrolls the full watchlist.'},
   {icon:'🕐',h:'World Clocks',p:'Real-time local time across 16 global cities and UTC — so you always know what hour it is in any major market or capital.'},
   {icon:'📰',h:'Intel Feed',p:'Live headlines from public RSS plus public Telegram, Reddit and X posts — social entries are labelled unverified first reports. Alerts auto-classify high-priority items and lead with measured USGS seismic events.'},
-  {icon:'🧭',h:'Use it',p:'Switch sections with the tabs (Markets · Intel · World · Alerts). Live data refreshes automatically. Beta — data may be delayed; verify critical intelligence independently.'},
+  {icon:'🧭',h:'Use it',p:'Switch sections with the tabs (Markets · Intel · World · Alerts). ⚙ Settings controls the look (HUD effects, motion, density), which sources feed the Intel panel, the map layers, focus regions, clock format and refresh rate — all stored in your browser only. Live data refreshes automatically. Beta — verify critical intelligence independently.'},
 ];
 let guideIdx=0;
 function openGuide(){ $('#welcome').hidden=false; renderGuide(); }
@@ -1184,9 +1329,14 @@ function closeGuide(){ $('#welcome').hidden=true; }
 
 /* ══════════════ TABS ══════════════ */
 function bindTabs(){
-  $$('.tab').forEach(t=>{
+  // Scope to the nav strip: the Settings/Help buttons also carry the `tab` class
+  // for styling, and binding them here made a click on either one clear the
+  // active tab and hide every view (dataset.view is undefined, so the toggle
+  // matched nothing) — the dashboard went blank until a real tab was clicked.
+  $$('.tabs .tab').forEach(t=>{
+    if(!t.dataset.view) return;
     t.addEventListener('click',()=>{
-      $$('.tab').forEach(x=>{x.classList.remove('is-active');x.setAttribute('aria-selected','false')});
+      $$('.tabs .tab').forEach(x=>{x.classList.remove('is-active');x.setAttribute('aria-selected','false')});
       t.classList.add('is-active');t.setAttribute('aria-selected','true');
       const v=t.dataset.view;
       $$('.view').forEach(s=>s.classList.toggle('is-active', s.id==='view-'+v));
@@ -1200,8 +1350,9 @@ function bindTabs(){
 /* ══════════════ BOOT ══════════════ */
 function boot(){
   bindTabs();
-  // honor #view hash for initial section
-  const want = (location.hash||'').replace('#','');
+  bindSettings();
+  // honor #view hash first, then the saved default view from Settings
+  const want = (location.hash||'').replace('#','') || SET.view;
   if(['markets','intel','prophecy','world','alerts'].includes(want)){
     const t=$(`.tab[data-view=${want}]`);
     if(t){ $$('.tab').forEach(x=>{x.classList.remove('is-active');x.setAttribute('aria-selected','false')});
@@ -1214,7 +1365,7 @@ function boot(){
   tickClocks(); setInterval(tickClocks,1000);
   renderAmber();   // NCMEC amber panel renders from committed snapshot — independent of news fetch
   loadMarkets(); setInterval(loadMarkets,60000);
-  loadNews(); setInterval(loadNews,120000);   // intel refresh ~2m so headlines stay live
+  applySettings();   // saved display classes + first feed render + refresh timer
   loadPrediction(); setInterval(loadPrediction,300000);
   loadFX(); setInterval(loadFX,300000);
   renderFiatleak(); setInterval(refreshFiatleak,1800000);   // refresh fiatleak.js hourly data

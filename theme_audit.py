@@ -21,15 +21,47 @@ window.addEventListener('load', () => setTimeout(() => {
   const parse = c => { const m = (c||'').match(/rgba?\(([^)]+)\)/); if(!m) return null;
     const p = m[1].split(',').map(Number);
     return {r:p[0], g:p[1], b:p[2], a: p.length>3 ? p[3] : 1}; };
+  const stops = c => { const m = (c||'').match(/rgba?\([^)]*\)/g); return m ? m.map(parse).filter(Boolean) : []; };
+  const over = (c, acc) => ({ r:c.r*c.a + acc.r*(1-c.a), g:c.g*c.a + acc.g*(1-c.a), b:c.b*c.a + acc.b*(1-c.a) });
+  // Composited background *candidates*. Glass panels are only half the story: the
+  // settings controls sit on `background-image` gradients, which have no
+  // backgroundColor at all — reading only the colour channel reported a bogus 1.04
+  // for dark-on-cyan segmented buttons. Each gradient contributes its stops as
+  // candidate backgrounds and the caller takes the worst contrast.
+  //
+  // Gradient alpha matters: the page backdrop is six mostly-transparent gradient
+  // layers, so treating them as opaque surfaces (alpha forced to 1) invented a
+  // bright surface behind every panel and failed the whole page. Only layers that
+  // actually paint are composited, each stop over the surface *beneath* the layer.
   const bgOf = el => {
     const stack = []; for(let n = el; n; n = n.parentElement) stack.push(n);
     stack.reverse();
     let acc = {r:3, g:6, b:13};
+    const cands = [];
     for(const n of stack){
-      const c = parse(getComputedStyle(n).backgroundColor);
-      if(c && c.a > 0.001) acc = { r:c.r*c.a + acc.r*(1-c.a), g:c.g*c.a + acc.g*(1-c.a), b:c.b*c.a + acc.b*(1-c.a) };
+      const cs2 = getComputedStyle(n);
+      const c = parse(cs2.backgroundColor);
+      if(c && c.a > 0.001) acc = over(c, acc);
+      const gs = stops(cs2.backgroundImage);
+      if(gs.length){
+        const beneath = acc;
+        // Only the element's OWN gradient is a surface it sits on. Ancestor
+        // gradients are decorative backdrop layers (page aurora, card-head wash)
+        // that a panel already covers — treating their faint stops as candidate
+        // surfaces failed the whole page on a nearly-invisible violet tint that
+        // is only ever visible at the page edges.
+        if(n === el) gs.forEach(st => { if(st.a > 0.05) cands.push(over(st, beneath)); });
+        const meanA = gs.reduce((s, x) => s + x.a, 0) / gs.length;
+        if(meanA > 0.05){
+          const avg = { r: gs.reduce((s, x) => s + x.r, 0)/gs.length,
+                        g: gs.reduce((s, x) => s + x.g, 0)/gs.length,
+                        b: gs.reduce((s, x) => s + x.b, 0)/gs.length, a: meanA };
+          acc = over(avg, acc);
+        }
+      }
     }
-    return acc;
+    cands.push(acc);
+    return cands;
   };
   const lum = c => { const f = v => { v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); };
     return 0.2126*f(c.r)+0.7152*f(c.g)+0.0722*f(c.b); };
@@ -43,22 +75,34 @@ window.addEventListener('load', () => setTimeout(() => {
     '.region .rl','.alert .atitle','.alert .asrc','.alert .at','.alert .sev','.prop .ptitle','.ptext',
     '.brief-body','.brief-note','.foot-note','.conn','.donateaddr .ad','.ticker-inner','.tk .up','.tk .dn',
     '.ph','.muted','.map-legend','.goldtile .gp','.goldtile .gn','.pq','.pmeta','.flmh','.flchip','.flprice',
-    '.pill.up','.pill.watch','.badge.dang','.pcov','.ambernote','.ammeta','.amsrc','.utc','.beta','.live'];
+    '.pill.up','.pill.watch','.badge.dang','.pcov','.ambernote','.ammeta','.amsrc','.utc','.beta','.live',
+    // settings panel
+    '.setgrp h3','.switch .setlab b','.switch .setlab i','.seg button','.seg button.on','.chip','.chip.on',
+    '.sethint','#settingsSaved'];
+
+  // the settings panel is rendered on open — build it so its styles are auditable too
+  const sb = document.querySelector('#settingsBtn');
+  if(sb) sb.click();
 
   const rows = [], missing = [];
   for(const s of SEL){
     const el = document.querySelector(s);
     if(!el){ missing.push(s); continue; }
     const cs = getComputedStyle(el);
-    const fg = parse(cs.color), bg = bgOf(el);
+    const fg = parse(cs.color);
     if(!fg) continue;
-    const blended = { r: fg.r*fg.a + bg.r*(1-fg.a), g: fg.g*fg.a + bg.g*(1-fg.a), b: fg.b*fg.a + bg.b*(1-fg.a) };
-    const r = ratio(blended, bg);
+    const cands = bgOf(el);
+    let r = Infinity, used = cands[cands.length - 1];
+    for(const bg of cands){
+      const blended = { r: fg.r*fg.a + bg.r*(1-fg.a), g: fg.g*fg.a + bg.g*(1-fg.a), b: fg.b*fg.a + bg.b*(1-fg.a) };
+      const v = ratio(blended, bg);
+      if(v < r){ r = v; used = bg; }          // worst-case surface wins
+    }
     const size = parseFloat(cs.fontSize), weight = parseInt(cs.fontWeight)||400;
     const large = size >= 18.66 || (size >= 14 && weight >= 700);
     const need = large ? 3 : 4.5;
     rows.push([s, r.toFixed(2), (r >= need ? 'PASS' : (r >= need - 1.2 ? 'WARN' : 'FAIL')),
-               cs.fontSize+'/'+cs.fontWeight, 'rgb('+Math.round(bg.r)+','+Math.round(bg.g)+','+Math.round(bg.b)+')'].join(' | '));
+               cs.fontSize+'/'+cs.fontWeight, 'rgb('+Math.round(used.r)+','+Math.round(used.g)+','+Math.round(used.b)+')'].join(' | '));
   }
 
   const de = document.documentElement;

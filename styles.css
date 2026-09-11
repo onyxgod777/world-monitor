@@ -43,6 +43,10 @@
   --bg-gray:rgba(148,163,184,.13); --tx-gray:#bcc9dd;
 
   --radius:11px;
+  /* backdrop layers as tokens so the Settings panel can switch them off */
+  --grid-a:linear-gradient(rgba(110,168,254,.055) 1px,transparent 1px);
+  --grid-b:linear-gradient(90deg,rgba(110,168,254,.055) 1px,transparent 1px);
+  --fade:linear-gradient(180deg,transparent 0%,rgba(3,6,13,.75) 88%,var(--bg) 100%);
   --sans:'Inter',ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
 }
@@ -52,9 +56,9 @@ body{
   /* layered backdrop: bottom fade, 44px HUD grid, two aurora blooms */
   background-color:var(--bg);
   background-image:
-    linear-gradient(180deg,transparent 0%,rgba(3,6,13,.75) 88%,var(--bg) 100%),
-    linear-gradient(rgba(110,168,254,.055) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(110,168,254,.055) 1px,transparent 1px),
+    var(--fade),
+    var(--grid-a),
+    var(--grid-b),
     radial-gradient(900px 520px at 10% -12%,rgba(110,168,254,.14),transparent 68%),
     radial-gradient(760px 440px at 92% -6%,rgba(34,211,238,.11),transparent 68%),
     radial-gradient(1100px 760px at 50% 118%,rgba(139,92,246,.08),transparent 72%);
@@ -701,6 +705,92 @@ a:hover{text-shadow:0 0 10px var(--glow)}
 .flprice .fls{font-family:var(--sans);font-weight:700;letter-spacing:.04em}
 .flprice b{color:var(--text);font-weight:600}
 .muted{color:var(--faint)}
+
+/* ═══════════════════════════════════════════════════════════
+   SETTINGS PANEL — switches, chips, segmented controls.
+   Rendered from SETTINGS_DEFS in app.js; state lives in localStorage.
+   ═══════════════════════════════════════════════════════════ */
+.setmodal{width:min(640px,94vw)}
+.setbody{min-height:0;max-height:min(64vh,640px);overflow:auto;padding:6px 18px 16px}
+.setgrp{margin-top:14px}
+.setgrp:first-child{margin-top:4px}
+.setgrp>h3{
+  margin:0 0 4px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);text-shadow:0 0 12px var(--glow);display:flex;align-items:center;gap:8px;
+}
+.setgrp>h3::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--line2),transparent)}
+
+.switch{position:relative;display:flex;align-items:center;gap:12px;padding:9px 2px;cursor:pointer;
+  border-bottom:1px solid rgba(110,168,254,.07)}
+.setgrp .switch:last-of-type{border-bottom:none}
+.switch:hover .setlab b{color:var(--text)}
+.switch .setlab{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.switch .setlab b{font-size:13px;font-weight:600;color:var(--text-dim);transition:color .15s}
+.switch .setlab i{font-style:normal;font-size:10.5px;color:var(--faint);line-height:1.4}
+.switch input{position:absolute;opacity:0;width:1px;height:1px;margin:0}
+.switch .track{
+  position:relative;flex:0 0 auto;width:40px;height:21px;border-radius:999px;
+  background:rgba(3,6,13,.9);border:1px solid var(--line2);
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.65);transition:background .18s,border-color .18s,box-shadow .18s;
+}
+.switch .track::after{
+  content:'';position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;
+  background:var(--muted);transition:left .18s,background .18s,box-shadow .18s;
+}
+.switch input:checked+.track{
+  background:linear-gradient(90deg,var(--accent-2),var(--accent));border-color:transparent;
+  box-shadow:0 0 16px -4px var(--glow-2),inset 0 1px 3px rgba(0,0,0,.35);
+}
+.switch input:checked+.track::after{left:22px;background:#04121c;box-shadow:0 0 8px rgba(4,18,28,.9)}
+.switch input:focus-visible+.track{outline:2px solid var(--accent-2);outline-offset:2px}
+
+.setrow{display:flex;align-items:center;gap:12px;padding:9px 2px}
+.setrow .setlab{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.setrow .setlab b{font-size:13px;font-weight:600;color:var(--text-dim)}
+.setrow .setlab i{font-style:normal;font-size:10.5px;color:var(--faint);line-height:1.4}
+.seg{display:inline-flex;flex:0 0 auto;border:1px solid var(--line);border-radius:8px;overflow:hidden;
+  background:rgba(3,6,13,.6)}
+.seg button{
+  appearance:none;border:none;background:transparent;color:var(--muted);cursor:pointer;
+  font:600 11px/1 var(--sans);letter-spacing:.06em;padding:8px 11px;transition:color .15s,background .15s;
+}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button:hover{color:var(--text-dim);background:rgba(110,168,254,.07)}
+.seg button.on{color:#04121c;background:linear-gradient(180deg,var(--accent-2),var(--accent));
+  box-shadow:0 0 16px -6px var(--glow-2)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:2px 2px 4px}
+.chip{
+  appearance:none;cursor:pointer;font:600 10.5px/1 var(--sans);letter-spacing:.05em;
+  padding:6px 10px;border-radius:999px;color:var(--muted);
+  background:rgba(3,6,13,.55);border:1px solid var(--line);transition:.15s;
+}
+.chip:hover{color:var(--text-dim);border-color:var(--line2)}
+.chip.on{color:#04121c;background:linear-gradient(180deg,var(--accent-2),var(--accent));border-color:transparent;
+  box-shadow:0 0 14px -5px var(--glow-2)}
+.sethint{font-size:10.5px;color:var(--faint);padding:2px 2px 0;line-height:1.5}
+#settingsSaved{color:var(--accent-2);opacity:.85}
+
+/* ── option states toggled by applySettings() on <body> ── */
+body.grid-off{--grid-a:none;--grid-b:none}
+body.fx-off .card::before,body.fx-off .card::after{display:none}
+body.fx-off *{text-shadow:none!important}
+body.fx-off .card{backdrop-filter:none;-webkit-backdrop-filter:none}
+body.fx-off .card-head h2::before{background:var(--line2);box-shadow:none}
+body.fx-off .card-head .src::before{box-shadow:none}
+body.fx-off .tab::after{box-shadow:none}
+body.fx-off .riskfill,body.fx-off .pbar .yes{box-shadow:none}
+body.fx-off .logo{filter:none}
+body.dense .fitem{padding:7px 10px}
+body.dense .fitem .ftitle{font-size:13px}
+body.dense .fitem .fmeta{margin-top:3px}
+body.dense .alert{padding:10px 14px}
+body.dense .prow{padding:8px 11px}
+body.dense .amberitem{padding:8px 12px}
+body.dense .feed{max-height:560px}
+body.dense .clock,.dense .tile{padding:9px 10px}
+body.motion-off .topbar::after,body.motion-off .pulse,body.motion-off .amber-pin,
+body.motion-off .amberglyph,body.motion-off .led.a{animation:none!important}
+body.motion-off .ticker-inner{animation-play-state:paused}
 
 /* ═══════════════════════════════════════════════════════════
    MOTION + FALLBACKS
