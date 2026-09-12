@@ -41,12 +41,23 @@ jobs:
           python-version: '3.12'
 
       # Each fetcher exits non-zero when a source yields nothing (it refuses to
-      # clobber a good snapshot with an empty one). Let the others still run.
+      # clobber a good snapshot with an empty one). Let the others still run, but
+      # record how many failed so the run itself reports a runner-side outage.
       - name: Generate snapshots
+        id: fetch
         run: |
           set +e
-          python3 fetch_quakes.py;  echo "quakes exit=$?"
-          python3 fetch_floods.py;  echo "floods exit=$?"
+          fail=0
+          python3 fetch_quakes.py || fail=$((fail+1))
+          python3 fetch_floods.py || fail=$((fail+1))
+          echo "failed=$fail" >> "$GITHUB_OUTPUT"
+          echo "--- produced ---"
+          grep -o '"_updated": "[^"]*"' quakes.js floods.js 2>/dev/null | head
+          if [ "$fail" -ge 2 ]; then
+            echo "::error::every fetcher failed — the runner could not reach any source"
+            exit 1
+          fi
+          [ "$fail" -gt 0 ] && echo "::warning::$fail fetcher(s) hit an unreachable/empty source this cycle"
 
       - name: Commit and push when changed
         run: |

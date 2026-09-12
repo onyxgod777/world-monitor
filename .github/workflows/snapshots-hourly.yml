@@ -36,13 +36,24 @@ jobs:
           python-version: '3.12'
 
       # A source that yields nothing must not stop the other fetchers; each one
-      # refuses to overwrite its snapshot with empty data on its own.
+      # refuses to overwrite its snapshot with empty data on its own. Record how
+      # many failed so an all-sources outage shows up as a red run.
       - name: Generate snapshots
+        id: fetch
         run: |
           set +e
-          python3 fetch_news.py;      echo "news exit=$?"
-          python3 fetch_fiatleak.py;  echo "fiatleak exit=$?"
-          python3 fetch_social.py;    echo "social exit=$?"
+          fail=0
+          python3 fetch_news.py     || fail=$((fail+1))
+          python3 fetch_fiatleak.py || fail=$((fail+1))
+          python3 fetch_social.py   || fail=$((fail+1))
+          echo "failed=$fail" >> "$GITHUB_OUTPUT"
+          echo "--- produced ---"
+          grep -o '"_updated": "[^"]*"' news.js fiatleak.js social.js 2>/dev/null | head
+          if [ "$fail" -ge 3 ]; then
+            echo "::error::every fetcher failed — the runner could not reach any source"
+            exit 1
+          fi
+          [ "$fail" -gt 0 ] && echo "::warning::$fail fetcher(s) hit an unreachable/empty source this cycle"
 
       - name: Commit and push when changed
         run: |

@@ -35,10 +35,20 @@ jobs:
           python-version: '3.12'
 
       - name: Generate snapshots
+        id: fetch
         run: |
           set +e
-          python3 fetch_amber.py;     echo "amber exit=$?"
-          python3 fetch_outbreaks.py; echo "outbreaks exit=$?"
+          fail=0
+          python3 fetch_amber.py     || fail=$((fail+1))
+          python3 fetch_outbreaks.py || fail=$((fail+1))
+          echo "failed=$fail" >> "$GITHUB_OUTPUT"
+          echo "--- produced ---"
+          grep -o '"_updated": "[^"]*"' amber.js outbreaks.js 2>/dev/null | head
+          if [ "$fail" -ge 2 ]; then
+            echo "::error::every fetcher failed — the runner could not reach any source"
+            exit 1
+          fi
+          [ "$fail" -gt 0 ] && echo "::warning::$fail fetcher(s) hit an unreachable/empty source this cycle"
 
       - name: Commit and push when changed
         run: |
