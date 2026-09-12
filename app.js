@@ -1106,33 +1106,38 @@ function renderOutbreaks(){
 // derived — never presented as an official government readiness level.
 function renderDefcon(){
   const body = $('#defconbody'); if(!body) return;
-  const F = window.FLOODS || {}, Q = window.QUAKES || {};
-  const fRed = F.red || 0, fOrg = F.orange || 0;
-  const floodPts = Math.min(30, fRed * 7 + fOrg * 1.5);
+  const F = window.FLOODS || {}, Q = window.QUAKES || {}, OB = window.OUTBREAKS || {};
   const now = Date.now(), wk = 7 * 24 * 3600e3;
+  // Each sub-index is normalised to 0..1 so one busy feed (e.g. a quiet-season
+  // quake count) cannot saturate the gauge on its own. Weighted, then scaled.
+  const fRed = F.red || 0, fOrg = F.orange || 0;
+  const floodIdx = Math.min(1, fRed / 20 + fOrg / 60);
+
   const qs = (Q.quakes || []).filter(q => (q.ts || 0) >= now - wk);
   const maxQ = qs.reduce((m, q) => Math.max(m, q.mag || 0), 0);
   const big = qs.filter(q => (q.mag || 0) >= 5.5).length;
-  const quakePts = Math.min(30, Math.max(0, (maxQ - 4.0)) * 8 + big * 3);
-  let high = 0;
-  (S.news || []).forEach(n => {
-    const t = ((n.title || '') + ' ' + (n.region || '')).toLowerCase();
-    if(/cyber|hack|breach|ransom|war|milit|conflict|attack|strike|invasion|crash|plunge|rout/.test(t)) high++;
-  });
-  const newsPts = Math.min(25, high * 1.6);
-  // outbreak burden: WHO DON bulletins issued in the last ~90 days
-  const OB = window.OUTBREAKS || {};
+  const quakeIdx = Math.min(1, Math.max(0, (maxQ - 5.0)) / 3.5 + Math.min(0.3, big / 40));
+
   const recentOb = (OB.items || []).filter(o => {
     const t = Date.parse(o.date || '');
     return !isNaN(t) && (now - t) <= 90 * 24 * 3600e3;
   });
   const obCountries = new Set(recentOb.map(o => o.country).filter(Boolean)).size;
-  const outbreakPts = Math.min(20, recentOb.length * 1.1 + obCountries * 0.6);
-  const score = Math.max(0, Math.min(100, Math.round(floodPts + quakePts + newsPts + outbreakPts)));
-  const lvl = score < 20 ? 5 : (score < 40 ? 4 : (score < 60 ? 3 : (score < 80 ? 2 : 1)));
+  const obIdx = Math.min(1, Math.min(0.5, recentOb.length / 30) + Math.min(0.3, obCountries / 20));
+
+  let high = 0;
+  (S.news || []).forEach(n => {
+    const t = ((n.title || '') + ' ' + (n.region || '')).toLowerCase();
+    if(/cyber|hack|breach|ransom|war|milit|conflict|attack|strike|invasion|crash|plunge|rout/.test(t)) high++;
+  });
+  const newsIdx = Math.min(0.25, high / 80);
+
+  const score = Math.round(100 * (0.28 * floodIdx + 0.28 * quakeIdx + 0.24 * obIdx + 0.20 * newsIdx));
+  const lvl = score < 18 ? 5 : (score < 36 ? 4 : (score < 58 ? 3 : (score < 78 ? 2 : 1)));
   const LAB = {5:'Normal readiness',4:'Increased watch',3:'Elevated',2:'High',1:'Maximum'};
   const COL = {5:'#22c55e',4:'#38bdf8',3:'#f59e0b',2:'#f97316',1:'#ef4444'};
   const col = COL[lvl];
+  const pctOf = v => Math.round(v * 100) + '%';
   const sEl = $('#defconSrc'); if(sEl) sEl.textContent = 'DERIVED · ' + String(F._updated || '').slice(11, 16) + ' UTC';
   body.innerHTML = `
     <div class="dcwrap">
@@ -1144,12 +1149,12 @@ function renderDefcon(){
       </div>
     </div>
     <div class="dcfac">
-      <div class="dcrow"><span>Flood alerting</span><b>${fRed} red · ${fOrg} orange</b><i>+${Math.round(floodPts)}</i></div>
-      <div class="dcrow"><span>Seismic (7d)</span><b>${big} at M5.5+ · max M${maxQ.toFixed(1)}</b><i>+${Math.round(quakePts)}</i></div>
-      <div class="dcrow"><span>High-severity headlines</span><b>${high}</b><i>+${Math.round(newsPts)}</i></div>
-      <div class="dcrow"><span>Outbreaks (WHO, 90d)</span><b>${recentOb.length} bulletins · ${obCountries} countries</b><i>+${Math.round(outbreakPts)}</i></div>
+      <div class="dcrow"><span>Flood alerting</span><b>${fRed} red · ${fOrg} orange</b><i>${pctOf(floodIdx)}</i></div>
+      <div class="dcrow"><span>Seismic (7d)</span><b>${big} at M5.5+ · max M${maxQ.toFixed(1)}</b><i>${pctOf(quakeIdx)}</i></div>
+      <div class="dcrow"><span>Outbreaks (WHO, 90d)</span><b>${recentOb.length} bulletins · ${obCountries} countries</b><i>${pctOf(obIdx)}</i></div>
+      <div class="dcrow"><span>High-severity headlines</span><b>${high}</b><i>${pctOf(newsIdx)}</i></div>
     </div>
-    <div class="dcnote">Derived composite of live open data (GDACS floods · USGS seismic · WHO outbreaks · RSS severity). The official US DEFCON is <b>not publicly published</b> — this is an independent indicator, not a government alert level.</div>`;
+    <div class="dcnote">Derived composite of live open data — flood, seismic, outbreak and headline severity, each normalised then weighted (28/28/24/20). The official US DEFCON is <b>not publicly published</b>; this is an independent indicator, not a government alert level.</div>`;
 }
 
 /* ══════════════ 6. AI SITUATION BRIEF (synthesis, labelled) ══════════════ */
