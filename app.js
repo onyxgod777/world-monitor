@@ -100,6 +100,8 @@ const SETTINGS_DEFS = [
   ]},
   { group:'Map layers', opts:[
     { k:'quakes', lab:'Seismic activity',   hint:'Live USGS — dashed magnitude rings, M2.5+' },
+    { k:'floods', lab:'Flood alerts',       hint:'Live GDACS global events + NOAA/NWS US warnings' },
+    { k:'outbreaks', lab:'Outbreak reports', hint:'Live WHO Disease Outbreak News bulletins' },
     { k:'amber',  lab:'Missing-child pins', hint:'NCMEC alert cases (US-anchored registry)' },
   ]},
 ];
@@ -110,10 +112,12 @@ const SETTINGS_SEGS = [
       [true,'24h'],[false,'12h'] ] },
   { k:'refresh', lab:'Intel refresh',   hint:'How often the feed re-reads the snapshot', vals:[
       [0,'Off'],[120000,'2 min'],[300000,'5 min'],[900000,'15 min'] ] },
+  { k:'mapMode', lab:'World map view',  hint:'2D map or 3D rotating globe', vals:[
+      ['2d','2D map'],['3d','3D globe'] ] },
 ];
 const SETTINGS_DEFAULTS = { fx:true, motion:true, grid:true, dense:false,
-  tg:true, reddit:true, x:true, quakes:true, amber:true,
-  regions:[], view:'markets', clock24:true, refresh:120000 };
+  tg:true, reddit:true, x:true, quakes:true, floods:true, outbreaks:true, amber:true,
+  regions:[], view:'markets', clock24:true, refresh:120000, mapMode:'2d' };
 let SET = (function(){
   try{ return Object.assign({}, SETTINGS_DEFAULTS, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
   catch(e){ return Object.assign({}, SETTINGS_DEFAULTS); }   // corrupt/blocked storage -> defaults
@@ -142,6 +146,21 @@ function applySettings(){
   b.classList.toggle('dense',      !!SET.dense);
   try{ loadNews(); }catch(e){ /* panel not built yet */ }
   try{ if(_map) updateMapSignals(); }catch(e){}
+  // reflect the saved world-map mode (initialise the globe only when it is on-screen)
+  try{
+    const is3 = SET.mapMode === '3d';
+    const worldActive = $('#view-world') && $('#view-world').classList.contains('is-active');
+    if(is3 && worldActive){
+      setMapMode('3d');
+    }else{
+      const gb = $('#globebox'); if(gb) gb.hidden = !is3;
+      const two = $('#worldmap'); if(two) two.style.display = is3 ? 'none' : '';
+      const b2 = $('#map2dBtn'), b3 = $('#map3dBtn');
+      if(b2){ b2.classList.toggle('is-on', !is3); b2.setAttribute('aria-pressed', String(!is3)); }
+      if(b3){ b3.classList.toggle('is-on', is3);  b3.setAttribute('aria-pressed', String(is3)); }
+      if(!is3) stopGlobe();
+    }
+  }catch(e){}
   try{ tickClocks(); }catch(e){}
   restartRefresh();
   const st = $('#settingsSaved');
@@ -907,7 +926,7 @@ async function loadNews(){
     }
   }catch(e){ /* keep last good list */ }
   // Render each dependent panel independently so one panel bug never blanks the rest.
-  [renderFeed, renderAlerts, renderAmber, renderBrief, renderWorld, renderProphecy].forEach(fn=>{ try{ fn(); }catch(e){ /* isolate */ } });
+  [renderFeed, renderAlerts, renderAmber, renderFloods, renderOutbreaks, renderDefcon, renderBrief, renderWorld, renderProphecy].forEach(fn=>{ try{ fn(); }catch(e){ /* isolate */ } });
 }
 function renderFeed(){
   // Slot guarantee: take one (newest) item per source first, then fill the rest
@@ -1019,6 +1038,118 @@ function renderAmber(){
   // coverage honesty: never claim this US-anchored feed is worldwide
   const note = document.getElementById('amberCoverage');
   if(note) note.textContent = 'Coverage: NCMEC missing-child alert cases (US-anchored registry). Not a global AMBER-activation feed — verify locally.';
+}
+
+/* ══════════════ 5c. FLOOD REPORT (GDACS global + NOAA/NWS, real data) ══════════════ */
+function floodRank(l){ return l === 'Red' ? 0 : (l === 'Orange' ? 1 : 2); }
+function renderFloods(){
+  const bar = $('#floodlist'); if(!bar) return;
+  const F = window.FLOODS;
+  const cEl = $('#floodCount'), sEl = $('#floodSrc');
+  if(!F || !Array.isArray(F.events) || !F.events.length){
+    if(cEl) cEl.textContent = '0 active';
+    if(sEl) sEl.textContent = 'GDACS · OFFLINE';
+    bar.innerHTML = `<div class="ph mono" style="padding:16px">Flood feed unavailable right now — retrying on next refresh. If this persists the GDACS/NWS feeds are unreachable.</div>`;
+    return;
+  }
+  const ev = F.events.slice().sort((a,b)=> floodRank(a.level) - floodRank(b.level)
+              || String(b.from||'').localeCompare(String(a.from||'')));
+  if(cEl) cEl.textContent = F.global + ' global' + (F.usWarnings ? ' · ' + F.usWarnings + ' US' : '');
+  if(sEl) sEl.textContent = 'GDACS · ' + String(F._updated||'').slice(0,10);
+  const chip = l => {
+    const c = l === 'Red' ? 'fl-red' : (l === 'Orange' ? 'fl-orange' : 'fl-green');
+    return `<span class="fllevel ${c}">${esc(l)}</span>`;
+  };
+  bar.innerHTML = ev.slice(0,10).map(e=>`
+    <div class="flitem">
+      ${chip(e.level)}
+      <div class="flbody">
+        <div class="fltitle">${esc(e.name)}</div>
+        <div class="flmeta">${esc(e.country || 'Location undisclosed')}${e.from ? ' · ' + esc(e.from) + (e.to ? ' → ' + esc(e.to) : '') : ''}</div>
+        <div class="flsrc">Real event · GDACS global flood alerting${e.report ? ` · <a href="${esc(e.report)}" target="_blank" rel="noopener">report ↗</a>` : ''}</div>
+      </div>
+    </div>`).join('')
+    + `<div class="flnote">${F.global} active global flood alerts — ${F.red} red · ${F.orange} orange across ${(F.countries||[]).length} countries.`
+    + ` US: ${F.usWarnings} NWS flood warning${F.usWarnings === 1 ? '' : 's'}. Source: GDACS (EU JRC) + NOAA/NWS.</div>`;
+}
+
+/* ══════════════ 5e. OUTBREAK REPORT (WHO Disease Outbreak News, real data) ══════════════ */
+function renderOutbreaks(){
+  const bar = $('#outbreaklist'); if(!bar) return;
+  const O = window.OUTBREAKS;
+  const cEl = $('#outbreakCount'), sEl = $('#outbreakSrc');
+  if(!O || !Array.isArray(O.items) || !O.items.length){
+    if(cEl) cEl.textContent = '0 reports';
+    if(sEl) sEl.textContent = 'WHO · OFFLINE';
+    bar.innerHTML = `<div class="ph mono" style="padding:16px">Outbreak feed unavailable right now — retrying on next refresh. If this persists the WHO DON feed is unreachable.</div>`;
+    return;
+  }
+  if(cEl) cEl.textContent = O.count + ' reports' + (O.countries ? ' · ' + O.countries.length + ' countries' : '');
+  if(sEl) sEl.textContent = 'WHO DON · ' + String(O.latest || O._updated || '').slice(0, 10);
+  const items = O.items.slice(0, 12);
+  bar.innerHTML = items.map(o=>`
+    <div class="obitem">
+      <div class="obflag">☣</div>
+      <div class="obbody">
+        <div class="obtitle">${esc(o.disease || o.title)}</div>
+        <div class="obmeta"><span class="obcountry">${esc(o.country || 'Multi-location')}</span>${o.date ? ' · ' + esc(o.date) : ''}</div>
+        ${o.summary ? `<div class="obsum">${esc(o.summary)}</div>` : ''}
+        <div class="obsrc">Official WHO Disease Outbreak News bulletin${o.url ? ` · <a href="${esc(o.url)}" target="_blank" rel="noopener">WHO DON ${esc(o.id || '')} ↗</a>` : ''}</div>
+      </div>
+    </div>`).join('')
+    + `<div class="outbreaknote">${O.count} live WHO Disease Outbreak News bulletins across ${(O.countries || []).length} countries; ${O.geocoded || 0} placed on the map. Source: World Health Organization — official outbreak bulletins, not news reports.</div>`;
+}
+
+/* ══════════════ 5d. GLOBAL READINESS (DEFCON-style, derived from live data) ══════════════ */
+// Honest framing: the US does not publish DEFCON in real time. This is an
+// independent, transparent composite of live open data, clearly labelled as
+// derived — never presented as an official government readiness level.
+function renderDefcon(){
+  const body = $('#defconbody'); if(!body) return;
+  const F = window.FLOODS || {}, Q = window.QUAKES || {};
+  const fRed = F.red || 0, fOrg = F.orange || 0;
+  const floodPts = Math.min(30, fRed * 7 + fOrg * 1.5);
+  const now = Date.now(), wk = 7 * 24 * 3600e3;
+  const qs = (Q.quakes || []).filter(q => (q.ts || 0) >= now - wk);
+  const maxQ = qs.reduce((m, q) => Math.max(m, q.mag || 0), 0);
+  const big = qs.filter(q => (q.mag || 0) >= 5.5).length;
+  const quakePts = Math.min(30, Math.max(0, (maxQ - 4.0)) * 8 + big * 3);
+  let high = 0;
+  (S.news || []).forEach(n => {
+    const t = ((n.title || '') + ' ' + (n.region || '')).toLowerCase();
+    if(/cyber|hack|breach|ransom|war|milit|conflict|attack|strike|invasion|crash|plunge|rout/.test(t)) high++;
+  });
+  const newsPts = Math.min(25, high * 1.6);
+  // outbreak burden: WHO DON bulletins issued in the last ~90 days
+  const OB = window.OUTBREAKS || {};
+  const recentOb = (OB.items || []).filter(o => {
+    const t = Date.parse(o.date || '');
+    return !isNaN(t) && (now - t) <= 90 * 24 * 3600e3;
+  });
+  const obCountries = new Set(recentOb.map(o => o.country).filter(Boolean)).size;
+  const outbreakPts = Math.min(20, recentOb.length * 1.1 + obCountries * 0.6);
+  const score = Math.max(0, Math.min(100, Math.round(floodPts + quakePts + newsPts + outbreakPts)));
+  const lvl = score < 20 ? 5 : (score < 40 ? 4 : (score < 60 ? 3 : (score < 80 ? 2 : 1)));
+  const LAB = {5:'Normal readiness',4:'Increased watch',3:'Elevated',2:'High',1:'Maximum'};
+  const COL = {5:'#22c55e',4:'#38bdf8',3:'#f59e0b',2:'#f97316',1:'#ef4444'};
+  const col = COL[lvl];
+  const sEl = $('#defconSrc'); if(sEl) sEl.textContent = 'DERIVED · ' + String(F._updated || '').slice(11, 16) + ' UTC';
+  body.innerHTML = `
+    <div class="dcwrap">
+      <div class="dcnum" style="color:${col}">${lvl}<small>DEFCON</small></div>
+      <div class="dcinfo">
+        <div class="dclab" style="color:${col}">${LAB[lvl]}</div>
+        <div class="dcbar"><i style="width:${score}%;background:${col}"></i></div>
+        <div class="dcscore">composite threat index <b>${score}</b>/100</div>
+      </div>
+    </div>
+    <div class="dcfac">
+      <div class="dcrow"><span>Flood alerting</span><b>${fRed} red · ${fOrg} orange</b><i>+${Math.round(floodPts)}</i></div>
+      <div class="dcrow"><span>Seismic (7d)</span><b>${big} at M5.5+ · max M${maxQ.toFixed(1)}</b><i>+${Math.round(quakePts)}</i></div>
+      <div class="dcrow"><span>High-severity headlines</span><b>${high}</b><i>+${Math.round(newsPts)}</i></div>
+      <div class="dcrow"><span>Outbreaks (WHO, 90d)</span><b>${recentOb.length} bulletins · ${obCountries} countries</b><i>+${Math.round(outbreakPts)}</i></div>
+    </div>
+    <div class="dcnote">Derived composite of live open data (GDACS floods · USGS seismic · WHO outbreaks · RSS severity). The official US DEFCON is <b>not publicly published</b> — this is an independent indicator, not a government alert level.</div>`;
 }
 
 /* ══════════════ 6. AI SITUATION BRIEF (synthesis, labelled) ══════════════ */
@@ -1133,16 +1264,26 @@ const HUBS=[
   ['Kenya',-1.3,36.8,['kenya','nairobi']],
   ['South Africa',-26.2,28.0,['south africa','johannesburg']],
 ];
+// CARTO dark basemap, split into two layers: the base gets the theme's darkening
+// filter, the labels ride in their own pane so place names keep full contrast.
+// Filtering a single combined layer measured 5.4:1 -> 2.6:1 on map labels, which
+// is a real legibility loss on a map; two layers cost one extra request each.
+const TILE_KEY = 'key=cb1_2yip_1_fd870b7c1b2d39e0d7589096';
+const TILE_BASE = 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png?' + TILE_KEY;
+const TILE_LABELS = 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png?' + TILE_KEY;
+const TILE_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
 let _map=null, _mapMarkers=[];
 function hubRe(kws){ return new RegExp('\\b('+kws.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\\b'); }
 function ensureMap(){
   if(_map || typeof L==='undefined') return _map;
   const el=$('#worldmap'); if(!el) return null;
   _map = L.map('worldmap',{ zoomControl:true, worldCopyJump:true, minZoom:2, maxZoom:8 });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=cb1_2yip_1_fd870b7c1b2d39e0d7589096',{
-    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains:'abcd', maxZoom:8
-  }).addTo(_map);
+  _map.createPane('labelsPane');
+  const lp = _map.getPane('labelsPane');
+  lp.style.zIndex = 350;          // above the tile pane (200), below overlays (400)
+  lp.style.pointerEvents = 'none';
+  L.tileLayer(TILE_BASE, { attribution:TILE_ATTR, subdomains:'abcd', maxZoom:8 }).addTo(_map);
+  L.tileLayer(TILE_LABELS, { subdomains:'abcd', maxZoom:8, pane:'labelsPane' }).addTo(_map);
   _map.setView([24,10],2);
   return _map;
 }
@@ -1227,6 +1368,50 @@ function updateMapSignals(){
         _mapMarkers.push(m);
       });
   }
+  // ── Flood alerts (GDACS global + NOAA/NWS US) ─────────────────────────────
+  // Drawn as level-coloured triangles so they never read as a news signal hub.
+  const FD = (SET.floods && window.FLOODS && Array.isArray(window.FLOODS.events)) ? window.FLOODS : null;
+  let floodOnMap = 0, floodRed = 0;
+  if(FD && typeof L !== 'undefined'){
+    const fcol = l => l === 'Red' ? '#ef4444' : (l === 'Orange' ? '#f59e0b' : '#2dd4bf');
+    FD.events.forEach(e=>{
+      if(typeof e.lat !== 'number' || typeof e.lng !== 'number') return;
+      floodOnMap++;
+      if(e.level === 'Red') floodRed++;
+      const col = fcol(e.level);
+      const ic = L.divIcon({ className:'flood-marker',
+        html:'<span class="flood-pin" style="color:'+col+'">▲</span>',
+        iconSize:[18,18], iconAnchor:[9,9], popupAnchor:[0,-11] });
+      const m = L.marker([e.lat,e.lng],{ icon:ic }).addTo(map);
+      m.bindPopup(
+        `<div class="mp-title" style="color:${col}">${esc(e.level)} flood alert</div>`+
+        `<div style="margin:3px 0 2px">${esc(e.name)}</div>`+
+        `<div class="mp-meta">${esc(e.country||'Location undisclosed')}${e.from?` · ${esc(e.from)}${e.to?' → '+esc(e.to):''}`:''}</div>`+
+        `<div class="mp-meta">Source: GDACS global flood alerting</div>`+
+        (e.report?`<div style="margin-top:6px"><a href="${esc(e.report)}" target="_blank" rel="noopener">GDACS report ↗</a></div>`:''));
+      _mapMarkers.push(m);
+    });
+  }
+  // ── Outbreak reports (WHO Disease Outbreak News) ──────────────────────────
+  const OB = (SET.outbreaks && window.OUTBREAKS && Array.isArray(window.OUTBREAKS.items)) ? window.OUTBREAKS : null;
+  let outbreakOnMap = 0;
+  if(OB && typeof L !== 'undefined'){
+    const obIcon = L.divIcon({ className:'outbreak-marker',
+      html:'<span class="outbreak-pin">☣</span>', iconSize:[18,18], iconAnchor:[9,9], popupAnchor:[0,-11] });
+    OB.items.forEach(o=>{
+      if(typeof o.lat !== 'number' || typeof o.lng !== 'number') return;
+      outbreakOnMap++;
+      const m = L.marker([o.lat, o.lng],{ icon:obIcon }).addTo(map);
+      m.bindPopup(
+        `<div class="mp-title" style="color:#8b8bff">☣ Outbreak report</div>`+
+        `<div style="margin:3px 0 2px"><b>${esc(o.disease||o.title||'')}</b></div>`+
+        `<div class="mp-meta">${esc(o.country||'Multi-location')}${o.date?' · '+esc(o.date):''}</div>`+
+        (o.summary?`<div class="mp-meta" style="margin-top:4px">${esc(o.summary.slice(0,180))}…</div>`:'')+
+        `<div class="mp-meta" style="margin-top:4px">Source: WHO Disease Outbreak News</div>`+
+        (o.url?`<div style="margin-top:6px"><a href="${esc(o.url)}" target="_blank" rel="noopener">WHO bulletin ↗</a></div>`:''));
+      _mapMarkers.push(m);
+    });
+  }
   // Legend is assembled from whichever layers are actually switched on (Settings).
   const leg = [
     `<span class="li"><span class="sw" style="background:#22c55e"></span>active</span>`,
@@ -1241,16 +1426,212 @@ function updateMapSignals(){
   if(SET.amber){
     leg.push(`<span class="li"><span class="sw amber-dot"></span>◉ NCMEC missing-child alert</span>`);
   }
+  if(SET.floods){
+    leg.push(`<span class="li"><span class="sw flood-sw lv-red"></span>Red flood</span>`,
+             `<span class="li"><span class="sw flood-sw lv-orange"></span>Orange flood</span>`,
+             `<span class="li"><span class="sw flood-sw lv-green"></span>Green flood · GDACS</span>`);
+  }
+  if(SET.outbreaks){
+    leg.push(`<span class="li"><span class="sw ob-sw"></span>☣ WHO outbreak report</span>`);
+  }
   $('#mapLegend').innerHTML = leg.join('');
   const qtxt = !SET.quakes ? ''
     : (quakeOnMap
         ? ' · '+quakeOnMap+' quake'+(quakeOnMap===1?'':'s')+(quakeMax?' (max M'+quakeMax+')':'')
         : (Q ? ' · no quakes in window' : ''));
+  const ftxt = !SET.floods ? ''
+    : (floodOnMap
+        ? ' · '+floodOnMap+' flood'+(floodOnMap===1?'':'s')+(floodRed?' ('+floodRed+' red)':'')
+        : (FD ? ' · no flood alerts' : ''));
+  const otxt = !SET.outbreaks ? ''
+    : (outbreakOnMap ? ' · '+outbreakOnMap+' outbreak'+(outbreakOnMap===1?'':'s')
+        : (OB ? ' · no outbreak reports' : ''));
   $('#mapCount').textContent =
-    (liveCount ? liveCount+' signal'+(liveCount===1?'':'s')+' live' : 'no regional activity this cycle') + qtxt;
+    (liveCount ? liveCount+' signal'+(liveCount===1?'':'s')+' live' : 'no regional activity this cycle') + qtxt + ftxt + otxt;
   const amc = $('#amberMapCount'); if(amc && amberOnMap) amc.textContent = amberOnMap+' on map';
 }
-function wakeMap(){ ensureMap(); if(_map){ _map.invalidateSize(); } updateMapSignals(); }
+function wakeMap(){
+  if(SET.mapMode === '3d'){ setMapMode('3d'); return; }
+  ensureMap(); if(_map){ _map.invalidateSize(); } updateMapSignals();
+}
+
+/* ══════════════ 7c. 3D GLOBE (canvas orthographic, auto-rotating) ══════════════
+   A real globe (not a flat map): orthographic projection on a 2D canvas, so it
+   needs no WebGL and renders everywhere. Same live layers as the 2D map —
+   news signal hubs, USGS quakes, GDACS/NWS floods and NCMEC amber cases.
+   Geometry comes from Natural Earth (world-atlas, via CDN like Leaflet). */
+const GLOBE_CDN = {
+  d3:    'https://unpkg.com/d3@7/dist/d3.min.js',
+  topo:  'https://unpkg.com/topojson-client@3/dist/topojson-client.min.js',
+  land:  'https://unpkg.com/world-atlas@2/land-110m.json',
+};
+let _globe = null;
+function loadScript(src){
+  return new Promise((res, rej)=>{
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = () => rej(new Error('load ' + src));
+    document.head.appendChild(s);
+  });
+}
+async function ensureGlobe(){
+  if(_globe && _globe.ready) return _globe;
+  const canvas = $('#globecanvas'); if(!canvas) return null;
+  try{
+    if(typeof d3 === 'undefined') await loadScript(GLOBE_CDN.d3);
+    if(typeof topojson === 'undefined') await loadScript(GLOBE_CDN.topo);
+    if(!window.__wmLand){
+      const r = await fetch(GLOBE_CDN.land); if(!r.ok) throw new Error('land ' + r.status);
+      const topo = await r.json();
+      window.__wmLand = topojson.feature(topo, topo.objects.land);
+    }
+    _globe = { canvas, ctx: canvas.getContext('2d'), land: window.__wmLand,
+               rot:[12,-16,0], auto:true, ready:true, raf:null, drag:false, w:0, h:0 };
+    sizeGlobe();
+    bindGlobeDrag();
+    startGlobe();
+    const fb = $('#globefallback');
+    if(fb) fb.textContent = 'Drag the globe to spin · auto-rotating · Natural Earth 110m';
+    return _globe;
+  }catch(e){
+    const fb = $('#globefallback');
+    if(fb) fb.textContent = '3D globe unavailable offline — showing the 2D map.';
+    setMapMode('2d');
+    return null;
+  }
+}
+function sizeGlobe(){
+  const g = _globe; if(!g) return;
+  const box = $('#globebox'); if(!box) return;
+  const w = box.clientWidth || 900, h = box.clientHeight || 430;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  g.canvas.width = Math.round(w * dpr); g.canvas.height = Math.round(h * dpr);
+  g.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.w = w; g.h = h;
+  g.proj = d3.geoOrthographic().translate([w/2, h/2])
+             .scale(Math.min(w, h) * 0.46).rotate(g.rot).clipAngle(90);
+  g.path = d3.geoPath(g.proj, g.ctx);
+  if(!g.grat) g.grat = d3.geoGraticule10();
+}
+function plotGlobePt(lng, lat, color, size, kind){
+  const g = _globe; if(!g) return;
+  const c = [-g.rot[0], -g.rot[1]];
+  if(d3.geoDistance([lng, lat], c) > Math.PI/2 - 0.02) return;   // far side of the globe
+  const p = g.proj([lng, lat]); if(!p) return;
+  const ctx = g.ctx; ctx.save();
+  if(kind === 'ring'){
+    ctx.beginPath(); ctx.arc(p[0], p[1], size, 0, 6.2832);
+    ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke();
+  }else{
+    ctx.beginPath();
+    if(kind === 'tri'){ ctx.moveTo(p[0], p[1]-size); ctx.lineTo(p[0]+size*0.95, p[1]+size*0.72); ctx.lineTo(p[0]-size*0.95, p[1]+size*0.72); ctx.closePath(); }
+    else if(kind === 'dia'){ ctx.moveTo(p[0], p[1]-size); ctx.lineTo(p[0]+size, p[1]); ctx.lineTo(p[0], p[1]+size); ctx.lineTo(p[0]-size, p[1]); ctx.closePath(); }
+    else { ctx.arc(p[0], p[1], size, 0, 6.2832); }
+    ctx.fillStyle = color; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 0.8; ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawGlobe(){
+  const g = _globe; if(!g || !g.proj) return;
+  const { ctx, w, h } = g;
+  ctx.clearRect(0, 0, w, h);
+  ctx.beginPath(); g.path({type:'Sphere'});
+  ctx.fillStyle = '#0a1220'; ctx.fill();
+  ctx.beginPath(); g.path(g.grat);
+  ctx.strokeStyle = 'rgba(110,168,254,.10)'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.beginPath(); g.path(g.land);
+  ctx.fillStyle = '#182338'; ctx.fill();
+  ctx.strokeStyle = '#2b3a58'; ctx.lineWidth = 0.7; ctx.stroke();
+  ctx.beginPath(); g.path({type:'Sphere'});
+  ctx.strokeStyle = 'rgba(110,168,254,.35)'; ctx.lineWidth = 1.2; ctx.stroke();
+
+  // news signal hubs (same keyword matching the 2D map uses)
+  if(S.news && S.news.length){
+    const titles = S.news.map(n => (n.title || '').toLowerCase());
+    HUBS.forEach(([name, lat, lng, kws])=>{
+      const re = hubRe(kws);
+      const count = titles.reduce((n, t)=> n + (re.test(t) ? 1 : 0), 0);
+      if(count > 0){
+        const col = count <= 2 ? '#22c55e' : (count <= 4 ? '#f59e0b' : '#ef4444');
+        plotGlobePt(lng, lat, col, Math.min(3 + count * 1.1, 10), 'circle');
+      }
+    });
+  }
+  if(SET.quakes && window.QUAKES && Array.isArray(window.QUAKES.quakes)){
+    const wk = Date.now() - 7*24*3600e3;
+    window.QUAKES.quakes.filter(q => (q.ts||0) >= wk).forEach(q=>{
+      const col = q.mag >= 5.5 ? '#ef4444' : (q.mag >= 4.2 ? '#f59e0b' : '#38bdf8');
+      plotGlobePt(q.lng, q.lat, col, Math.min(3 + (q.mag-2.5)*1.5, 11), 'ring');
+    });
+  }
+  if(SET.floods && window.FLOODS && Array.isArray(window.FLOODS.events)){
+    window.FLOODS.events.forEach(e=>{
+      const col = e.level === 'Red' ? '#ef4444' : (e.level === 'Orange' ? '#f59e0b' : '#2dd4bf');
+      plotGlobePt(e.lng, e.lat, col, 5.5, 'tri');
+    });
+  }
+  if(SET.amber && window.AMBER && Array.isArray(window.AMBER.cases)){
+    window.AMBER.cases.forEach(c=>{
+      if(typeof c.lat === 'number') plotGlobePt(c.lng, c.lat, '#f59e0b', 5, 'dia');
+    });
+  }
+  if(SET.outbreaks && window.OUTBREAKS && Array.isArray(window.OUTBREAKS.items)){
+    window.OUTBREAKS.items.forEach(o=>{
+      if(typeof o.lat === 'number') plotGlobePt(o.lng, o.lat, '#8b8bff', 5.5, 'circle');
+    });
+  }
+}
+function globeFrame(){
+  const g = _globe; if(!g || !g.ready) return;
+  if(g.auto && !g.drag){
+    g.rot[0] += 0.11; if(g.rot[0] > 180) g.rot[0] -= 360;
+    g.proj.rotate(g.rot);
+  }
+  drawGlobe();
+  g.raf = requestAnimationFrame(globeFrame);
+}
+function startGlobe(){
+  const g = _globe; if(!g || g.raf) return;
+  if(document.body.classList.contains('motion-off')) { drawGlobe(); return; }   // honour reduced-motion setting
+  g.raf = requestAnimationFrame(globeFrame);
+}
+function stopGlobe(){ const g = _globe; if(g && g.raf){ cancelAnimationFrame(g.raf); g.raf = null; } }
+function bindGlobeDrag(){
+  const g = _globe; if(!g) return;
+  const c = g.canvas; let last = null;
+  c.addEventListener('pointerdown', e=>{
+    g.drag = true; last = {x:e.clientX, y:e.clientY};
+    try{ c.setPointerCapture(e.pointerId); }catch(_){}
+  });
+  c.addEventListener('pointermove', e=>{
+    if(!g.drag || !last) return;
+    const dx = e.clientX - last.x, dy = e.clientY - last.y;
+    last = {x:e.clientX, y:e.clientY};
+    g.rot[0] += dx * 0.28;
+    g.rot[1] = Math.max(-80, Math.min(80, g.rot[1] - dy * 0.25));
+    g.proj.rotate(g.rot);
+    if(g.raf === null) drawGlobe();     // static mode: redraw on drag
+  });
+  const up = ()=>{ g.drag = false; last = null; };
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=> c.addEventListener(ev, up));
+}
+function setMapMode(mode){
+  SET.mapMode = (mode === '3d') ? '3d' : '2d'; saveSettings();
+  const is3 = SET.mapMode === '3d';
+  const two = $('#worldmap'), box = $('#globebox');
+  const b2 = $('#map2dBtn'), b3 = $('#map3dBtn');
+  if(box) box.hidden = !is3;
+  if(two) two.style.display = is3 ? 'none' : '';
+  if(b2){ b2.classList.toggle('is-on', !is3); b2.setAttribute('aria-pressed', String(!is3)); }
+  if(b3){ b3.classList.toggle('is-on', is3);  b3.setAttribute('aria-pressed', String(is3)); }
+  if(is3){
+    ensureGlobe().then(g=>{ if(g){ sizeGlobe(); startGlobe(); } });
+  }else{
+    stopGlobe();
+    ensureMap(); if(_map){ setTimeout(()=>_map.invalidateSize(), 60); }
+    try{ updateMapSignals(); }catch(_){}
+  }
+}
 
 /* ══════════════ 8. PROPHECY (News & Prophecy causal analyses) ══════════════ */
 function propCoverage(p){
@@ -1310,7 +1691,9 @@ const GUIDE=[
   {icon:'📈',h:'Markets',p:'A live watchlist of major crypto assets with real prices, 24h changes and 7-day sparklines — pulled straight from public market data. The top ticker scrolls the full watchlist.'},
   {icon:'🕐',h:'World Clocks',p:'Real-time local time across 16 global cities and UTC — so you always know what hour it is in any major market or capital.'},
   {icon:'📰',h:'Intel Feed',p:'Live headlines from public RSS plus public Telegram, Reddit and X posts — social entries are labelled unverified first reports. Alerts auto-classify high-priority items and lead with measured USGS seismic events.'},
-  {icon:'🧭',h:'Use it',p:'Switch sections with the tabs (Markets · Intel · World · Alerts). ⚙ Settings controls the look (HUD effects, motion, density), which sources feed the Intel panel, the map layers, focus regions, clock format and refresh rate — all stored in your browser only. Live data refreshes automatically. Beta — verify critical intelligence independently.'},
+  {icon:'🌊',h:'Floods, Outbreaks & Readiness',p:'The Flood Report lists live flood alerts worldwide from GDACS plus NOAA/NWS US warnings; the Outbreak Report lists official WHO Disease Outbreak News bulletins, both drawn as icons on the map. Beside them, the DEFCON-style readiness indicator is a transparent composite of flood, seismic, outbreak and headline severity — clearly labelled as derived, because the official US DEFCON is not publicly published.'},
+  {icon:'🌐',h:'2D map or 3D globe',p:'In the World tab, switch the map between the flat 2D map and a 3D rotating globe. Drag the globe to spin it yourself, or let it auto-rotate. Both views carry the same live layers.'},
+  {icon:'🧭',h:'Use it',p:'Switch sections with the tabs (Markets · Intel · Prophecy · Alerts · World · Settings). ⚙ Settings controls the look (HUD effects, motion, density), which sources feed the Intel panel, the map layers, 2D/3D map view, focus regions, clock format and refresh rate — all stored in your browser only. Live data refreshes automatically. Beta — verify critical intelligence independently.'},
 ];
 let guideIdx=0;
 function openGuide(){ $('#welcome').hidden=false; renderGuide(); }
@@ -1340,7 +1723,8 @@ function bindTabs(){
       t.classList.add('is-active');t.setAttribute('aria-selected','true');
       const v=t.dataset.view;
       $$('.view').forEach(s=>s.classList.toggle('is-active', s.id==='view-'+v));
-      if(v==='world') setTimeout(wakeMap, 60);   // init/resize map once its container is visible
+      if(v==='world') setTimeout(wakeMap, 60);   // init/resize the map (or globe) once visible
+      else stopGlobe();                          // pause globe animation off-screen
       try{ history.replaceState(null,'','#'+v); }catch(e){}
       window.scrollTo({top:0,behavior:'smooth'});
     });
@@ -1364,6 +1748,9 @@ function boot(){
   $('#closeGuide').addEventListener('click',closeGuide);
   tickClocks(); setInterval(tickClocks,1000);
   renderAmber();   // NCMEC amber panel renders from committed snapshot — independent of news fetch
+  renderFloods();  // GDACS/NWS flood report — committed snapshot, independent of news fetch
+  renderOutbreaks(); // WHO Disease Outbreak News report — committed snapshot
+  renderDefcon();  // derived readiness indicator — recomputed on each news refresh
   loadMarkets(); setInterval(loadMarkets,60000);
   applySettings();   // saved display classes + first feed render + refresh timer
   loadPrediction(); setInterval(loadPrediction,300000);
@@ -1372,8 +1759,19 @@ function boot(){
   // guide on first visit (skip when arriving via a section deep-link)
   if(!location.hash && !localStorage.getItem('wm_seen')){ openGuide(); localStorage.setItem('wm_seen','1'); }
   $('#helpBtn').addEventListener('click',openGuide);
-  // page visibility keeps data honest on reload/tab-return
-  document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ tickClocks(); } });
+  // 2D map / 3D globe toggle
+  const b2 = $('#map2dBtn'), b3 = $('#map3dBtn');
+  if(b2) b2.addEventListener('click', ()=>setMapMode('2d'));
+  if(b3) b3.addEventListener('click', ()=>setMapMode('3d'));
+  window.addEventListener('resize', ()=>{
+    const gb = $('#globebox');
+    if(SET.mapMode === '3d' && gb && !gb.hidden) sizeGlobe();
+  });
+  // page visibility keeps data honest on reload/tab-return (and parks the globe)
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){ stopGlobe(); }
+    else { tickClocks(); if(SET.mapMode === '3d') startGlobe(); }
+  });
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
 else boot();

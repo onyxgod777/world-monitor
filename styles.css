@@ -99,7 +99,11 @@ a:hover{text-shadow:0 0 10px var(--glow)}
 }
 @keyframes scanx{0%{background-position:-40% 0}100%{background-position:140% 0}}
 .brand{display:flex;align-items:center;gap:9px;flex:0 0 auto}
-.logo{width:22px;height:22px;flex:0 0 auto;filter:drop-shadow(0 0 6px var(--glow))}
+/* the header mark is now the favicon's geometry at tab-icon weight: hairline
+   strokes at 22px read as grey mush, so the ring runs at 3/32 units and the
+   amber live dot marks the globe centre. Sized so the drawn ring occupies the
+   same footprint the old thin logo did. */
+.logo{width:24px;height:24px;flex:0 0 auto;filter:drop-shadow(0 0 5px rgba(110,168,254,.42))}
 .brand-name{font-weight:700;letter-spacing:.16em;font-size:14px;color:var(--text);
   text-shadow:0 0 18px rgba(110,168,254,.35)}
 .tabs{display:flex;gap:2px;margin-left:6px}
@@ -435,6 +439,64 @@ a:hover{text-shadow:0 0 10px var(--glow)}
 .fitem.social{border-left:2px solid var(--amber);background:linear-gradient(90deg,rgba(245,158,11,.07),transparent 45%)}
 .fitem.social:hover{background:linear-gradient(90deg,rgba(245,158,11,.12),transparent 45%)}
 
+/* ═══ FLOOD REPORT (GDACS global + NOAA/NWS) ═══ */
+.floodglyph{color:#2dd4bf;font-size:11px}
+.floodlist{display:flex;flex-direction:column;max-height:420px;overflow:auto;padding:6px 6px 8px}
+.flitem{display:flex;gap:11px;align-items:flex-start;padding:9px 11px;border-bottom:1px solid rgba(30,42,65,.5)}
+.flitem:last-of-type{border-bottom:none}
+.flitem:hover{background:var(--panel2)}
+.fllevel{flex:0 0 auto;font-size:9.5px;font-weight:800;letter-spacing:.06em;padding:2px 8px;border-radius:5px;margin-top:1px}
+.fllevel.fl-red{color:var(--tx-red);background:var(--bg-red)}
+.fllevel.fl-orange{color:var(--tx-amber);background:var(--bg-amber)}
+.fllevel.fl-green{color:#0f766e;background:#ccfbf1}
+.flbody{flex:1;min-width:0}
+.fltitle{font-size:13.5px;font-weight:600;color:var(--text)}
+.flmeta{font-size:11.5px;color:var(--dim);margin-top:3px}
+.flsrc{font-size:10.5px;color:var(--faint);margin-top:3px}
+.flsrc a{color:var(--accent)}
+.flnote{font-size:10.5px;color:var(--muted);padding:9px 12px;border-top:1px dashed var(--line);line-height:1.5}
+.flood-marker{z-index:900}
+.flood-pin{font-size:15px;line-height:1;text-shadow:0 0 6px rgba(0,0,0,.9),0 0 2px #000}
+.flood-sw{width:9px;height:9px;border-radius:2px}
+.flood-sw.lv-red{background:#ef4444}.flood-sw.lv-orange{background:#f59e0b}.flood-sw.lv-green{background:#2dd4bf}
+
+/* ═══ OUTBREAK REPORT (WHO Disease Outbreak News) ═══ */
+.obglyph{color:var(--violet);font-size:12px}
+.outbreaklist{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:0;max-height:420px;overflow:auto;padding:6px}
+.obitem{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-bottom:1px solid rgba(30,42,65,.5)}
+.obitem:hover{background:var(--panel2)}
+.obflag{flex:0 0 auto;color:var(--violet);font-size:14px;margin-top:1px}
+.obbody{flex:1;min-width:0}
+.obtitle{font-size:13.5px;font-weight:600;color:var(--text);line-height:1.35}
+.obmeta{font-size:11.5px;color:var(--dim);margin-top:3px}
+.obcountry{color:var(--violet);font-weight:600}
+.obsum{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5}
+.obsrc{font-size:10.5px;color:var(--faint);margin-top:4px}
+.obsrc a{color:var(--accent)}
+.outbreaknote{grid-column:1/-1;font-size:10.5px;color:var(--muted);padding:9px 12px;border-top:1px dashed var(--line);line-height:1.5}
+.outbreak-marker{z-index:950}
+.outbreak-pin{font-size:15px;line-height:1;text-shadow:0 0 6px rgba(0,0,0,.9),0 0 2px #000}
+.ob-sw{background:var(--violet);width:9px;height:9px;border-radius:50%;box-shadow:0 0 0 2px rgba(139,139,255,.25)}
+
+/* ═══ GLOBAL READINESS (DEFCON-style, derived) ═══ */
+.defconbody{padding:14px}
+.dcwrap{display:flex;gap:16px;align-items:center}
+.dcnum{font-size:52px;font-weight:800;line-height:1;display:flex;flex-direction:column;align-items:center;min-width:96px}
+.dcnum small{font-size:9px;letter-spacing:.18em;font-weight:700;color:var(--muted);margin-top:5px}
+.dcinfo{flex:1;min-width:0}
+.dclab{font-size:15px;font-weight:700;letter-spacing:.02em}
+.dcbar{height:8px;border-radius:5px;background:var(--bg);border:1px solid var(--line);overflow:hidden;margin:9px 0 6px}
+.dcbar i{display:block;height:100%;border-radius:5px;transition:width .6s ease}
+.dcscore{font-size:11px;color:var(--muted)}
+.dcscore b{color:var(--text)}
+.dcfac{margin-top:14px;display:flex;flex-direction:column;gap:5px}
+.dcrow{display:flex;align-items:center;gap:8px;font-size:11.5px;padding:6px 9px;border-radius:6px;background:var(--panel2);border:1px solid var(--line)}
+.dcrow span{color:var(--muted);flex:0 0 158px}
+.dcrow b{color:var(--text-dim);font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dcrow i{font-style:normal;font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.dcnote{margin-top:12px;font-size:10.5px;color:var(--faint);line-height:1.55;border-top:1px dashed var(--line);padding-top:10px}
+.dcnote b{color:var(--muted)}
+
 /* ═══ STATUS BAR / FOOTER ═══ */
 .statusbar{max-width:1680px;margin:0 auto;padding:6px 16px 18px}
 .srow{display:flex;align-items:center;gap:14px;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:9px 14px;flex-wrap:wrap}
@@ -508,6 +570,18 @@ a:hover{text-shadow:0 0 10px var(--glow)}
 .leaflet-popup-content .mp-meta{color:var(--muted);font-size:11px}
 .leaflet-popup-content a{color:var(--accent)}
 .leaflet-popup-close-button{color:var(--muted)!important}
+
+/* ═══ 2D / 3D map toggle + rotating globe ═══ */
+.maptoggle{display:inline-flex;gap:2px;margin-left:10px;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:2px}
+.mtbtn{appearance:none;border:none;background:transparent;color:var(--muted);font:700 11px/1 var(--sans);
+  padding:6px 11px;border-radius:5px;cursor:pointer;letter-spacing:.03em;transition:color .15s,background .15s}
+.mtbtn:hover{color:var(--text-dim)}
+.mtbtn.is-on{color:var(--text);background:rgba(110,168,254,.16);box-shadow:inset 0 0 0 1px rgba(110,168,254,.35)}
+#globebox{position:absolute;inset:0;z-index:2;background:radial-gradient(circle at 50% 45%,#0b1424 0%,#05080f 72%)}
+#globebox[hidden]{display:none}
+#globecanvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none}
+#globecanvas:active{cursor:grabbing}
+.globehint{position:absolute;left:12px;bottom:12px;z-index:3;font-size:10px;color:var(--faint);letter-spacing:.03em}
 
 /* ═══ MODAL / GUIDE ═══ */
 .overlay{position:fixed;inset:0;background:rgba(2,4,10,.7);backdrop-filter:blur(3px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
@@ -620,8 +694,16 @@ a:hover{text-shadow:0 0 10px var(--glow)}
 .iconbtn:hover{background:rgba(110,168,254,.12);color:var(--text)}
 
 /* map: neon controls, glass legend + popups */
-.mapbox{background:var(--panel-solid)}
-#worldmap{background:var(--panel-solid)}
+/* Tiles are darkened + cooled to sit at the same level as the panels instead of
+   floating a mid-grey rectangle in a near-black page. Filter values measured on
+   real CARTO tiles in chromium: brightness(.62) alone landed lum 12.8 neutral,
+   while sepia -> hue-rotate -> saturate gives the blue cast the page has
+   (cast +3.6 vs +0.1) with slightly better detail retention (sd 13.4 vs 13.0).
+   Do not add contrast() to the chain — pivoting at 128 crushes the dark base to
+   lum 3.7. Filtering the tile pane leaves the marker panes crisp. */
+.mapbox{background:#03060d}
+#worldmap{background:#03060d}
+.mapbox .leaflet-tile-pane{filter:sepia(.45) hue-rotate(190deg) saturate(1.8) brightness(.58)}
 .mapbox .leaflet-control-zoom a{
   background:rgba(12,19,34,.92);color:var(--text-dim);border-color:var(--line);
 }

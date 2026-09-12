@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>World Monitor — Daily Events</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-variant-numeric:tabular-nums}
+  :root{
+    --bg:#05080f; --panel:#0f1729; --panel2:#131d33; --line:#1e2a41; --line2:#2b3a58;
+    --text:#e6ecf5; --dim:#a7b6cd; --muted:#6b7a94; --faint:#41506c;
+    --accent:#6ea8fe; --amber:#f59e0b; --green:#22c55e; --red:#ef4444; --violet:#8b8bff;
+  }
+  body{width:1600px;height:1200px;background:var(--bg);color:var(--text);
+    font-family:'Inter',ui-sans-serif,system-ui,'DejaVu Sans',Roboto,Helvetica,Arial,sans-serif;
+    overflow:hidden;padding:22px 24px}
+  .head{display:flex;align-items:center;gap:14px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+  .logo{width:30px;height:30px}
+  .brand{font-weight:800;letter-spacing:.16em;font-size:22px}
+  .sub{font-size:12px;letter-spacing:.28em;color:var(--accent);font-weight:700;margin-top:2px}
+  .hmeta{margin-left:auto;text-align:right}
+  .date{font-size:17px;font-weight:700}
+  .gen{font-size:11px;color:var(--muted);margin-top:3px}
+  .live{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;
+    letter-spacing:.12em;color:var(--green)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:auto auto auto;gap:14px;margin-top:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .ch{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line)}
+  .ch h2{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+  .ch .cnt{margin-left:auto;font-size:11px;color:var(--muted)}
+  .mapcard{grid-column:1 / span 3;height:474px;display:flex;flex-direction:column}
+  #map{flex:1;background:var(--panel)}
+  .legend{display:flex;gap:16px;align-items:center;padding:8px 14px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+  .li{display:flex;align-items:center;gap:6px}
+  .sw{width:10px;height:10px;border-radius:50%}
+  .amberp{background:var(--amber);width:9px;height:9px;transform:rotate(45deg)}
+  .body{padding:10px 12px}
+  .sig{display:flex;align-items:center;gap:10px;padding:6px 4px}
+  .sig .nm{font-size:12.5px;font-weight:600;width:118px;color:var(--text)}
+  .bar{flex:1;height:7px;background:#0a1120;border:1px solid var(--line);border-radius:5px;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:5px}
+  .sig .n{font-size:12px;font-weight:700;width:22px;text-align:right;color:var(--dim)}
+  .hl{display:flex;gap:9px;padding:7px 4px;border-bottom:1px solid rgba(30,42,65,.5)}
+  .hl:last-child{border-bottom:none}
+  .hl .t{font-size:12.5px;line-height:1.34;color:var(--text);font-weight:500}
+  .hl .m{font-size:10px;color:var(--muted);margin-top:3px;display:flex;gap:7px}
+  .tag{font-size:9.5px;font-weight:800;letter-spacing:.05em;padding:1px 7px;border-radius:5px;
+    color:#1e40af;background:#dbeafe}
+  .t-geo{color:#991b1b;background:#fee2e2} .t-mkt{color:#166534;background:#dcfce7}
+  .t-cyb{color:#92400e;background:#fef3c7} .t-ene{color:#5b21b6;background:#ede9fe}
+  .t-cli{color:#065f46;background:#d1fae5}
+  .mkt{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .mk{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .mk .s{font-size:11px;font-weight:800;color:var(--text);letter-spacing:.04em}
+  .mk .p{font-size:17px;font-weight:700;margin-top:2px}
+  .mk .c{font-size:11px;font-weight:700}
+  .up{color:var(--green)} .dn{color:var(--red)}
+  .mlist{margin-top:9px;font-size:11.5px;line-height:1.7;color:var(--dim)}
+  .mlist b{color:var(--text)} .mlist .u{color:var(--green)} .mlist .d{color:var(--red)}
+  .am{display:flex;gap:9px;padding:7px 4px;border-bottom:1px solid rgba(30,42,65,.5)}
+  .am:last-child{border-bottom:none}
+  .am .g{color:var(--amber);font-size:13px}
+  .am .n{font-size:12.5px;font-weight:700}
+  .am .m{font-size:10.5px;color:var(--muted);margin-top:2px}
+  .note{font-size:9.5px;color:var(--faint);padding:7px 14px;border-top:1px dashed var(--line)}
+  .foot{display:flex;align-items:center;gap:14px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);
+    font-size:11px;color:var(--muted)}
+  .foot .sep{width:1px;height:14px;background:var(--line)}
+  .amber-dot{background:var(--amber);width:9px;height:9px;transform:rotate(45deg)}
+  .amber-pin{color:var(--amber);font-size:20px;text-shadow:0 0 8px rgba(245,158,11,.9),0 0 2px #000}
+</style></head>
+<body>
+  <div class="head">
+    <svg class="logo" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="none" stroke="#6ea8fe" stroke-width="1.6"/><ellipse cx="16" cy="16" rx="6.4" ry="13" fill="none" stroke="#6ea8fe" stroke-width="1.2" opacity=".7"/><path d="M3 16h26M16 3c-4.5 4-4.5 22 0 26M16 3c4.5 4 4.5 22 0 26" fill="none" stroke="#6ea8fe" stroke-width="1" opacity=".7"/></svg>
+    <div><div class="brand">WORLD&nbsp;MONITOR</div><div class="sub">DAILY EVENTS</div></div>
+    <div class="hmeta">
+      <div class="date">Wednesday, 09 September 2026</div>
+      <div class="gen"><span class="live"><span class="dot"></span>LIVE</span> &nbsp;generated 2026-09-09 23:56</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- MAP -->
+    <div class="card mapcard">
+      <div class="ch"><h2>Global Situational Map</h2><span class="cnt">9 regions with live signal · 5 NCMEC missing-child alerts</span></div>
+      <div id="map"></div>
+      <div class="legend">
+        <span class="li"><span class="sw" style="background:#22c55e"></span>active</span>
+        <span class="li"><span class="sw" style="background:#f59e0b"></span>heightened</span>
+        <span class="li"><span class="sw" style="background:#ef4444"></span>elevated</span>
+        <span class="li"><span class="sw amberp"></span>◉ NCMEC missing-child alert</span>
+      </div>
+    </div>
+
+    <!-- SIGNALS -->
+    <div class="card" style="grid-row:2 / span 2">
+      <div class="ch"><h2>Signal Heat · by Region</h2><span class="cnt">120 headlines</span></div>
+      <div class="body">
+        <div class="sig"><span class="nm">United States</span>
+          <span class="bar"><i style="width:100%;background:#ef4444"></i></span>
+          <span class="n">125</span></div><div class="sig"><span class="nm">India</span>
+          <span class="bar"><i style="width:42%;background:#ef4444"></i></span>
+          <span class="n">52</span></div><div class="sig"><span class="nm">Iran</span>
+          <span class="bar"><i style="width:40%;background:#ef4444"></i></span>
+          <span class="n">50</span></div><div class="sig"><span class="nm">China</span>
+          <span class="bar"><i style="width:17%;background:#ef4444"></i></span>
+          <span class="n">21</span></div><div class="sig"><span class="nm">Israel</span>
+          <span class="bar"><i style="width:6%;background:#ef4444"></i></span>
+          <span class="n">8</span></div><div class="sig"><span class="nm">South Korea</span>
+          <span class="bar"><i style="width:6%;background:#ef4444"></i></span>
+          <span class="n">5</span></div><div class="sig"><span class="nm">Canada</span>
+          <span class="bar"><i style="width:6%;background:#f59e0b"></i></span>
+          <span class="n">3</span></div><div class="sig"><span class="nm">Russia</span>
+          <span class="bar"><i style="width:6%;background:#f59e0b"></i></span>
+          <span class="n">3</span></div><div class="sig"><span class="nm">Brazil</span>
+          <span class="bar"><i style="width:6%;background:#22c55e"></i></span>
+          <span class="n">2</span></div>
+      </div>
+    </div>
+
+    <!-- HEADLINES -->
+    <div class="card" style="grid-column:2 / span 2">
+      <div class="ch"><h2>Live Intel Feed · Top Events</h2><span class="cnt">public RSS</span></div>
+      <div class="body">
+        <div class="hl"><div><div class="t">Trump promises $5,000 dividend in convention speech, but only if Republicans win</div>
+          <div class="m"><span class="tag t-">World</span>
+          <span>Google News</span><span>46m</span></div></div></div><div class="hl"><div><div class="t">Rhode Island’s Democratic governor loses primary amid anger over bridge</div>
+          <div class="m"><span class="tag t-">World</span>
+          <span>Google News</span><span>3h</span></div></div></div><div class="hl"><div><div class="t">Trump administration proposes changes to census that could exclude millions</div>
+          <div class="m"><span class="tag t-">World</span>
+          <span>Google News</span><span>2h</span></div></div></div><div class="hl"><div><div class="t">Weekly market commentary</div>
+          <div class="m"><span class="tag t-mkt">Markets</span>
+          <span>Google News</span><span>44h</span></div></div></div><div class="hl"><div><div class="t">Global markets keep shrugging off shocks. Here's what could break that streak, according to HSBC</div>
+          <div class="m"><span class="tag t-mkt">Markets</span>
+          <span>Google News</span><span>47h</span></div></div></div><div class="hl"><div><div class="t">Petrobras price gap with global market nears record</div>
+          <div class="m"><span class="tag t-mkt">Markets</span>
+          <span>Google News</span><span>13h</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- MARKETS -->
+    <div class="card">
+      <div class="ch"><h2>Markets</h2><span class="cnt">2026-09-10 03:00</span></div>
+      <div class="body">
+        <div class="mkt">
+          <div class="mk"><div class="s">BTC</div><div class="p">$78,320</div>
+            <div class="c dn">-0.53%</div></div><div class="mk"><div class="s">ETH</div><div class="p">$2,473.4</div>
+            <div class="c dn">-0.9%</div></div><div class="mk"><div class="s">SOL</div><div class="p">$101.82</div>
+            <div class="c dn">-1.74%</div></div><div class="mk"><div class="s">XRP</div><div class="p">$1.3908</div>
+            <div class="c dn">-1.93%</div></div><div class="mk"><div class="s">AAPL</div><div class="p">$316.77</div>
+            <div class="c dn">-2.89%</div></div><div class="mk"><div class="s">NVDA</div><div class="p">$222.92</div>
+            <div class="c up">+65.82%</div></div>
+        </div>
+        <div class="mlist">
+          <b>Top gainers</b> NVDA <span class='u'>+65.82%</span>, IOST <span class='u'>+60.99%</span>, LRC <span class='u'>+18.24%</span>, SC <span class='u'>+12.65%</span>, META <span class='u'>+5.16%</span><br>
+          <b>Top losers</b> WAVES <span class='d'>-13.31%</span>, UNI <span class='d'>-11.2%</span>, ETC <span class='d'>-10.55%</span>, SAND <span class='d'>-10.49%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AMBER -->
+    <div class="card">
+      <div class="ch"><h2><span style="color:var(--amber)">◉</span> AMBER · Missing-Child</h2><span class="cnt">9 active</span></div>
+      <div class="body">
+        <div class="am"><div class="g">◉</div><div><div class="n">Jacob Pritchett · age 12</div>
+          <div class="m">BROOKLYN, NY · since 06/01/2025</div></div></div><div class="am"><div class="g">◉</div><div><div class="n">Genesis Reid · age 3</div>
+          <div class="m">ENTERPRISE, AL · since 02/16/2026</div></div></div><div class="am"><div class="g">◉</div><div><div class="n">Jonathan Lyman · age 18</div>
+          <div class="m">Defuniak Springs, FL · since 07/05/2025</div></div></div><div class="am"><div class="g">◉</div><div><div class="n">Maryuri Gomez Marquez · age 15</div>
+          <div class="m">PLAINS, TX · since 12/27/2025</div></div></div><div class="am"><div class="g">◉</div><div><div class="n">Allen Fischer · age 14</div>
+          <div class="m">MONTEVIEW, ID · since 06/22/2025</div></div></div>
+      </div>
+      <div class="note">Coverage: NCMEC missing-child registry (US-anchored). Not a global AMBER-activation feed.</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>Data: live public RSS · NCMEC missing-child registry · FiatLeak market snapshot</span>
+    <span class="sep"></span>
+    <span>120 headlines · 9 regional signals · 9 alerts</span>
+    <span class="sep"></span>
+    <span style="margin-left:auto">worldmonitor.thealpha-secret.xyz</span>
+  </div>
+
+<script>
+  var nodes = [{"name": "United States", "lat": 38.9, "lng": -77.0, "hits": 125, "color": "#ef4444", "r": 22.099999999999998}, {"name": "India", "lat": 28.6, "lng": 77.2, "hits": 52, "color": "#ef4444", "r": 22.099999999999998}, {"name": "Iran", "lat": 35.7, "lng": 51.4, "hits": 50, "color": "#ef4444", "r": 22.099999999999998}, {"name": "China", "lat": 39.9, "lng": 116.4, "hits": 21, "color": "#ef4444", "r": 22.099999999999998}, {"name": "Israel", "lat": 32.08, "lng": 34.78, "hits": 8, "color": "#ef4444", "r": 22.099999999999998}, {"name": "South Korea", "lat": 37.57, "lng": 126.98, "hits": 5, "color": "#ef4444", "r": 17.5}, {"name": "Canada", "lat": 45.4, "lng": -75.7, "hits": 3, "color": "#f59e0b", "r": 12.899999999999999}, {"name": "Russia", "lat": 55.75, "lng": 37.6, "hits": 3, "color": "#f59e0b", "r": 12.899999999999999}, {"name": "Brazil", "lat": -15.8, "lng": -47.9, "hits": 2, "color": "#22c55e", "r": 10.6}];
+  var amber = [{"name": "Jacob Pritchett", "lat": 40.6526006, "lng": -73.9497211, "loc": "BROOKLYN, NY", "age": 12}, {"name": "Genesis Reid", "lat": 31.3151708, "lng": -85.8552161, "loc": "ENTERPRISE, AL", "age": 3}, {"name": "Jonathan Lyman", "lat": 30.7210227, "lng": -86.1152184, "loc": "Defuniak Springs, FL", "age": 18}, {"name": "Maryuri Gomez Marquez", "lat": 33.1892387, "lng": -102.827274, "loc": "PLAINS, TX", "age": 15}, {"name": "Allen Fischer", "lat": 43.9718512, "lng": -112.5363764, "loc": "MONTEVIEW, ID", "age": 14}];
+  var map = L.map('map', {zoomControl:false, attributionControl:false, worldCopyJump:true, minZoom:2, maxZoom:5});
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {subdomains:'abcd', maxZoom:5}).addTo(map);
+  map.setView([22,8], 2);
+  nodes.forEach(function(n){
+    var m = L.circleMarker([n.lat,n.lng], {radius:n.r, color:'#ffffff', weight:1, fillColor:n.color, fillOpacity:0.9}).addTo(map);
+    m.bindTooltip(n.name + ' — ' + n.hits + ' signals', {permanent:false});
+  });
+  var ai = L.divIcon({className:'', html:'<span class="amber-pin">◉</span>', iconSize:[22,22], iconAnchor:[11,11]});
+  amber.forEach(function(a){ L.marker([a.lat,a.lng], {icon:ai}).addTo(map); });
+  window.__mapready = true;
+</script>
+</body></html>
