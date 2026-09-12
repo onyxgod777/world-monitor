@@ -1731,9 +1731,11 @@ function globeFrame(){
   g.raf = requestAnimationFrame(globeFrame);
 }
 function startGlobe(){
-  const g = _globe; if(!g || g.raf) return;
-  if(document.body.classList.contains('motion-off')) { drawGlobe(); return; }   // honour reduced-motion setting
-  g.raf = requestAnimationFrame(globeFrame);
+  const g = _globe; if(!g) return;
+  drawGlobe();     // paint once up-front: also fills g.hits, so markers stay tappable
+                   // even if the animation loop is throttled (background tab, reduced motion)
+  if(document.body.classList.contains('motion-off')) return;   // honour reduced-motion setting
+  if(!g.raf) g.raf = requestAnimationFrame(globeFrame);
 }
 function stopGlobe(){ const g = _globe; if(g && g.raf){ cancelAnimationFrame(g.raf); g.raf = null; } }
 /* ── Marker popups on the canvas globe ──────────────────────────────────────
