@@ -1789,6 +1789,7 @@ function bindGlobeDrag(){
   c.addEventListener('pointerdown', e=>{
     g.drag = true; last = {x:e.clientX, y:e.clientY};
     tap = {x:e.clientX, y:e.clientY, t:Date.now(), moved:0};
+    g.auto = false;      // freeze on press, else the marker drifts out from under the finger
     try{ c.setPointerCapture(e.pointerId); }catch(_){}
   });
   c.addEventListener('pointermove', e=>{
@@ -1814,11 +1815,16 @@ function bindGlobeDrag(){
   c.addEventListener('pointerup', e=>{
     const wasTap = tap && tap.moved < 7 && (Date.now() - tap.t) < 700;
     g.drag = false; last = null; tap = null;
-    if(!wasTap) return;                 // a real spin, not a tap
+    if(!wasTap){ hideGlobeTip(); return; }   // a real spin — and it resumes rotation
     const hit = globeTapTest(e.clientX, e.clientY);
-    if(hit) showGlobeTip(hit); else hideGlobeTip();
+    if(hit) showGlobeTip(hit);               // keeps the globe frozen while the card is open
+    else hideGlobeTip();                     // empty space: dismiss + resume rotation
   });
-  const up = ()=>{ g.drag = false; last = null; tap = null; };
+  const up = ()=>{
+    g.drag = false; last = null; tap = null;
+    const tip = $('#globeTip');            // cancelled press: resume spin if no card is open
+    if((!tip || tip.hidden) && !document.body.classList.contains('motion-off')) g.auto = true;
+  };
   ['pointercancel','pointerleave'].forEach(ev=> c.addEventListener(ev, up));
 }
 function setMapMode(mode){
