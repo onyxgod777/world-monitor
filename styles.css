@@ -603,16 +603,20 @@ a:hover{text-shadow:0 0 10px var(--glow)}
 /* marker popup for the canvas globe (the canvas has no DOM nodes of its own) */
 .globetip{position:absolute;z-index:6;width:236px;max-width:calc(100% - 16px);background:rgba(10,16,28,.97);
   border:1px solid var(--line2);border-radius:9px;padding:11px 12px 10px;box-shadow:0 10px 28px rgba(0,0,0,.6);
-  backdrop-filter:blur(3px)}
+  backdrop-filter:blur(3px);
+  /* let taps fall through the card to the canvas, so a marker sitting underneath
+     stays tappable; only the interactive bits capture the pointer */
+  pointer-events:none}
 .globetip[hidden]{display:none}
 .globetip .gt-close{position:absolute;top:5px;right:6px;appearance:none;background:none;border:0;color:var(--muted);
-  font-size:16px;line-height:1;cursor:pointer;padding:2px 5px}
+  font-size:16px;line-height:1;cursor:pointer;padding:2px 5px;pointer-events:auto}
 .globetip .gt-close:hover{color:var(--text)}
 .globetip .gt-title{font:600 12.5px/1.35 var(--sans);padding-right:16px;margin-bottom:3px}
 .globetip .gt-line{font-size:11.5px;color:var(--text-dim);line-height:1.45;margin-top:2px}
 .globetip .gt-line b{color:var(--text)}
 .globetip .gt-link{display:inline-block;margin-top:7px;font:600 11.5px/1 var(--sans);color:var(--accent);
-  border:1px solid rgba(110,168,254,.35);background:rgba(110,168,254,.10);border-radius:6px;padding:6px 10px;text-decoration:none}
+  border:1px solid rgba(110,168,254,.35);background:rgba(110,168,254,.10);border-radius:6px;padding:6px 10px;
+  text-decoration:none;pointer-events:auto;position:relative;z-index:1}
 .globetip .gt-link:hover{background:rgba(110,168,254,.2)}
 
 /* ═══ MODAL / GUIDE ═══ */
