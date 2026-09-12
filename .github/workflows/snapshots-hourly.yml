@@ -25,13 +25,17 @@ concurrency:
 jobs:
   snapshots:
     runs-on: ubuntu-latest
+    # The fetchers resolve their output paths from WM_REPO_DIR; here that is the
+    # Actions checkout, so the same scripts run unmodified in the cloud.
+    env:
+      WM_REPO_DIR: ${{ github.workspace }}
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
