@@ -1131,7 +1131,6 @@ const LIVE_CHANNELS = [
   { name:'Reuters',     region:'Global',        srcs:['https://amg00453-reuters-amg00453c1-rakuten-uk-2110.playouts.now.amagi.tv/playlist/amg00453-reuters-reuters-rakutenuk/playlist.m3u8'] },
   { name:'VOA Africa',  region:'US · Africa',   srcs:['https://voa-ingest.akamaized.net/hls/live/2033874/tvmc06/playlist.m3u8'] },
   { name:'DW Arabic',   region:'Germany',       srcs:['https://dwamdstream104.akamaized.net/hls/live/2015530/dwstream104/index.m3u8'] },
-  { name:'Top Stories', region:'US · Newsy',    srcs:['https://content.uplynk.com/channel/33c48f602cfd4474b957eb4ad999caf8.m3u8'] },
 ];
 let _liveCur = null, _liveHls = null;
 
@@ -1791,7 +1790,7 @@ const GUIDE=[
   {icon:'📰',h:'Intel Feed',p:'Live headlines from public RSS plus public Telegram, Reddit and X posts — social entries are labelled unverified first reports. Alerts auto-classify high-priority items and lead with measured USGS seismic events.'},
   {icon:'🌊',h:'Floods, Outbreaks & Readiness',p:'The Flood Report lists live flood alerts worldwide from GDACS plus NOAA/NWS US warnings; the Outbreak Report lists official WHO Disease Outbreak News bulletins, both drawn as icons on the map. Beside them, the DEFCON-style readiness indicator is a transparent composite of flood, seismic, outbreak and headline severity — clearly labelled as derived, because the official US DEFCON is not publicly published.'},
   {icon:'🌐',h:'2D map or 3D globe',p:'In the World tab, switch the map between the flat 2D map and a 3D rotating globe. Drag the globe to spin it yourself, or let it auto-rotate. Both views carry the same live layers.'},
-  {icon:'📺',h:'Live Broadcasts',p:'The Intel tab plays live news straight from broadcasters’ own public HLS streams — DW English, Tagesschau, Al Arabiya, WION, NDTV 24x7, CNA, Arirang TV, Reuters, VOA Africa, DW Arabic and Top Stories. No YouTube, no sign-in, no embed wall: the stream plays natively in the page, and if a source is unreachable from your network the player falls over to that channel’s next source automatically.'},
+  {icon:'📺',h:'Live Broadcasts',p:'The Intel tab plays live news straight from broadcasters’ own public HLS streams — DW English, Tagesschau, Al Arabiya, WION, NDTV 24x7, CNA, Arirang TV, Reuters, VOA Africa and DW Arabic. No YouTube, no sign-in, no embed wall: the stream plays natively in the page, and if a source is unreachable from your network the player falls over to that channel’s next source automatically.'},
   {icon:'🧭',h:'Use it',p:'Switch sections with the tabs (Markets · Intel · Prophecy · Alerts · World · Settings). ⚙ Settings controls the look (HUD effects, motion, density), which sources feed the Intel panel, the map layers, 2D/3D map view, focus regions, clock format and refresh rate — all stored in your browser only. Live data refreshes automatically. Beta — verify critical intelligence independently.'},
 ];
 let guideIdx=0;
