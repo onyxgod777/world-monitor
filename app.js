@@ -1745,12 +1745,17 @@ function globeTapTest(clientX, clientY){
   const g = _globe; if(!g || !g.hits || !g.hits.length) return null;
   const r = g.canvas.getBoundingClientRect();
   const x = clientX - r.left, y = clientY - r.top;
-  for(let i = g.hits.length - 1; i >= 0; i--){          // reverse = topmost drawn wins
+  // Nearest marker within the tolerance wins, so tapping a specific dot selects
+  // that dot rather than a neighbour; the 0.5px slack lets a later-drawn
+  // (topmost) marker win an exact tie.
+  let best = null, bestD = Infinity;
+  for(let i = 0; i < g.hits.length; i++){
     const h = g.hits[i];
-    const tol = Math.max(h.r + 8, 14);                  // finger-friendly target
-    if(Math.hypot(h.x - x, h.y - y) <= tol) return h;
+    const tol = Math.max(h.r + 8, 14);          // finger-friendly target
+    const d = Math.hypot(h.x - x, h.y - y);
+    if(d <= tol && d <= bestD + 0.5){ best = h; bestD = d; }
   }
-  return null;
+  return best;
 }
 function hideGlobeTip(){
   const tip = $('#globeTip'); if(tip) tip.hidden = true;
@@ -1796,6 +1801,10 @@ function bindGlobeDrag(){
     }
     const dx = e.clientX - last.x, dy = e.clientY - last.y;
     if(tap) tap.moved += Math.abs(dx) + Math.abs(dy);
+    if(tap && tap.moved > 7){
+      const tip = $('#globeTip');
+      if(tip && !tip.hidden) hideGlobeTip();     // a spin detaches it from its marker
+    }
     last = {x:e.clientX, y:e.clientY};
     g.rot[0] += dx * 0.28;
     g.rot[1] = Math.max(-80, Math.min(80, g.rot[1] - dy * 0.25));

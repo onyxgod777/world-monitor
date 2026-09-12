@@ -55,6 +55,9 @@ def parse_feed(xml):
         guid = clean(re.search(r'<guid[^>]*>(.*?)</guid>', it, re.S).group(1))
         desc = clean(re.search(r'<description>(.*?)</description>', it, re.S).group(1))
         link = clean(re.search(r'<link>(.*?)</link>', it, re.S).group(1))
+        # NCMEC publishes these over http; the site serves https fine, so upgrade
+        # to avoid a redirect hop and any mixed-content warnings in the UI.
+        link = re.sub(r'^http://', 'https://', link)
         photo = None
         en = re.search(r'<enclosure[^>]*url="([^"]+)"', it)
         if en: photo = en.group(1).replace('http://', 'https://')
