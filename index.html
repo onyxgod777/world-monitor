@@ -139,13 +139,13 @@
           <div class="card-head">
             <h2><span class="liveglyph"></span> Live Broadcasts</h2>
             <span class="count mono" id="liveCount">—</span>
-            <span class="src mono">OFFICIAL YOUTUBE LIVE</span>
+            <span class="src mono">DIRECT STREAM · NO SIGN-IN</span>
           </div>
           <div class="livechips" id="liveChips"></div>
           <div class="liveplayer" id="livePlayer">
             <div class="ph mono" style="padding:34px;text-align:center">Select a channel to start the live stream.</div>
           </div>
-          <div class="livenote">Embedded official live channels via YouTube. Streams are provided by the broadcasters — availability, schedule and regional access vary; some channels may be offline or geo-blocked at any given time.</div>
+          <div class="livenote">Direct HLS broadcasts straight from the broadcaster's own CDN — no YouTube, no account, no sign-in wall, no embed restrictions. Playback is native in your browser; if a source is unavailable from your network the player automatically fails over to the next source for that channel. Public-service and free-to-air news channels only.</div>
         </div>
       </div>
     </section>
@@ -261,7 +261,7 @@
       <div class="srow">
         <span id="connStatus" class="conn mono">STATUS: CONNECTING</span>
         <span class="sep"></span>
-        <span class="foot-note">Live where available — crypto prices &amp; clocks are real-time. News feed best-effort via public RSS; seismic is live USGS data; floods are current GDACS + NOAA/NWS alerts (expired events excluded); outbreaks are official WHO Disease Outbreak News bulletins; live broadcasts embed the broadcasters' own YouTube live streams (availability and regional access vary); Telegram / Reddit / X entries are unverified public social posts, not edited journalism. The DEFCON-style readiness indicator is a derived composite of those open feeds — the official US DEFCON is not publicly published. AI brief is illustrative. Data may be delayed or incomplete — always verify critical intelligence independently.</span>
+        <span class="foot-note">Live where available — crypto prices &amp; clocks are real-time. News feed best-effort via public RSS; seismic is live USGS data; floods are current GDACS + NOAA/NWS alerts (expired events excluded); outbreaks are official WHO Disease Outbreak News bulletins; live broadcasts play the broadcasters' own public HLS streams directly in the page (no YouTube, no sign-in, no embed wall — sources unreachable from your network fail over automatically); Telegram / Reddit / X entries are unverified public social posts, not edited journalism. The DEFCON-style readiness indicator is a derived composite of those open feeds — the official US DEFCON is not publicly published. AI brief is illustrative. Data may be delayed or incomplete — always verify critical intelligence independently.</span>
       </div>
     </footer>
   </main>
@@ -326,6 +326,7 @@
   <script src="quakes.js"></script>
   <script src="floods.js"></script>
   <script src="outbreaks.js"></script>
+  <script src="vendor/hls.min.js"></script>
   <script src="social.js"></script>
   <script src="news.js"></script>
   <script src="app.js"></script>

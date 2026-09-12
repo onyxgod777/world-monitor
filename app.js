@@ -1112,48 +1112,82 @@ function renderOutbreaks(){
     + `<div class="outbreaknote">${recent.length} WHO Disease Outbreak News bulletins in the last 120 days${archive ? ` · ${archive} older in the WHO archive (not shown)` : ''} · ${O.geocoded || 0} placed on the map. Source: World Health Organization — official outbreak bulletins, not news reports.</div>`;
 }
 
-/* ══════════════ 5f. LIVE BROADCASTS (official YouTube live channels) ══════════════
-   Embeds each broadcaster's own YouTube live stream via the channel-based
-   live_stream player (no video ID, so it follows whichever stream is live).
-   Channel IDs below were verified against each broadcaster's channel page.
-   The iframe only loads when the card scrolls into view, so it costs nothing
-   until the Intel tab is actually opened. */
+/* ══════════════ 5f. LIVE BROADCASTS (direct HLS from broadcaster CDNs) ══════════════
+   No YouTube anywhere: each channel is the broadcaster's OWN public HLS endpoint.
+   Every source below was verified reachable cross-origin (Access-Control-Allow-
+   Origin present on the master AND the media playlist), so playback happens
+   natively in this page — no account, no sign-in wall, no embed restriction.
+   Each channel carries fallback sources; if one is unreachable from the viewer's
+   network the player advances to the next automatically. */
 const LIVE_CHANNELS = [
-  { name:'Al Jazeera English', id:'UCNye-wNBqNL5ZzHSJj3l8Bg' },
-  { name:'France 24 English',  id:'UCQfwfsi5VrQ8yKZ-UWmAEFg' },
-  { name:'DW News',            id:'UCknLrEdhRCp1aegoMqRaCZg' },
-  { name:'Sky News',           id:'UCoMdktPbSTixAyNGwb-UYkQ' },
-  { name:'Euronews',           id:'UCSrZ3UV4jOidv8ppoVuvW9Q' },
-  { name:'ABC News',           id:'UCBi2mrWuNuyYy4gbM6fU18Q' },
-  { name:'Bloomberg TV',       id:'UCIALMKvObZNtJ6AmdCLP7Lg' },
-  { name:'Reuters',            id:'UChqUTb7kYRX8-EiaN3XFrSQ' },
-  { name:'CNA',                id:'UC83jt4dlz1Gjl58fzQrrKZg' },
+  { name:'DW English',  region:'Germany',       srcs:['https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8'] },
+  { name:'Tagesschau',  region:'Germany · ARD', srcs:['https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8'] },
+  { name:'Al Arabiya',  region:'UAE',           srcs:['https://live.alarabiya.net/alarabiapublish/alarabiya.smil/playlist.m3u8'] },
+  { name:'WION',        region:'India',         srcs:['https://d7x8z4yuq42qn.cloudfront.net/index_7.m3u8'] },
+  { name:'NDTV 24x7',   region:'India',         srcs:['https://ndtv24x7elemarchana.akamaized.net/hls/live/2003678/ndtv24x7/master.m3u8'] },
+  { name:'CNA',         region:'Singapore',     srcs:['https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8',
+                                                      'https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index_5.m3u8'] },
+  { name:'Arirang TV',  region:'South Korea',   srcs:['https://amdlive-ch01-ctnd-com.akamaized.net/arirang_1ch/smil:arirang_1ch.smil/playlist.m3u8'] },
+  { name:'Reuters',     region:'Global',        srcs:['https://amg00453-reuters-amg00453c1-rakuten-uk-2110.playouts.now.amagi.tv/playlist/amg00453-reuters-reuters-rakutenuk/playlist.m3u8'] },
+  { name:'VOA Africa',  region:'US · Africa',   srcs:['https://voa-ingest.akamaized.net/hls/live/2033874/tvmc06/playlist.m3u8'] },
+  { name:'DW Arabic',   region:'Germany',       srcs:['https://dwamdstream104.akamaized.net/hls/live/2015530/dwstream104/index.m3u8'] },
+  { name:'Top Stories', region:'US · Newsy',    srcs:['https://content.uplynk.com/channel/33c48f602cfd4474b957eb4ad999caf8.m3u8'] },
 ];
-let _liveCur = null;
-function liveEmbedUrl(id){
-  return 'https://www.youtube.com/embed/live_stream?channel=' + encodeURIComponent(id) +
-         '&autoplay=1&mute=1&playsinline=1&rel=0';
-}
-function setLiveChannel(id){
+let _liveCur = null, _liveHls = null;
+
+function liveMessage(msg, bad){
   const box = $('#livePlayer'); if(!box) return;
-  _liveCur = id;
-  document.querySelectorAll('#liveChips .lchip').forEach(b => b.classList.toggle('is-on', b.dataset.ch === id));
-  box.innerHTML = `<iframe src="${esc(liveEmbedUrl(id))}" title="Live news broadcast"
-    allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen
-    referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+  box.innerHTML = `<div class="livemsg mono${bad ? ' bad' : ''}">${esc(msg)}</div>`;
+}
+function playLiveSource(i){
+  const ch = LIVE_CHANNELS.find(c => c.name === _liveCur); if(!ch) return;
+  if(i >= ch.srcs.length){
+    liveMessage('All sources for ' + ch.name + ' are unreachable from your network right now — try another channel.', true);
+    return;
+  }
+  const box = $('#livePlayer'); if(!box) return;
+  if(_liveHls){ try{ _liveHls.destroy(); }catch(e){} _liveHls = null; }
+  if(i === 0){
+    box.innerHTML = '<video class="livevideo" playsinline muted autoplay controls referrerpolicy="no-referrer"></video>' +
+                    '<div class="livebadge">● LIVE</div>';
+  }
+  const v = box.querySelector('video'); if(!v) return;
+  const url = ch.srcs[i];
+  const advance = () => playLiveSource(i + 1);
+  if(window.Hls && Hls.isSupported()){
+    const hls = new Hls({ lowLatencyMode:true, enableWorker:true,
+      manifestLoadingTimeOut:12000, manifestLoadingMaxRetry:1, fragLoadingMaxRetry:2 });
+    _liveHls = hls;
+    hls.loadSource(url);
+    hls.attachMedia(v);
+    hls.on(Hls.Events.MANIFEST_PARSED, () => { v.play().catch(()=>{}); });
+    hls.on(Hls.Events.ERROR, (e, data) => { if(data && data.fatal) advance(); });
+  }else if(v.canPlayType('application/vnd.apple.mpegurl')){
+    v.src = url;                              // Safari / iOS native HLS
+    v.addEventListener('error', advance, { once:true });
+    v.play().catch(()=>{});
+  }else{
+    liveMessage('This browser cannot play HLS streams.', true);
+  }
+}
+function setLiveChannel(name){
+  _liveCur = name;
+  document.querySelectorAll('#liveChips .lchip').forEach(b => b.classList.toggle('is-on', b.dataset.ch === name));
+  playLiveSource(0);
 }
 function initLive(){
   const box = $('#liveChips'); if(!box) return;
   box.innerHTML = LIVE_CHANNELS.map((c, i) =>
-    `<button class="lchip${i === 0 ? ' is-on' : ''}" type="button" data-ch="${esc(c.id)}"><span class="ldot"></span>${esc(c.name)}</button>`).join('');
-  const cnt = $('#liveCount'); if(cnt) cnt.textContent = LIVE_CHANNELS.length + ' channels';
+    `<button class="lchip${i === 0 ? ' is-on' : ''}" type="button" data-ch="${esc(c.name)}" title="${esc(c.region)}"><span class="ldot"></span>${esc(c.name)}</button>`).join('');
+  const cnt = $('#liveCount');
+  if(cnt) cnt.textContent = LIVE_CHANNELS.length + ' channels' + (window.Hls ? '' : ' · native');
   box.querySelectorAll('.lchip').forEach(b => b.addEventListener('click', () => setLiveChannel(b.dataset.ch)));
   // start the first channel only once the card is actually on screen
   const card = document.querySelector('.card.live');
-  if(!card || !('IntersectionObserver' in window)){ setLiveChannel(LIVE_CHANNELS[0].id); return; }
+  if(!card || !('IntersectionObserver' in window)){ setLiveChannel(LIVE_CHANNELS[0].name); return; }
   const io = new IntersectionObserver(ents => {
     ents.forEach(e => {
-      if(e.isIntersecting && !_liveCur){ setLiveChannel(LIVE_CHANNELS[0].id); io.disconnect(); }
+      if(e.isIntersecting && !_liveCur){ setLiveChannel(LIVE_CHANNELS[0].name); io.disconnect(); }
     });
   }, { rootMargin:'250px' });
   io.observe(card);
@@ -1757,7 +1791,7 @@ const GUIDE=[
   {icon:'📰',h:'Intel Feed',p:'Live headlines from public RSS plus public Telegram, Reddit and X posts — social entries are labelled unverified first reports. Alerts auto-classify high-priority items and lead with measured USGS seismic events.'},
   {icon:'🌊',h:'Floods, Outbreaks & Readiness',p:'The Flood Report lists live flood alerts worldwide from GDACS plus NOAA/NWS US warnings; the Outbreak Report lists official WHO Disease Outbreak News bulletins, both drawn as icons on the map. Beside them, the DEFCON-style readiness indicator is a transparent composite of flood, seismic, outbreak and headline severity — clearly labelled as derived, because the official US DEFCON is not publicly published.'},
   {icon:'🌐',h:'2D map or 3D globe',p:'In the World tab, switch the map between the flat 2D map and a 3D rotating globe. Drag the globe to spin it yourself, or let it auto-rotate. Both views carry the same live layers.'},
-  {icon:'📺',h:'Live Broadcasts',p:'The Intel tab embeds official live news channels — Al Jazeera English, France 24, DW, Sky News, Euronews, ABC News, Bloomberg TV, Reuters and CNA — through each broadcaster’s own YouTube live stream. Pick a channel with the buttons; availability and regional access vary by broadcaster.'},
+  {icon:'📺',h:'Live Broadcasts',p:'The Intel tab plays live news straight from broadcasters’ own public HLS streams — DW English, Tagesschau, Al Arabiya, WION, NDTV 24x7, CNA, Arirang TV, Reuters, VOA Africa, DW Arabic and Top Stories. No YouTube, no sign-in, no embed wall: the stream plays natively in the page, and if a source is unreachable from your network the player falls over to that channel’s next source automatically.'},
   {icon:'🧭',h:'Use it',p:'Switch sections with the tabs (Markets · Intel · Prophecy · Alerts · World · Settings). ⚙ Settings controls the look (HUD effects, motion, density), which sources feed the Intel panel, the map layers, 2D/3D map view, focus regions, clock format and refresh rate — all stored in your browser only. Live data refreshes automatically. Beta — verify critical intelligence independently.'},
 ];
 let guideIdx=0;
