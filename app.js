@@ -1084,9 +1084,21 @@ function renderOutbreaks(){
     bar.innerHTML = `<div class="ph mono" style="padding:16px">Outbreak feed unavailable right now — retrying on next refresh. If this persists the WHO DON feed is unreachable.</div>`;
     return;
   }
-  if(cEl) cEl.textContent = O.count + ' reports' + (O.countries ? ' · ' + O.countries.length + ' countries' : '');
+  // only current bulletins: WHO DON is an archive, so keep the last 120 days and
+  // surface older ones as an explicit archive count rather than as "live" reports
+  const nowMs = Date.now();
+  const recent = O.items.filter(o => {
+    const t = Date.parse(o.date || '');
+    return isNaN(t) || (nowMs - t) <= 120 * 24 * 3600e3;
+  });
+  const archive = O.items.length - recent.length;
+  if(cEl) cEl.textContent = recent.length + ' recent' + (O.countries ? ' · ' + O.countries.length + ' countries' : '');
   if(sEl) sEl.textContent = 'WHO DON · ' + String(O.latest || O._updated || '').slice(0, 10);
-  const items = O.items.slice(0, 12);
+  const items = recent.slice(0, 12);
+  if(!items.length){
+    bar.innerHTML = `<div class="ph mono" style="padding:16px">No WHO outbreak bulletins in the last 120 days — ${archive} older bulletins sit in the WHO archive.</div>`;
+    return;
+  }
   bar.innerHTML = items.map(o=>`
     <div class="obitem">
       <div class="obflag">☣</div>
@@ -1097,7 +1109,54 @@ function renderOutbreaks(){
         <div class="obsrc">Official WHO Disease Outbreak News bulletin${o.url ? ` · <a href="${esc(o.url)}" target="_blank" rel="noopener">WHO DON ${esc(o.id || '')} ↗</a>` : ''}</div>
       </div>
     </div>`).join('')
-    + `<div class="outbreaknote">${O.count} live WHO Disease Outbreak News bulletins across ${(O.countries || []).length} countries; ${O.geocoded || 0} placed on the map. Source: World Health Organization — official outbreak bulletins, not news reports.</div>`;
+    + `<div class="outbreaknote">${recent.length} WHO Disease Outbreak News bulletins in the last 120 days${archive ? ` · ${archive} older in the WHO archive (not shown)` : ''} · ${O.geocoded || 0} placed on the map. Source: World Health Organization — official outbreak bulletins, not news reports.</div>`;
+}
+
+/* ══════════════ 5f. LIVE BROADCASTS (official YouTube live channels) ══════════════
+   Embeds each broadcaster's own YouTube live stream via the channel-based
+   live_stream player (no video ID, so it follows whichever stream is live).
+   Channel IDs below were verified against each broadcaster's channel page.
+   The iframe only loads when the card scrolls into view, so it costs nothing
+   until the Intel tab is actually opened. */
+const LIVE_CHANNELS = [
+  { name:'Al Jazeera English', id:'UCNye-wNBqNL5ZzHSJj3l8Bg' },
+  { name:'France 24 English',  id:'UCQfwfsi5VrQ8yKZ-UWmAEFg' },
+  { name:'DW News',            id:'UCknLrEdhRCp1aegoMqRaCZg' },
+  { name:'Sky News',           id:'UCoMdktPbSTixAyNGwb-UYkQ' },
+  { name:'Euronews',           id:'UCSrZ3UV4jOidv8ppoVuvW9Q' },
+  { name:'ABC News',           id:'UCBi2mrWuNuyYy4gbM6fU18Q' },
+  { name:'Bloomberg TV',       id:'UCIALMKvObZNtJ6AmdCLP7Lg' },
+  { name:'Reuters',            id:'UChqUTb7kYRX8-EiaN3XFrSQ' },
+  { name:'CNA',                id:'UC83jt4dlz1Gjl58fzQrrKZg' },
+];
+let _liveCur = null;
+function liveEmbedUrl(id){
+  return 'https://www.youtube.com/embed/live_stream?channel=' + encodeURIComponent(id) +
+         '&autoplay=1&mute=1&playsinline=1&rel=0';
+}
+function setLiveChannel(id){
+  const box = $('#livePlayer'); if(!box) return;
+  _liveCur = id;
+  document.querySelectorAll('#liveChips .lchip').forEach(b => b.classList.toggle('is-on', b.dataset.ch === id));
+  box.innerHTML = `<iframe src="${esc(liveEmbedUrl(id))}" title="Live news broadcast"
+    allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen
+    referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+}
+function initLive(){
+  const box = $('#liveChips'); if(!box) return;
+  box.innerHTML = LIVE_CHANNELS.map((c, i) =>
+    `<button class="lchip${i === 0 ? ' is-on' : ''}" type="button" data-ch="${esc(c.id)}"><span class="ldot"></span>${esc(c.name)}</button>`).join('');
+  const cnt = $('#liveCount'); if(cnt) cnt.textContent = LIVE_CHANNELS.length + ' channels';
+  box.querySelectorAll('.lchip').forEach(b => b.addEventListener('click', () => setLiveChannel(b.dataset.ch)));
+  // start the first channel only once the card is actually on screen
+  const card = document.querySelector('.card.live');
+  if(!card || !('IntersectionObserver' in window)){ setLiveChannel(LIVE_CHANNELS[0].id); return; }
+  const io = new IntersectionObserver(ents => {
+    ents.forEach(e => {
+      if(e.isIntersecting && !_liveCur){ setLiveChannel(LIVE_CHANNELS[0].id); io.disconnect(); }
+    });
+  }, { rootMargin:'250px' });
+  io.observe(card);
 }
 
 /* ══════════════ 5d. GLOBAL READINESS (DEFCON-style, derived from live data) ══════════════ */
@@ -1698,6 +1757,7 @@ const GUIDE=[
   {icon:'📰',h:'Intel Feed',p:'Live headlines from public RSS plus public Telegram, Reddit and X posts — social entries are labelled unverified first reports. Alerts auto-classify high-priority items and lead with measured USGS seismic events.'},
   {icon:'🌊',h:'Floods, Outbreaks & Readiness',p:'The Flood Report lists live flood alerts worldwide from GDACS plus NOAA/NWS US warnings; the Outbreak Report lists official WHO Disease Outbreak News bulletins, both drawn as icons on the map. Beside them, the DEFCON-style readiness indicator is a transparent composite of flood, seismic, outbreak and headline severity — clearly labelled as derived, because the official US DEFCON is not publicly published.'},
   {icon:'🌐',h:'2D map or 3D globe',p:'In the World tab, switch the map between the flat 2D map and a 3D rotating globe. Drag the globe to spin it yourself, or let it auto-rotate. Both views carry the same live layers.'},
+  {icon:'📺',h:'Live Broadcasts',p:'The Intel tab embeds official live news channels — Al Jazeera English, France 24, DW, Sky News, Euronews, ABC News, Bloomberg TV, Reuters and CNA — through each broadcaster’s own YouTube live stream. Pick a channel with the buttons; availability and regional access vary by broadcaster.'},
   {icon:'🧭',h:'Use it',p:'Switch sections with the tabs (Markets · Intel · Prophecy · Alerts · World · Settings). ⚙ Settings controls the look (HUD effects, motion, density), which sources feed the Intel panel, the map layers, 2D/3D map view, focus regions, clock format and refresh rate — all stored in your browser only. Live data refreshes automatically. Beta — verify critical intelligence independently.'},
 ];
 let guideIdx=0;
@@ -1756,6 +1816,7 @@ function boot(){
   renderFloods();  // GDACS/NWS flood report — committed snapshot, independent of news fetch
   renderOutbreaks(); // WHO Disease Outbreak News report — committed snapshot
   renderDefcon();  // derived readiness indicator — recomputed on each news refresh
+  initLive();      // live news broadcast channels (iframe loads when the card is in view)
   loadMarkets(); setInterval(loadMarkets,60000);
   applySettings();   // saved display classes + first feed render + refresh timer
   loadPrediction(); setInterval(loadPrediction,300000);
