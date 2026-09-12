@@ -1,0 +1,62 @@
+# World Monitor — four-hourly snapshots (NCMEC alerts, WHO outbreak bulletins).
+#
+# Slow-moving sources, so a 4-hour cadence keeps load (and Nominatim geocoding
+# calls) polite. Runs on GitHub's runners, independent of the maintainer's laptop.
+name: WM snapshots — 4h
+
+on:
+  schedule:
+    - cron: '12 */4 * * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - 'fetch_amber.py'
+      - 'fetch_outbreaks.py'
+      - '.github/workflows/snapshots-4h.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wm-snapshots-4h
+  cancel-in-progress: false
+
+jobs:
+  snapshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate snapshots
+        run: |
+          set +e
+          python3 fetch_amber.py;     echo "amber exit=$?"
+          python3 fetch_outbreaks.py; echo "outbreaks exit=$?"
+
+      - name: Commit and push when changed
+        run: |
+          set -e
+          git config user.name  "world-monitor-bot"
+          git config user.email "world-monitor-bot@users.noreply.github.com"
+          git add amber.js outbreaks.js
+          if git diff --cached --quiet; then
+            echo "no snapshot changes"
+            exit 0
+          fi
+          git commit -m "snapshot: NCMEC alerts + WHO outbreaks (automated, $(date -u '+%Y-%m-%d %H:%M') UTC)"
+          for attempt in 1 2 3 4; do
+            git pull --rebase --autostash origin main || true
+            if git push origin main; then
+              echo "pushed on attempt $attempt"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "push failed after 4 attempts"; exit 1

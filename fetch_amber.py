@@ -19,8 +19,10 @@ Usage:
 import json, os, re, subprocess, sys, datetime, time, urllib.request, urllib.parse
 
 HOME = os.path.expanduser('~')
-OUT = os.path.join(HOME, 'world-monitor', 'amber.js')
-REPO = os.path.join(HOME, 'world-monitor')
+# REPO is overridable so the same script runs unchanged from GitHub Actions
+# (checkout dir) as well as from the laptop's ~/world-monitor checkout.
+REPO = os.environ.get('WM_REPO_DIR') or os.path.join(HOME, 'world-monitor')
+OUT = os.path.join(REPO, 'amber.js')
 FEED = ('https://www.missingkids.org/missingkids/servlet/XmlServlet'
         '?act=rss&LanguageCountry=en_US&orgPrefix=NCMC')
 GEO = 'https://nominatim.openstreetmap.org/search'

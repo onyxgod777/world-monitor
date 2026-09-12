@@ -1,0 +1,66 @@
+# World Monitor — hourly snapshots (Intel news feed, FiatLeak movers, social signals).
+#
+# Runs on GitHub's runners so the dashboard keeps refreshing with the maintainer's
+# laptop off. Commits only when the data actually changed.
+name: WM snapshots — hourly
+
+on:
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - 'fetch_news.py'
+      - 'fetch_fiatleak.py'
+      - 'fetch_social.py'
+      - '.github/workflows/snapshots-hourly.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wm-snapshots-hourly
+  cancel-in-progress: false
+
+jobs:
+  snapshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # A source that yields nothing must not stop the other fetchers; each one
+      # refuses to overwrite its snapshot with empty data on its own.
+      - name: Generate snapshots
+        run: |
+          set +e
+          python3 fetch_news.py;      echo "news exit=$?"
+          python3 fetch_fiatleak.py;  echo "fiatleak exit=$?"
+          python3 fetch_social.py;    echo "social exit=$?"
+
+      - name: Commit and push when changed
+        run: |
+          set -e
+          git config user.name  "world-monitor-bot"
+          git config user.email "world-monitor-bot@users.noreply.github.com"
+          git add news.js fiatleak.js social.js
+          if git diff --cached --quiet; then
+            echo "no snapshot changes"
+            exit 0
+          fi
+          git commit -m "snapshot: intel + fiatleak + social (automated, $(date -u '+%Y-%m-%d %H:%M') UTC)"
+          for attempt in 1 2 3 4; do
+            git pull --rebase --autostash origin main || true
+            if git push origin main; then
+              echo "pushed on attempt $attempt"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "push failed after 4 attempts"; exit 1

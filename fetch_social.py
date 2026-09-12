@@ -26,8 +26,10 @@ import concurrent.futures, datetime, html, json, os, re, subprocess, sys, time
 import urllib.error, urllib.request
 
 HOME = os.path.expanduser('~')
-OUT = os.path.join(HOME, 'world-monitor', 'social.js')
-REPO = os.path.join(HOME, 'world-monitor')
+# REPO is overridable so the same script runs unchanged from GitHub Actions
+# (checkout dir) as well as from the laptop's ~/world-monitor checkout.
+REPO = os.environ.get('WM_REPO_DIR') or os.path.join(HOME, 'world-monitor')
+OUT = os.path.join(REPO, 'social.js')
 UA = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36',
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       'Accept-Language': 'en-US,en;q=0.9'}

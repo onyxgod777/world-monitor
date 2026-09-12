@@ -21,8 +21,10 @@ Usage:
 import datetime, email.utils, json, os, re, subprocess, sys, urllib.request
 
 HOME = os.path.expanduser('~')
-OUT = os.path.join(HOME, 'world-monitor', 'floods.js')
-REPO = os.path.join(HOME, 'world-monitor')
+# REPO is overridable so the same script runs unchanged from GitHub Actions
+# (checkout dir) as well as from the laptop's ~/world-monitor checkout.
+REPO = os.environ.get('WM_REPO_DIR') or os.path.join(HOME, 'world-monitor')
+OUT = os.path.join(REPO, 'floods.js')
 GDACS_RSS = 'https://www.gdacs.org/xml/rss.xml'
 NWS = 'https://api.weather.gov/alerts/active?event=Flood%20Warning'
 UA = {'User-Agent': 'WorldMonitor-FloodFetcher/1.0 (public GDACS + NOAA NWS open data)',

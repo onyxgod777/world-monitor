@@ -22,8 +22,10 @@ import datetime, json, os, re, subprocess, sys, urllib.request
 import xml.etree.ElementTree as ET
 
 HOME = os.path.expanduser('~')
-OUT = os.path.join(HOME, 'world-monitor', 'news.js')
-REPO = os.path.join(HOME, 'world-monitor')
+# REPO is overridable so the same script runs unchanged from GitHub Actions
+# (checkout dir) as well as from the laptop's ~/world-monitor checkout.
+REPO = os.environ.get('WM_REPO_DIR') or os.path.join(HOME, 'world-monitor')
+OUT = os.path.join(REPO, 'news.js')
 UA = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
       'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*'}
 

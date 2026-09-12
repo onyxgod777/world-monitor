@@ -21,8 +21,10 @@ Usage:
 import datetime, json, os, subprocess, sys, urllib.request
 
 HOME = os.path.expanduser('~')
-OUT = os.path.join(HOME, 'world-monitor', 'quakes.js')
-REPO = os.path.join(HOME, 'world-monitor')
+# REPO is overridable so the same script runs unchanged from GitHub Actions
+# (checkout dir) as well as from the laptop's ~/world-monitor checkout.
+REPO = os.environ.get('WM_REPO_DIR') or os.path.join(HOME, 'world-monitor')
+OUT = os.path.join(REPO, 'quakes.js')
 BASE = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/'
 FEEDS = ['2.5_day.geojson', '4.5_week.geojson']
 # Hard caps so one very active day cannot bloat the committed snapshot. Sorted

@@ -14,11 +14,13 @@ Usage:
     python3 fetch_outbreaks.py            # write outbreaks.js in place (if changed)
     python3 fetch_outbreaks.py --commit   # write + commit + push (only when changed)
 """
-import datetime, json, os, re, subprocess, sys, urllib.request, urllib.parse
+import datetime, json, os, re, subprocess, sys, time, urllib.request, urllib.parse
 
 HOME = os.path.expanduser('~')
-OUT = os.path.join(HOME, 'world-monitor', 'outbreaks.js')
-REPO = os.path.join(HOME, 'world-monitor')
+# REPO is overridable so the same script runs unchanged from GitHub Actions
+# (checkout dir) as well as from the laptop's ~/world-monitor checkout.
+REPO = os.environ.get('WM_REPO_DIR') or os.path.join(HOME, 'world-monitor')
+OUT = os.path.join(REPO, 'outbreaks.js')
 API = ('https://www.who.int/api/news/diseaseoutbreaknews'
        '?%24orderby=PublicationDateAndTime%20desc&%24top=40')
 TOP = 30
@@ -62,10 +64,20 @@ CC = {
  'Ireland': (53.4, -8.2), 'Portugal': (39.4, -8.2), 'Georgia': (42.3, 43.4), 'Kazakhstan': (48.0, 66.9),
 }
 
-def fetch(url):
-    req = urllib.request.Request(url, headers=UA)
-    with urllib.request.urlopen(req, timeout=30) as r:
-        return json.loads(r.read().decode('utf-8', 'ignore'))
+def fetch(url, attempts=3):
+    # WHO's API returns transient 503s; retry briefly rather than losing the
+    # whole 4-hour cycle (and never overwrite a good snapshot on a transient miss).
+    last = None
+    for i in range(attempts):
+        try:
+            req = urllib.request.Request(url, headers=UA)
+            with urllib.request.urlopen(req, timeout=30) as r:
+                return json.loads(r.read().decode('utf-8', 'ignore'))
+        except Exception as e:
+            last = e
+            if i < attempts - 1:
+                time.sleep(5 * (i + 1))
+    raise last
 
 def split_title(title):
     """'Ebola ... - Democratic Republic of the Congo' -> (disease, country).
