@@ -57,7 +57,10 @@ jobs:
             echo "::error::every fetcher failed — the runner could not reach any source"
             exit 1
           fi
-          [ "$fail" -gt 0 ] && echo "::warning::$fail fetcher(s) hit an unreachable/empty source this cycle"
+          if [ "$fail" -gt 0 ]; then
+            echo "::warning::$fail fetcher(s) hit an unreachable/empty source this cycle"
+          fi
+          exit 0
 
       - name: Commit and push when changed
         run: |
