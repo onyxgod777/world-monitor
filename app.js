@@ -1582,12 +1582,12 @@ async function ensureGlobe(){
       window.__wmLand = topojson.feature(topo, topo.objects.land);
     }
     _globe = { canvas, ctx: canvas.getContext('2d'), land: window.__wmLand,
-               rot:[12,-16,0], auto:true, ready:true, raf:null, drag:false, w:0, h:0 };
+               rot:[12,-16,0], auto:true, ready:true, raf:null, drag:false, w:0, h:0, hits:[] };
     sizeGlobe();
     bindGlobeDrag();
     startGlobe();
     const fb = $('#globefallback');
-    if(fb) fb.textContent = 'Drag the globe to spin · auto-rotating · Natural Earth 110m';
+    if(fb) fb.textContent = 'Drag the globe to spin · tap a marker for details · Natural Earth 110m';
     return _globe;
   }catch(e){
     const fb = $('#globefallback');
@@ -1609,7 +1609,7 @@ function sizeGlobe(){
   g.path = d3.geoPath(g.proj, g.ctx);
   if(!g.grat) g.grat = d3.geoGraticule10();
 }
-function plotGlobePt(lng, lat, color, size, kind){
+function plotGlobePt(lng, lat, color, size, kind, data){
   const g = _globe; if(!g) return;
   const c = [-g.rot[0], -g.rot[1]];
   if(d3.geoDistance([lng, lat], c) > Math.PI/2 - 0.02) return;   // far side of the globe
@@ -1627,6 +1627,9 @@ function plotGlobePt(lng, lat, color, size, kind){
     ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 0.8; ctx.stroke();
   }
   ctx.restore();
+  // Canvas has no DOM nodes, so remember where each marker landed this frame.
+  // globeTapTest() hit-tests against this list — without it the dots are unclickable.
+  if(data) g.hits.push({ x:p[0], y:p[1], r:size, data });
 }
 function drawGlobe(){
   const g = _globe; if(!g || !g.proj) return;
@@ -1642,15 +1645,24 @@ function drawGlobe(){
   ctx.beginPath(); g.path({type:'Sphere'});
   ctx.strokeStyle = 'rgba(110,168,254,.35)'; ctx.lineWidth = 1.2; ctx.stroke();
 
+  g.hits = [];                        // rebuilt every frame; hit-testing reads this
+
   // news signal hubs (same keyword matching the 2D map uses)
   if(S.news && S.news.length){
     const titles = S.news.map(n => (n.title || '').toLowerCase());
     HUBS.forEach(([name, lat, lng, kws])=>{
       const re = hubRe(kws);
-      const count = titles.reduce((n, t)=> n + (re.test(t) ? 1 : 0), 0);
+      const idx = [];
+      titles.forEach((t, i) => { if(re.test(t)) idx.push(i); });
+      const count = idx.length;
       if(count > 0){
         const col = count <= 2 ? '#22c55e' : (count <= 4 ? '#f59e0b' : '#ef4444');
-        plotGlobePt(lng, lat, col, Math.min(3 + count * 1.1, 10), 'circle');
+        const top = S.news[idx[0]];
+        plotGlobePt(lng, lat, col, Math.min(3 + count * 1.1, 10), 'circle', {
+          color: col, title: name,
+          lines: [count + ' matching headline' + (count === 1 ? '' : 's') + ' in live feed', top ? top.title : ''],
+          link: top ? top.link : '', linkText: 'open story ↗'
+        });
       }
     });
   }
@@ -1658,23 +1670,54 @@ function drawGlobe(){
     const wk = Date.now() - 7*24*3600e3;
     window.QUAKES.quakes.filter(q => (q.ts||0) >= wk).forEach(q=>{
       const col = q.mag >= 5.5 ? '#ef4444' : (q.mag >= 4.2 ? '#f59e0b' : '#38bdf8');
-      plotGlobePt(q.lng, q.lat, col, Math.min(3 + (q.mag-2.5)*1.5, 11), 'ring');
+      const utc = new Date(q.ts).toISOString().replace('T',' ').slice(0,16) + ' UTC';
+      plotGlobePt(q.lng, q.lat, col, Math.min(3 + (q.mag-2.5)*1.5, 11), 'ring', {
+        color: col, title: 'M' + q.mag + ' earthquake',
+        lines: [ q.place,
+                 'Depth ' + (q.depth != null ? q.depth + ' km' : 'unknown') + ' · ' + utc,
+                 agoLabel(q.ts, Date.now()) + ' ago · USGS event ' + (q.id || ''),
+                 q.tsunami ? '⚠ TSUNAMI FLAG SET BY USGS' : '',
+                 q.alert ? 'USGS impact alert: ' + String(q.alert).toUpperCase() : '' ],
+        link: q.url || '', linkText: 'USGS event page ↗'
+      });
     });
   }
   if(SET.floods && window.FLOODS && Array.isArray(window.FLOODS.events)){
     window.FLOODS.events.forEach(e=>{
       const col = e.level === 'Red' ? '#ef4444' : (e.level === 'Orange' ? '#f59e0b' : '#2dd4bf');
-      plotGlobePt(e.lng, e.lat, col, 5.5, 'tri');
+      plotGlobePt(e.lng, e.lat, col, 5.5, 'tri', {
+        color: col, title: e.level + ' flood alert',
+        lines: [ e.name,
+                 (e.country || 'Location undisclosed') + (e.from ? ' · ' + e.from + (e.to ? ' → ' + e.to : '') : ''),
+                 'Source: GDACS global flood alerting' ],
+        link: e.report || '', linkText: 'GDACS report ↗'
+      });
     });
   }
   if(SET.amber && window.AMBER && Array.isArray(window.AMBER.cases)){
     window.AMBER.cases.forEach(c=>{
-      if(typeof c.lat === 'number') plotGlobePt(c.lng, c.lat, '#f59e0b', 5, 'dia');
+      if(typeof c.lat !== 'number') return;
+      plotGlobePt(c.lng, c.lat, '#f59e0b', 5, 'dia', {
+        color: '#f59e0b', title: '◉ Missing-Child Alert',
+        lines: [ c.name,
+                 (c.age != null ? 'Age now: ' + c.age : 'Age unknown') + (c.missing ? ' · Missing since ' + c.missing : ''),
+                 c.loc || c.city || 'Location undisclosed',
+                 'Report tips to law enforcement / NCMEC 1-800-THE-LOST' ],
+        link: c.link || '', linkText: 'NCMEC case poster ↗'
+      });
     });
   }
   if(SET.outbreaks && window.OUTBREAKS && Array.isArray(window.OUTBREAKS.items)){
     window.OUTBREAKS.items.forEach(o=>{
-      if(typeof o.lat === 'number') plotGlobePt(o.lng, o.lat, '#8b8bff', 5.5, 'circle');
+      if(typeof o.lat !== 'number') return;
+      plotGlobePt(o.lng, o.lat, '#8b8bff', 5.5, 'circle', {
+        color: '#8b8bff', title: '☣ Outbreak report',
+        lines: [ o.disease || o.title || '',
+                 (o.country || 'Multi-location') + (o.date ? ' · ' + o.date : ''),
+                 o.summary ? o.summary.slice(0, 170) + '…' : '',
+                 'Source: WHO Disease Outbreak News' ],
+        link: o.url || '', linkText: 'WHO bulletin ↗'
+      });
     });
   }
 }
@@ -1693,27 +1736,85 @@ function startGlobe(){
   g.raf = requestAnimationFrame(globeFrame);
 }
 function stopGlobe(){ const g = _globe; if(g && g.raf){ cancelAnimationFrame(g.raf); g.raf = null; } }
+/* ── Marker popups on the canvas globe ──────────────────────────────────────
+   The globe is a single <canvas>, so markers are pixels with no DOM identity.
+   plotGlobePt() records each marker's screen position every frame into g.hits;
+   a tap is hit-tested against that list and the details render into a normal
+   DOM overlay (#globeTip) so the links inside it are real, clickable anchors. */
+function globeTapTest(clientX, clientY){
+  const g = _globe; if(!g || !g.hits || !g.hits.length) return null;
+  const r = g.canvas.getBoundingClientRect();
+  const x = clientX - r.left, y = clientY - r.top;
+  for(let i = g.hits.length - 1; i >= 0; i--){          // reverse = topmost drawn wins
+    const h = g.hits[i];
+    const tol = Math.max(h.r + 8, 14);                  // finger-friendly target
+    if(Math.hypot(h.x - x, h.y - y) <= tol) return h;
+  }
+  return null;
+}
+function hideGlobeTip(){
+  const tip = $('#globeTip'); if(tip) tip.hidden = true;
+  const g = _globe; if(g && !document.body.classList.contains('motion-off')) g.auto = true;
+}
+function showGlobeTip(hit){
+  const box = $('#globebox'), tip = $('#globeTip');
+  if(!box || !tip || !hit) return;
+  const d = hit.data || {};
+  tip.innerHTML =
+    '<button class="gt-close" type="button" aria-label="Close">×</button>' +
+    '<div class="gt-title" style="color:' + esc(d.color || '#fff') + '">' + esc(d.title || '') + '</div>' +
+    (d.lines || []).filter(Boolean).map(l => '<div class="gt-line">' + esc(l) + '</div>').join('') +
+    (d.link ? '<a class="gt-link" href="' + esc(d.link) + '" target="_blank" rel="noopener">' +
+              esc(d.linkText || 'open ↗') + '</a>' : '');
+  tip.hidden = false;
+  const bw = box.clientWidth, bh = box.clientHeight;
+  const tw = tip.offsetWidth || 236, th = tip.offsetHeight || 100;
+  let x = hit.x + 16, y = hit.y - Math.round(th / 2);
+  if(x + tw > bw - 8) x = hit.x - tw - 16;              // flip to the other side
+  x = Math.max(8, Math.min(x, Math.max(8, bw - tw - 8)));
+  y = Math.max(8, Math.min(y, Math.max(8, bh - th - 8)));
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+  const g = _globe; if(g) g.auto = false;               // hold still while open, else it drifts
+  const cl = tip.querySelector('.gt-close');
+  if(cl) cl.addEventListener('click', hideGlobeTip);
+}
 function bindGlobeDrag(){
   const g = _globe; if(!g) return;
-  const c = g.canvas; let last = null;
+  const c = g.canvas; let last = null, tap = null;
   c.addEventListener('pointerdown', e=>{
     g.drag = true; last = {x:e.clientX, y:e.clientY};
+    tap = {x:e.clientX, y:e.clientY, t:Date.now(), moved:0};
     try{ c.setPointerCapture(e.pointerId); }catch(_){}
   });
   c.addEventListener('pointermove', e=>{
-    if(!g.drag || !last) return;
+    if(!g.drag || !last){
+      // hover affordance: show a pointer when over a marker
+      if(!tap && e.pointerType === 'mouse'){
+        c.style.cursor = globeTapTest(e.clientX, e.clientY) ? 'pointer' : 'grab';
+      }
+      return;
+    }
     const dx = e.clientX - last.x, dy = e.clientY - last.y;
+    if(tap) tap.moved += Math.abs(dx) + Math.abs(dy);
     last = {x:e.clientX, y:e.clientY};
     g.rot[0] += dx * 0.28;
     g.rot[1] = Math.max(-80, Math.min(80, g.rot[1] - dy * 0.25));
     g.proj.rotate(g.rot);
     if(g.raf === null) drawGlobe();     // static mode: redraw on drag
   });
-  const up = ()=>{ g.drag = false; last = null; };
-  ['pointerup','pointercancel','pointerleave'].forEach(ev=> c.addEventListener(ev, up));
+  c.addEventListener('pointerup', e=>{
+    const wasTap = tap && tap.moved < 7 && (Date.now() - tap.t) < 700;
+    g.drag = false; last = null; tap = null;
+    if(!wasTap) return;                 // a real spin, not a tap
+    const hit = globeTapTest(e.clientX, e.clientY);
+    if(hit) showGlobeTip(hit); else hideGlobeTip();
+  });
+  const up = ()=>{ g.drag = false; last = null; tap = null; };
+  ['pointercancel','pointerleave'].forEach(ev=> c.addEventListener(ev, up));
 }
 function setMapMode(mode){
   SET.mapMode = (mode === '3d') ? '3d' : '2d'; saveSettings();
+  hideGlobeTip();                     // never leave a stale popup behind on a mode swap
   const is3 = SET.mapMode === '3d';
   const two = $('#worldmap'), box = $('#globebox');
   const b2 = $('#map2dBtn'), b3 = $('#map3dBtn');
@@ -1822,7 +1923,7 @@ function bindTabs(){
       const v=t.dataset.view;
       $$('.view').forEach(s=>s.classList.toggle('is-active', s.id==='view-'+v));
       if(v==='world') setTimeout(wakeMap, 60);   // init/resize the map (or globe) once visible
-      else stopGlobe();                          // pause globe animation off-screen
+      else { stopGlobe(); hideGlobeTip(); }     // pause globe + drop any popup off-screen
       try{ history.replaceState(null,'','#'+v); }catch(e){}
       window.scrollTo({top:0,behavior:'smooth'});
     });
