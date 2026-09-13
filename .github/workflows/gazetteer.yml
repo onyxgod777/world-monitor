@@ -1,0 +1,71 @@
+# World Monitor — rebuild the place table (gazetteer.js) from its public sources.
+#
+# gazetteer.js is what puts a headline on the Live World Signals map / 3D globe.
+# It is generated from mledoze/countries (ISO 3166 names, capitals, demonyms,
+# country centroids) plus Wikidata/Wikipedia/OSM coordinates for multi-country
+# regions. Country lists and region coordinates change rarely, so this runs once a
+# month — and only commits when something actually moved.
+name: WM gazetteer — monthly rebuild
+
+on:
+  schedule:
+    - cron: '17 4 1 * *'          # 04:17 UTC on the 1st
+  workflow_dispatch:
+  push:
+    paths:
+      - 'build_gazetteer.py'
+      - '.github/workflows/gazetteer.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wm-gazetteer
+  cancel-in-progress: false
+
+jobs:
+  gazetteer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      WM_REPO_DIR: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      # Queries Wikidata/Wikipedia/OSM for the region list, so it needs network and
+      # takes a couple of minutes (rate-limit polite sleeps included).
+      - name: Rebuild place table
+        run: |
+          set +e
+          python3 build_gazetteer.py
+          echo "builder exit=$?"
+          ls -l gazetteer.js
+          python3 -c "import json; src=open('gazetteer.js').read(); d=json.loads(src.split('=',1)[1].rsplit(';',1)[0]); p=d['places']; c=[x for x in p if x.get('t')=='country']; r=[x for x in p if x.get('t')=='region']; print('places %d | countries %d | regions %d' % (len(p), len(c), len(r))); print('missing coords:', [x['n'] for x in p if 'lat' not in x or 'lng' not in x]); assert len(c) > 150, 'country table truncated'; assert len(r) > 30, 'region table truncated'"
+          echo "health check exit=$?"
+
+      - name: Commit and push when changed
+        run: |
+          set -e
+          git config user.name  "world-monitor-bot"
+          git config user.email "world-monitor-bot@users.noreply.github.com"
+          git add gazetteer.js
+          if git diff --cached --quiet; then
+            echo "place table unchanged"
+            exit 0
+          fi
+          git commit -m "gazetteer: rebuild place table (automated, $(date -u '+%Y-%m-%d') UTC)"
+          for attempt in 1 2 3 4; do
+            git pull --rebase --autostash origin main || true
+            if git push origin main; then
+              echo "pushed on attempt $attempt"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "push failed after 4 attempts"; exit 1

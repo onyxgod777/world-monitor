@@ -29,6 +29,7 @@ The fetchers take their output directory from `WM_REPO_DIR` (unset → `~/world-
 
 ## Data honesty
 - Crypto prices, forex, gold, prediction markets & clocks are **real-time** (all keyless, CORS-enabled public APIs).
+- **Map placement is keyword-derived, country-level.** Every headline on the Live World Signals map / 3D globe is pinned to the place the headline *names* (ISO 3166 countries via `gazetteer.js`, plus multi-country regions like the Black Sea or Sahel), never to where the story was sourced; a headline naming no place stays off the map rather than being guessed into one, and the marker popup says so. The panel's own counter reports how many of the cycle's headlines were placed. `gazetteer.js` is rebuilt monthly by `.github/workflows/gazetteer.yml` from mledoze/countries + Wikidata/Wikipedia/OpenStreetMap coordinates.
 - The intel feed streams live Google News headlines via a public CORS proxy (falling back to rss2json, then clearly-labelled sample items if every source is unreachable), auto-dropping known paywalled outlets so links open readable articles. It recovers automatically on refresh.
 - Risk gauge and AI brief are labelled illustrative heuristics.
 - The Prophecy tab's "headlines tracking" counter is a keyword heuristic over the live feed — an approximate gauge of coverage, not proof a prophecy is being fulfilled. Full analyses and their framing live on the source News & Prophecy page.

@@ -1332,17 +1332,18 @@ function advRatio(){
 }
 
 /* ══════════════ 7b. LIVE WORLD SIGNAL MAP ══════════════ */
-// representative hubs; each matches live headlines by keyword
+// Fallback place list, used only when gazetteer.js is absent (e.g. a cached page).
+// Live placement uses window.GAZETTEER — see placeIndex() below.
 const HUBS=[
   ['United States',38.9,-77.0,['us','u.s.','united states','washington','white house','pentagon','america']],
   ['Canada',45.4,-75.7,['canada','ottawa']],
   ['Mexico',19.4,-99.1,['mexico']],
   ['Brazil',-15.8,-47.9,['brazil']],
   ['Argentina',-34.6,-58.4,['argentina','milei']],
-  ['United Kingdom',51.5,-0.1,['uk ','britain','london','westminster','starmer']],
+  ['United Kingdom',51.5,-0.1,['uk','britain','london','westminster','starmer']],
   ['France',48.9,2.35,['france','paris','macron']],
   ['Germany',52.5,13.4,['germany','berlin','scholz']],
-  ['European Union',50.85,4.35,['eu ','european union','brussels']],
+  ['European Union',50.85,4.35,['eu','european union','brussels']],
   ['Russia',55.75,37.6,['russia','moscow','putin']],
   ['Ukraine',50.45,30.5,['ukraine','kyiv']],
   ['Turkey',41.0,28.9,['turkey','erdogan','istanbul']],
@@ -1361,6 +1362,114 @@ const HUBS=[
   ['Kenya',-1.3,36.8,['kenya','nairobi']],
   ['South Africa',-26.2,28.0,['south africa','johannesburg']],
 ];
+/* ── Place resolution (gazetteer.js) ─────────────────────────────────────────
+   The map used to place headlines with the 26 hub keyword lists above, which left
+   most of the live feed (measured: ~72% in one cycle) unplotted. window.GAZETTEER
+   — built by build_gazetteer.py from ISO 3166 country data plus sourced region
+   coordinates — replaces that with every country and the multi-country regions
+   (Black Sea, Sahel, West Bank …). HUBS stays as the fallback if the file is
+   missing.
+
+   Placement is keyword-derived and country-level: a headline is pinned to the
+   place it NAMES, never to where the story was sourced, and a headline naming no
+   place stays off the map rather than being guessed into one. The marker popup
+   says so. */
+let _placeIndex = null;
+function placeIndex(){
+  if(_placeIndex) return _placeIndex;
+  const gz = (window.GAZETTEER && Array.isArray(window.GAZETTEER.places)) ? window.GAZETTEER.places : null;
+  _placeIndex = gz
+    ? gz.filter(p => typeof p.lat === 'number' && typeof p.lng === 'number' && p.k && p.k.length)
+        .map(p => ({ n: p.n, lat: p.lat, lng: p.lng, t: p.t || 'country', ind: p.ind || 0, kws: p.k }))
+    : HUBS.map(([n, lat, lng, kws]) => ({ n, lat, lng, t: 'hub', ind: 1, kws: kws.map(k => k.trim()).filter(Boolean) }));
+  return _placeIndex;
+}
+// Word-ish matcher: finds `kw` in `hay` only where it is not butted against
+// letters/digits. Regex \b could not do this — it never matches dotted aliases
+// like "u.s.", which is why the old hub list had to write "us " with a space.
+function kwIndex(hay, kw){
+  let from = 0;
+  for(;;){
+    const i = hay.indexOf(kw, from);
+    if(i < 0) return -1;
+    const before = i === 0 ? '' : hay[i-1];
+    const after = hay[i + kw.length] || '';
+    if(!/[a-z0-9]/.test(before) && !/[a-z0-9]/.test(after)) return i;
+    from = i + 1;
+  }
+}
+// Best place for one headline: earliest mention wins (the subject usually leads),
+// longest keyword breaks ties. Keywords prefixed '=' match case-sensitively, so
+// short forms (US, UK, EU) cannot hit ordinary prose. Memoised: the globe redraws
+// every frame, so the same titles get re-resolved constantly.
+const _placeCache = new Map();
+// Lexicographic compare over [number, number, number, number, string] tie-breakers.
+function cmp4(a, b){
+  for(let i = 0; i < 4; i++){ if(a[i] !== b[i]) return a[i] - b[i]; }
+  return a[4] < b[4] ? -1 : (a[4] > b[4] ? 1 : 0);
+}
+function placeOf(title){
+  const key = title || '';
+  if(_placeCache.has(key)) return _placeCache.get(key);
+  const lower = key.toLowerCase();
+  let best = null;
+  placeIndex().forEach(p => {
+    let at = -1, len = 0, mkw = '';
+    for(const kw of p.kws){
+      const cs = kw.charCodeAt(0) === 61;             // '='
+      const bare = cs ? kw.slice(1) : kw;
+      const i = cs ? kwIndex(key, bare) : kwIndex(lower, bare);
+      if(i >= 0 && (at < 0 || i < at || (i === at && bare.length > len))) {
+        at = i; len = bare.length; mkw = bare.toLowerCase();
+      }
+      // Plurals of long noun forms ("Russian" → "Russians", "American" →
+      // "Americans") are the same place, and long keywords cannot collide with
+      // ordinary words the way short ones can.
+      if(!cs && bare.length >= 5){
+        const j = kwIndex(lower, bare + 's');
+        if(j >= 0 && (at < 0 || j < at || (j === at && bare.length + 1 > len))) {
+          at = j; len = bare.length + 1; mkw = bare.toLowerCase();
+        }
+      }
+    }
+    if(at < 0) return;
+    // Order of preference for a shared alias: earliest mention, then the longest
+    // keyword, then the entry the alias is the NAME of (so "Puerto Rico" lands on
+    // Puerto Rico, not on the United States, whose spellings also list it), then
+    // sovereign states over their territories, then name for determinism.
+    const own = (p.n.toLowerCase() === mkw) ? 1 : 0;
+    const key4 = [at, -len, -own, -p.ind, p.n];
+    if(!best || cmp4(key4, best.key4) < 0) best = { p, key4 };
+  });
+  const hit = best ? best.p : null;
+  if(_placeCache.size > 4000) _placeCache.clear();   // a feed cycle is ~250 titles
+  _placeCache.set(key, hit);
+  return hit;
+}
+// Live feed aggregated by resolved place — shared by the 2D map and the 3D globe
+// so both layers always show the same picture. Cached per feed revision, because
+// the globe's render loop asks for it on every frame.
+let _placeAgg = { key: null, val: null };
+function newsPlaces(){
+  const news = S.news || [];
+  const key = news.length + '|' + (news[0] && news[0].title || '') + '|'
+            + (news[news.length-1] && news[news.length-1].title || '');
+  if(_placeAgg.key === key) return _placeAgg.val;
+  const groups = new Map();
+  let placed = 0;
+  news.forEach(n => {
+    const p = placeOf(n.title);
+    if(!p) return;
+    placed++;
+    if(!groups.has(p.n)) groups.set(p.n, { n: p.n, lat: p.lat, lng: p.lng, t: p.t, items: [] });
+    groups.get(p.n).items.push(n);
+  });
+  const val = { groups: [...groups.values()].sort((a, b) => b.items.length - a.items.length),
+                placed, total: news.length };
+  _placeAgg = { key, val };
+  return val;
+}
+
 // CARTO dark basemap, split into two layers: the base gets the theme's darkening
 // filter, the labels ride in their own pane so place names keep full contrast.
 // Filtering a single combined layer measured 5.4:1 -> 2.6:1 on map labels, which
@@ -1370,7 +1479,6 @@ const TILE_BASE = 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r
 const TILE_LABELS = 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png?' + TILE_KEY;
 const TILE_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
 let _map=null, _mapMarkers=[];
-function hubRe(kws){ return new RegExp('\\b('+kws.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\\b'); }
 function ensureMap(){
   if(_map || typeof L==='undefined') return _map;
   const el=$('#worldmap'); if(!el) return null;
@@ -1386,30 +1494,29 @@ function ensureMap(){
 }
 function updateMapSignals(){
   const map=ensureMap(); if(!map) return;
-  const titles=(S.news||[]).map(n=>(n.title||'').toLowerCase());
   _mapMarkers.forEach(m=>m.remove()); _mapMarkers=[];
+  const agg=newsPlaces();
   let liveCount=0;
-  HUBS.forEach(([name,lat,lng,kws])=>{
-    const re=hubRe(kws);
-    const idx=titles.map((t,i)=>({i,t})).filter(o=>re.test(o.t));
-    const count=idx.length;
-    // Only draw a dot where the live feed actually has signal for that hub.
-    // A quiet hub with no matching headlines is just noise — nothing to show.
-    if(count>0){
-      liveCount++;
-      const color = count<=2?'#22c55e':(count<=4?'#f59e0b':'#ef4444');
-      const radius = 6 + Math.min(count,7)*2.3;
-      const top = S.news[idx[0].i];
-      const m = L.circleMarker([lat,lng],{
-        radius, color:'#ffffff', weight:1,
-        fillColor:color, fillOpacity:0.85
-      }).addTo(map);
-      m.bindPopup(`<div class="mp-title">${esc(name)}</div>`+
-        `<div class="mp-meta">${count} matching headline${count===1?'':'s'} in live feed</div>`+
-        `<div style="margin-top:5px">${esc(top.title)}</div>`+
-        `<div class="mp-meta" style="margin-top:2px"><a href="${esc(top.link)}" target="_blank" rel="noopener">open story ↗</a></div>`);
-      _mapMarkers.push(m);
-    }
+  agg.groups.forEach(g=>{
+    const count=g.items.length;
+    liveCount++;
+    const color = count<=2?'#22c55e':(count<=4?'#f59e0b':'#ef4444');
+    const radius = 6 + Math.min(count,7)*2.3;
+    const m = L.circleMarker([g.lat,g.lng],{
+      radius, color:'#ffffff', weight:1,
+      fillColor:color, fillOpacity:0.85
+    }).addTo(map);
+    const shown = g.items.slice(0,3).map(it =>
+      `<div style="margin-top:5px">${esc(it.title)}</div>`+
+      (it.link?`<div class="mp-meta" style="margin-top:2px"><a href="${esc(it.link)}" target="_blank" rel="noopener">open story ↗</a></div>`:'')
+    ).join('');
+    m.bindPopup(`<div class="mp-title">${esc(g.n)}</div>`+
+      `<div class="mp-meta">${count} matching headline${count===1?'':'s'} in the live feed</div>`+
+      shown+
+      (count>3?`<div class="mp-meta" style="margin-top:5px">+${count-3} more in the Intel feed</div>`:'')+
+      `<div class="mp-meta" style="margin-top:6px;font-size:10px">Place derived from headline keywords`+
+      `${g.t==='region'?' (multi-country region)':''} — where the story is NAMED, not where it was sourced.</div>`);
+    _mapMarkers.push(m);
   });
   // NCMEC missing-child (AMBER) icons on the map — drawn on top of the signal hubs.
   const A = (SET.amber && window.AMBER && Array.isArray(window.AMBER.cases)) ? window.AMBER : null;
@@ -1544,7 +1651,9 @@ function updateMapSignals(){
     : (outbreakOnMap ? ' · '+outbreakOnMap+' outbreak'+(outbreakOnMap===1?'':'s')
         : (OB ? ' · no outbreak reports' : ''));
   $('#mapCount').textContent =
-    (liveCount ? liveCount+' signal'+(liveCount===1?'':'s')+' live' : 'no regional activity this cycle') + qtxt + ftxt + otxt;
+    (liveCount ? liveCount+' place'+(liveCount===1?'':'s')+' with live signal' : 'no placeable headlines this cycle')
+    + (agg.total ? ' · '+agg.placed+'/'+agg.total+' headlines placed' : '')
+    + qtxt + ftxt + otxt;
   const amc = $('#amberMapCount'); if(amc && amberOnMap) amc.textContent = amberOnMap+' on map';
 }
 function wakeMap(){
@@ -1647,23 +1756,20 @@ function drawGlobe(){
 
   g.hits = [];                        // rebuilt every frame; hit-testing reads this
 
-  // news signal hubs (same keyword matching the 2D map uses)
+  // news signals — same place resolution the 2D map uses (newsPlaces), so the two
+  // layers can never disagree about where a headline sits.
   if(S.news && S.news.length){
-    const titles = S.news.map(n => (n.title || '').toLowerCase());
-    HUBS.forEach(([name, lat, lng, kws])=>{
-      const re = hubRe(kws);
-      const idx = [];
-      titles.forEach((t, i) => { if(re.test(t)) idx.push(i); });
-      const count = idx.length;
-      if(count > 0){
-        const col = count <= 2 ? '#22c55e' : (count <= 4 ? '#f59e0b' : '#ef4444');
-        const top = S.news[idx[0]];
-        plotGlobePt(lng, lat, col, Math.min(3 + count * 1.1, 10), 'circle', {
-          color: col, title: name,
-          lines: [count + ' matching headline' + (count === 1 ? '' : 's') + ' in live feed', top ? top.title : ''],
-          link: top ? top.link : '', linkText: 'open story ↗'
-        });
-      }
+    newsPlaces().groups.forEach(g=>{
+      const count = g.items.length;
+      const col = count <= 2 ? '#22c55e' : (count <= 4 ? '#f59e0b' : '#ef4444');
+      const top = g.items[0];
+      plotGlobePt(g.lng, g.lat, col, Math.min(3 + count * 1.1, 10), 'circle', {
+        color: col, title: g.n,
+        lines: [count + ' matching headline' + (count === 1 ? '' : 's') + ' in live feed',
+                top ? top.title : '',
+                'place from headline keywords'],
+        link: top ? top.link : '', linkText: 'open story ↗'
+      });
     });
   }
   if(SET.quakes && window.QUAKES && Array.isArray(window.QUAKES.quakes)){
