@@ -2272,6 +2272,14 @@ function nextGuide(){
   else closeGuide();
 }
 function closeGuide(){ $('#welcome').hidden=true; }
+// A full-screen overlay swallows every tap underneath it — including taps on the
+// globe's markers. Backdrop click and Escape dismiss it, so a welcome card that is
+// left open can never be mistaken for "the map's dots do not work".
+function bindGuide(){
+  const w = $('#welcome'); if(!w) return;
+  w.addEventListener('click', e => { if(e.target === w) closeGuide(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && !w.hidden) closeGuide(); });
+}
 
 /* ══════════════ TABS ══════════════ */
 function bindTabs(){
@@ -2298,6 +2306,7 @@ function bindTabs(){
 function boot(){
   bindTabs();
   bindSettings();
+  bindGuide();
   // honor #view hash first, then the saved default view from Settings
   const want = (location.hash||'').replace('#','') || SET.view;
   if(['markets','intel','prophecy','world','alerts'].includes(want)){
