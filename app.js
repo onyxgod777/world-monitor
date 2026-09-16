@@ -50,10 +50,10 @@ const PROXIES = [
 ];
 // remember the first proxy that works this session
 let _activeProxy = 0;
-async function fetchTimeout(url, ms=5000){
+async function fetchTimeout(url, ms=5000, opts){
   const ctl = new AbortController();
   const t = setTimeout(()=>ctl.abort(), ms);
-  try{ return await fetch(url, {signal:ctl.signal}); }
+  try{ return await fetch(url, Object.assign({signal:ctl.signal}, opts||{})); }
   finally{ clearTimeout(t); }
 }
 async function proxied(url){
@@ -98,6 +98,9 @@ const SETTINGS_DEFS = [
     { k:'reddit', lab:'Reddit',      hint:'Public subreddit feeds · unverified first reports' },
     { k:'x',      lab:'X / Twitter', hint:'Public timeline widget — cached per handle' },
   ]},
+  { group:'Market panels', opts:[
+    { k:'penny',  lab:'Penny stocks',       hint:'Live sub-$5 US + Canadian listings from the TradingView scanner' },
+  ]},
   { group:'Map layers', opts:[
     { k:'quakes', lab:'Seismic activity',   hint:'Live USGS — dashed magnitude rings, M2.5+' },
     { k:'floods', lab:'Flood alerts',       hint:'Live GDACS global events + NOAA/NWS US warnings' },
@@ -117,7 +120,7 @@ const SETTINGS_SEGS = [
       ['2d','2D map'],['3d','3D globe'] ] },
 ];
 const SETTINGS_DEFAULTS = { fx:true, motion:true, grid:true, dense:false,
-  tg:true, reddit:true, x:true, quakes:true, floods:true, outbreaks:true, amber:true, iss:true,
+  tg:true, reddit:true, x:true, quakes:true, floods:true, outbreaks:true, amber:true, iss:true, penny:true,
   regions:[], view:'markets', clock24:true, refresh:120000, mapMode:'2d' };
 let SET = (function(){
   try{ return Object.assign({}, SETTINGS_DEFAULTS, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
@@ -147,6 +150,11 @@ function applySettings(){
   b.classList.toggle('dense',      !!SET.dense);
   try{ loadNews(); }catch(e){ /* panel not built yet */ }
   try{ if(_map) updateMapSignals(); }catch(e){}
+  try{
+    const pc = $('#pennycard'); if(pc) pc.hidden = !SET.penny;
+    if(SET.penny && !_pennyTimer) _pennyTimer = setInterval(loadPenny, 120000);
+    if(!SET.penny && _pennyTimer){ clearInterval(_pennyTimer); _pennyTimer = null; }
+  }catch(e){}
   // reflect the saved world-map mode (initialise the globe only when it is on-screen)
   try{
     const is3 = SET.mapMode === '3d';
@@ -293,6 +301,103 @@ function cacheSet(coins){
   }catch(e){ /* localStorage full or blocked — non-fatal */ }
 }
 function markMkt(src){ $('#mktSrc').textContent = src; }
+
+/* ══════════════ 2c. PENNY STOCKS — sub-$5 USD + CAD ══════════════
+   Both lists come from the TradingView scanner, which answers a text/plain POST
+   with CORS allowed, so the panel is live in the browser — no proxy and no key.
+   The universe is the scanner's own, filtered to a price band, a share-volume
+   floor and common stock, because leveraged ETPs also price under $5 and are not
+   penny stocks. A committed penny.js snapshot from fetch_penny.py covers the case
+   where the browser cannot reach the scanner at all. */
+const PENNY_SCAN = 'https://scanner.tradingview.com/%s/scan';
+const PENNY_MARKETS = [
+  { cur:'usd', market:'america', lo:0.01, hi:4.99, minVol:500000, keep:12, money:'US$', label:'USD · US listings' },
+  { cur:'cad', market:'canada',  lo:0.01, hi:4.99, minVol:100000, keep:12, money:'C$',  label:'CAD · TSX / TSXV / CSE' },
+];
+const _PENNY_CACHE_KEY = 'wm_penny_cache_v1';
+let _pennyTimer = null;
+function pennyCacheGet(){
+  try{ const raw = localStorage.getItem(_PENNY_CACHE_KEY); return raw ? JSON.parse(raw) : null; }
+  catch(e){ return null; }
+}
+function pennyCacheSet(data){
+  try{ localStorage.setItem(_PENNY_CACHE_KEY, JSON.stringify({ at: Date.now(), usd: data.usd, cad: data.cad })); }
+  catch(e){}
+}
+const volFmt = v => v >= 1e9 ? (v/1e9).toFixed(2)+'B'
+                : v >= 1e6 ? (v/1e6).toFixed(1)+'M'
+                : v >= 1e3 ? (v/1e3).toFixed(0)+'K' : String(v ?? 0);
+function pennyScan(cfg){
+  const body = {
+    filter: [
+      { left:'close',  operation:'greater', right: cfg.lo },
+      { left:'close',  operation:'less',    right: cfg.hi },
+      { left:'volume', operation:'greater', right: cfg.minVol },
+      { left:'type',   operation:'equal',   right:'stock' },
+    ],
+    options: { lang:'en' },
+    columns: ['name','description','close','change','volume','currency','exchange'],
+    sort: { sortBy:'volume', sortOrder:'desc' },
+    range: [0, 40],
+  };
+  // The body goes out as text/plain ON PURPOSE: a JSON content-type would make the
+  // browser send a CORS preflight, and the scanner's policy does not allow that
+  // header — but it does allow this response to be read. So: keep it a simple request.
+  return fetchTimeout(PENNY_SCAN.replace('%s', cfg.market), 12000,
+                      { method:'POST', body: JSON.stringify(body) })
+    .then(r => r.ok ? r.json() : null)
+    .then(j => {
+      if(!j || !Array.isArray(j.data)) return null;
+      const rows = j.data.map(it => {
+        const d = it.d || [];
+        return { sym:d[0], name:d[1], price:Number(d[2]), chg:Number(d[3]), vol:Number(d[4]),
+                 cur:d[5], exch:d[6],
+                 tv:'https://www.tradingview.com/symbols/' + String(it.s||'').replace(':', '-') + '/' };
+      }).filter(r => r.sym && r.cur && isFinite(r.price) && r.price > 0);
+      rows.sort((a,b) => b.vol - a.vol);
+      return rows.slice(0, cfg.keep);
+    })
+    .catch(() => null);
+}
+async function loadPenny(){
+  const box = $('#pennylist'); if(!box || !SET.penny) return;
+  const res = await Promise.all(PENNY_MARKETS.map(cfg => pennyScan(cfg)));
+  if(res.some(r => r && r.length)){
+    const data = { usd: res[0] || [], cad: res[1] || [], at: Date.now() };
+    pennyCacheSet(data);
+    renderPenny(data, 'SCANNER · LIVE');
+    return;
+  }
+  const cached = pennyCacheGet();
+  if(cached && ((cached.usd||[]).length || (cached.cad||[]).length)){
+    renderPenny(cached, 'LAST KNOWN · ' + agoLabel(cached.at, Date.now()) + ' AGO');
+    return;
+  }
+  if(window.PENNY && ((window.PENNY.usd||[]).length || (window.PENNY.cad||[]).length)){
+    renderPenny({ usd: window.PENNY.usd, cad: window.PENNY.cad }, 'SNAPSHOT · ' + (window.PENNY._updated || ''));
+    return;
+  }
+  $('#pennySrc').textContent = 'OFFLINE · RETRYING';
+  box.innerHTML = '<div class="ph mono" style="padding:16px">Sub-$5 quotes unavailable right now — retrying automatically.</div>';
+}
+function renderPenny(data, label){
+  const box = $('#pennylist'); if(!box) return;
+  const src = $('#pennySrc'); if(src) src.textContent = label;
+  const n = (data.usd||[]).length + (data.cad||[]).length;
+  const cnt = $('#pennyCount'); if(cnt) cnt.textContent = n ? n + ' under $5' : '—';
+  box.innerHTML = PENNY_MARKETS.map(cfg => {
+    const rows = data[cfg.cur] || [];
+    const body = rows.length ? rows.map(r => {
+      const up = r.chg >= 0;
+      return `<a class="prow" href="${esc(r.tv)}" target="_blank" rel="noopener"><span class="psym">${esc(r.sym)}<span class="pex">${esc(r.exch||'')}</span></span><span class="pname" title="${esc(r.name)}">${esc(r.name||'—')}</span><span class="ppx">${cfg.money}${mono(r.price, r.price < 1 ? 3 : 2)}</span><span class="pchg ${up?'up':'dn'}">${pct(r.chg)}</span><span class="pvol">${volFmt(r.vol)}</span></a>`;
+    }).join('') : '<div class="ph mono" style="padding:12px">no qualifying listings in this session</div>';
+    return `<div class="pcol">
+      <div class="phead"><span class="pcur">${esc(cfg.label)}</span>
+        <span class="prule">${cfg.money}${cfg.lo.toFixed(2)}–${cfg.hi.toFixed(2)} · ≥${volFmt(cfg.minVol)} shares · by volume</span></div>
+      <div class="prow phd"><span>Symbol</span><span>Name</span><span class="r">Price</span><span class="r">Chg</span><span class="r">Vol</span></div>
+      ${body}</div>`;
+  }).join('');
+}
 
 async function loadMarkets(){
   // 1) Full CoinGecko snapshot (direct, then via any working proxy). Best data.
@@ -2339,6 +2444,7 @@ function boot(){
   renderDefcon();  // derived readiness indicator — recomputed on each news refresh
   initLive();      // live news broadcast channels (iframe loads when the card is in view)
   loadMarkets(); setInterval(loadMarkets,60000);
+  loadPenny();   // sub-$5 USD/CAD panel (refresh interval is set in applySettings)
   // The ISS layer needs satellite.js on the 2D map as well — the globe fetches it
   // for itself, but a 2D-only visit would otherwise never load it. Non-fatal.
   if(SET.iss && typeof satellite === 'undefined' && window.ISS){
