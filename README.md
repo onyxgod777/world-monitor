@@ -13,7 +13,7 @@ refreshing with no machine of ours running:
 |---|---|---|
 | `snapshots-fast.yml` | every 15 min | `quakes.js`, `floods.js` |
 | `snapshots-hourly.yml` | hourly | `news.js`, `fiatleak.js`, `social.js` |
-| `snapshots-4h.yml` | every 4 h | `amber.js`, `outbreaks.js` |
+| `snapshots-4h.yml` | every 4 h | `amber.js`, `outbreaks.js`, `iss.js` |
 
 Each run commits **only when the data actually changed**, so quiet cycles add no commits.
 Run one by hand from the repo's **Actions** tab (*Run workflow*); no local scheduler needed.
@@ -25,12 +25,14 @@ The fetchers take their output directory from `WM_REPO_DIR` (unset → `~/world-
 - **Intel** — live headlines streamed from public RSS (world, markets, cyber, geopolitics, energy), tagged and auto-aged.
 - **Prophecy** — the daily *News & Prophecy* causal analyses from **pi.thealpha-secret.xyz/news/** rendered as tracked predictions: each tracks an **observed cause**, projects its **necessary effect if the cause persists**, and names **the hinge** — the human choice that changes the cause and rewrites the outcome. A live counter shows how many current feed headlines track each cause. Data lives in `prophecies.js` (update it when the news page publishes).
 - **Alerts** — headlines auto-classified HIGH / MED / LOW priority.
-- **World (board)** — a live world signal map (Leaflet/CARTO) plus status board, cyber grid and regional pulse derived from the live feed.
+- **World (board)** — a live world signal map (Leaflet/CARTO) plus status board, cyber grid and regional pulse derived from the live feed. The 3D globe and the 2D map share the same layers, and every marker (including the ISS) is tappable for its report.
+- **ISS (live)** — the station is propagated in the browser with SGP4 (satellite.js) from the TLE committed by `fetch_iss.py` (CelesTrak), so it moves continuously across the globe with its orbit track and visibility footprint; tapping it reports sub-point, altitude, speed, orbit, sunlit/eclipsed state, the nearest place-table entry, and links to NASA's *Spot the Station* sighting reports. Switch it off under Settings → Map layers.
 
 ## Data honesty
 - Crypto prices, forex, gold, prediction markets & clocks are **real-time** (all keyless, CORS-enabled public APIs).
 - **Map placement is keyword-derived, country-level.** Every headline on the Live World Signals map / 3D globe is pinned to the place the headline *names* (ISO 3166 countries via `gazetteer.js`, plus multi-country regions like the Black Sea or Sahel), never to where the story was sourced; a headline naming no place stays off the map rather than being guessed into one, and the marker popup says so. The panel's own counter reports how many of the cycle's headlines were placed. `gazetteer.js` is rebuilt monthly by `.github/workflows/gazetteer.yml` from mledoze/countries + Wikidata/Wikipedia/OpenStreetMap coordinates.
 - The intel feed streams live Google News headlines via a public CORS proxy (falling back to rss2json, then clearly-labelled sample items if every source is unreachable), auto-dropping known paywalled outlets so links open readable articles. It recovers automatically on refresh.
+- The ISS layer is **computed, not copied**: position, altitude and velocity come from propagating the committed CelesTrak element set (verified against the independent wheretheiss.at API — sub-0.02° / <0.1 km/h agreement); sunlit-vs-eclipsed comes from a solar position that reproduces that API's solar sub-point exactly. A TLE is valid for days, so the layer is refreshed every 4 h and the popup prints the epoch it was computed from.
 - Risk gauge and AI brief are labelled illustrative heuristics.
 - The Prophecy tab's "headlines tracking" counter is a keyword heuristic over the live feed — an approximate gauge of coverage, not proof a prophecy is being fulfilled. Full analyses and their framing live on the source News & Prophecy page.
 - Prediction-market probabilities are opinion data from Polymarket traders — not forecasts. Verify critical intelligence independently.

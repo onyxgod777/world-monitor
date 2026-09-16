@@ -103,6 +103,7 @@ const SETTINGS_DEFS = [
     { k:'floods', lab:'Flood alerts',       hint:'Live GDACS global events + NOAA/NWS US warnings' },
     { k:'outbreaks', lab:'Outbreak reports', hint:'Live WHO Disease Outbreak News bulletins' },
     { k:'amber',  lab:'Missing-child pins', hint:'NCMEC alert cases (US-anchored registry)' },
+    { k:'iss',    lab:'ISS tracker',        hint:'Live International Space Station — orbit track, visibility footprint' },
   ]},
 ];
 const SETTINGS_SEGS = [
@@ -116,7 +117,7 @@ const SETTINGS_SEGS = [
       ['2d','2D map'],['3d','3D globe'] ] },
 ];
 const SETTINGS_DEFAULTS = { fx:true, motion:true, grid:true, dense:false,
-  tg:true, reddit:true, x:true, quakes:true, floods:true, outbreaks:true, amber:true,
+  tg:true, reddit:true, x:true, quakes:true, floods:true, outbreaks:true, amber:true, iss:true,
   regions:[], view:'markets', clock24:true, refresh:120000, mapMode:'2d' };
 let SET = (function(){
   try{ return Object.assign({}, SETTINGS_DEFAULTS, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
@@ -1616,6 +1617,12 @@ function updateMapSignals(){
       _mapMarkers.push(m);
     });
   }
+  // ── ISS (live: propagated from the committed TLE) ─────────────────────────
+  if(SET.iss && typeof L !== 'undefined' && issReady()){
+    issMapMarker(map);
+  }else if(_issMarker && _map){
+    _map.removeLayer(_issMarker); _issMarker = null;
+  }
   // Legend is assembled from whichever layers are actually switched on (Settings).
   const leg = [
     `<span class="li"><span class="sw" style="background:#22c55e"></span>active</span>`,
@@ -1637,6 +1644,9 @@ function updateMapSignals(){
   }
   if(SET.outbreaks){
     leg.push(`<span class="li"><span class="sw ob-sw"></span>☣ WHO outbreak report</span>`);
+  }
+  if(SET.iss && issReady()){
+    leg.push(`<span class="li"><span class="sw iss-sw"></span>🛰 ISS · live orbit</span>`);
   }
   $('#mapLegend').innerHTML = leg.join('');
   const qtxt = !SET.quakes ? ''
@@ -1670,6 +1680,7 @@ const GLOBE_CDN = {
   d3:    'https://unpkg.com/d3@7/dist/d3.min.js',
   topo:  'https://unpkg.com/topojson-client@3/dist/topojson-client.min.js',
   land:  'https://unpkg.com/world-atlas@2/land-110m.json',
+  sat:   'https://unpkg.com/satellite.js@5.0.0/dist/satellite.min.js',
 };
 let _globe = null;
 function loadScript(src){
@@ -1685,6 +1696,12 @@ async function ensureGlobe(){
   try{
     if(typeof d3 === 'undefined') await loadScript(GLOBE_CDN.d3);
     if(typeof topojson === 'undefined') await loadScript(GLOBE_CDN.topo);
+    // ISS propagation is optional: if the CDN module is unreachable the globe
+    // still draws every other layer, the station just does not appear.
+    if(typeof satellite === 'undefined' && window.ISS){
+      try{ await loadScript(GLOBE_CDN.sat); }catch(e){ /* ISS layer stays off */ }
+      try{ issLegendTick(); }catch(e){}
+    }
     if(!window.__wmLand){
       const r = await fetch(GLOBE_CDN.land); if(!r.ok) throw new Error('land ' + r.status);
       const topo = await r.json();
@@ -1727,6 +1744,20 @@ function plotGlobePt(lng, lat, color, size, kind, data){
   if(kind === 'ring'){
     ctx.beginPath(); ctx.arc(p[0], p[1], size, 0, 6.2832);
     ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke();
+  }else if(kind === 'iss'){
+    // the station gets its own glyph: filled dot, halo ring and crosshair ticks,
+    // so it never reads as just another signal hub
+    ctx.beginPath(); ctx.arc(p[0], p[1], size, 0, 6.2832);
+    ctx.fillStyle = color; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.beginPath(); ctx.arc(p[0], p[1], size + 4.5, 0, 6.2832);
+    ctx.strokeStyle = color; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.beginPath();
+    [[0,-1],[0,1],[-1,0],[1,0]].forEach(d=>{
+      ctx.moveTo(p[0] + d[0]*(size+7), p[1] + d[1]*(size+7));
+      ctx.lineTo(p[0] + d[0]*(size+11), p[1] + d[1]*(size+11));
+    });
+    ctx.strokeStyle = color; ctx.lineWidth = 1.4; ctx.stroke();
   }else{
     ctx.beginPath();
     if(kind === 'tri'){ ctx.moveTo(p[0], p[1]-size); ctx.lineTo(p[0]+size*0.95, p[1]+size*0.72); ctx.lineTo(p[0]-size*0.95, p[1]+size*0.72); ctx.closePath(); }
@@ -1739,6 +1770,7 @@ function plotGlobePt(lng, lat, color, size, kind, data){
   // Canvas has no DOM nodes, so remember where each marker landed this frame.
   // globeTapTest() hit-tests against this list — without it the dots are unclickable.
   if(data) g.hits.push({ x:p[0], y:p[1], r:size, data });
+  return p;                            // callers may label the marker they just drew
 }
 function drawGlobe(){
   const g = _globe; if(!g || !g.proj) return;
@@ -1826,6 +1858,8 @@ function drawGlobe(){
       });
     });
   }
+  // ISS — drawn last so the station and its orbit sit above the event layers
+  if(SET.iss && issReady()) drawIss(g);
 }
 function globeFrame(){
   const g = _globe; if(!g || !g.ready) return;
@@ -1843,7 +1877,210 @@ function startGlobe(){
   if(document.body.classList.contains('motion-off')) return;   // honour reduced-motion setting
   if(!g.raf) g.raf = requestAnimationFrame(globeFrame);
 }
-function stopGlobe(){ const g = _globe; if(g && g.raf){ cancelAnimationFrame(g.raf); g.raf = null; } }
+function stopGlobe(){
+  const g = _globe; if(g && g.raf){ cancelAnimationFrame(g.raf); g.raf = null; }
+}
+
+/* ══════════════ 7d. ISS — live station (SGP4 from the committed TLE) ══════════════
+   fetch_iss.py commits the ISS two-line element set (iss.js); satellite.js
+   propagates it here, so the station is drawn where it really is right now and
+   glides across the globe instead of hopping between API polls. Everything the
+   popup reports — sub-point, altitude, velocity, orbit, sunlit/eclipsed — is
+   computed from that TLE, not copied from a feed. */
+const ISS_COL = '#5eead4';
+const ISS_RE  = 6371.0;                       // mean Earth radius, km
+let _iss = { satrec:null, cur:null, at:0, track:null, trackAt:0 }, _issMarker = null;
+function issReady(){
+  return !!window.ISS && !!window.ISS.tle1 && !!window.ISS.tle2 &&
+         typeof satellite !== 'undefined' && !!satellite.twoline2satrec;
+}
+// Low-precision solar position (Astronomical Almanac series, ±0.01°) in ECI km.
+// Needed for the eclipse test; verified against wheretheiss.at's solar sub-point.
+function issSunEci(ms){
+  const n  = ms / 86400000 + 2440587.5 - 2451545.0;
+  const L  = (280.460 + 0.9856474 * n) % 360;
+  const g  = ((357.528 + 0.9856003 * n) % 360) * Math.PI / 180;
+  const lam = (L + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * Math.PI / 180;
+  const eps = (23.439 - 0.0000004 * n) * Math.PI / 180;
+  const R  = 1.00014 - 0.01671 * Math.cos(g) - 0.00014 * Math.cos(2 * g);   // AU
+  const AU = 149597870.7;
+  return { x: R * Math.cos(lam) * AU, y: R * Math.cos(eps) * Math.sin(lam) * AU,
+           z: R * Math.sin(eps) * Math.sin(lam) * AU };
+}
+// Pure propagation at an arbitrary instant (used for the ground track too).
+function issAt(ms){
+  if(!window.ISS || !window.ISS.tle1) return null;
+  if(!_iss.satrec){
+    try{ _iss.satrec = satellite.twoline2satrec(window.ISS.tle1, window.ISS.tle2); }
+    catch(e){ _iss.satrec = null; return null; }
+  }
+  const date = new Date(ms);
+  const pv = satellite.propagate(_iss.satrec, date);
+  if(!pv || !pv.position || !isFinite(pv.position.x)) return null;
+  const gd = satellite.eciToGeodetic(pv.position, satellite.gstime(date));
+  if(!isFinite(gd.height)) return null;
+  const p = pv.position;
+  const s = issSunEci(ms);
+  const sn = Math.hypot(s.x, s.y, s.z);
+  const along = (p.x * s.x + p.y * s.y + p.z * s.z) / sn;      // km along the sun line
+  const r2 = p.x * p.x + p.y * p.y + p.z * p.z - along * along;
+  const sunlit = !(along < 0 && Math.sqrt(Math.max(r2, 0)) < ISS_RE);
+  const no = _iss.satrec.no;
+  return { ts: ms,
+           lat: satellite.degreesLat(gd.latitude), lng: satellite.degreesLong(gd.longitude),
+           alt: gd.height, vel: Math.hypot(pv.velocity.x, pv.velocity.y, pv.velocity.z),
+           sunlit,
+           period: no ? (2 * Math.PI / no) : null,                       // minutes
+           incl: _iss.satrec.inclo != null ? _iss.satrec.inclo * 180 / Math.PI : null,
+           foot: Math.acos(Math.max(-1, Math.min(1, ISS_RE / (ISS_RE + gd.height)))) * 180 / Math.PI };
+}
+// Memoised current state — SGP4 is cheap but not free; 4 recomputes/s is plenty.
+function issState(){
+  const now = Date.now();
+  if(_iss.cur && (now - _iss.at) < 250) return _iss.cur;
+  const st = issAt(now);
+  if(st){
+    st.payload = issPayload(st);     // the popup text is built once per recompute
+    _iss.cur = st; _iss.at = now;
+  }
+  return st;
+}
+// ±50 min of orbit, cached: redrawing it every frame would mean ~100 SGP4 passes
+// per frame, which is real work on a phone. The window only slides 30 s at a time.
+function issTrackPts(ts){
+  if(_iss.track && Math.abs(ts - _iss.trackAt) < 30000) return _iss.track;
+  const pts = [];
+  for(let m = -50; m <= 50; m += 1){
+    const s = issAt(ts + m * 60000);
+    if(s) pts.push([s.lng, s.lat]);
+  }
+  _iss.track = pts; _iss.trackAt = ts;
+  return pts;
+}
+// Nearest place-table entry to the sub-point (country centroids / regions —
+// coarse by nature, so the popup states the distance instead of pretending).
+function issNearest(lat, lng){
+  const places = (window.GAZETTEER && window.GAZETTEER.places) || [];
+  let best = null, bestD = Infinity;
+  places.forEach(p => {
+    const d = d3.geoDistance([lng, lat], [p.lng, p.lat]) * 6371;   // km
+    if(d < bestD){ bestD = d; best = p; }
+  });
+  return best ? { name: best.n, km: Math.round(bestD), type: best.t } : null;
+}
+function issGeoStr(lat, lng){
+  return Math.abs(lat).toFixed(2) + '°' + (lat >= 0 ? 'N' : 'S') + ' ' +
+         Math.abs(lng).toFixed(2) + '°' + (lng >= 0 ? 'E' : 'W');
+}
+// The report the marker carries — same text on the globe popup and the 2D pin.
+function issPayload(st){
+  if(!st) return null;
+  const near = issNearest(st.lat, st.lng);
+  const kmh = Math.round(st.vel * 3600);
+  const away = near.km > 400;
+  return {
+    color: ISS_COL, live: 'iss',
+    title: '🛰 ' + ((window.ISS && window.ISS.name) || 'ISS') + ' — live',
+    lines: [
+      'Sub-point ' + issGeoStr(st.lat, st.lng) + ' · altitude ' + Math.round(st.alt) + ' km',
+      'Speed ' + st.vel.toFixed(2) + ' km/s · ' + kmh.toLocaleString('en-GB') + ' km/h',
+      st.incl != null && st.period != null
+        ? 'Orbit: ' + st.incl.toFixed(1) + '° inclination · ' + st.period.toFixed(1) +
+          ' min per revolution (' + (1440 / st.period).toFixed(1) + ' orbits/day)'
+        : 'Orbit: period unavailable',
+      st.sunlit ? 'In sunlight — the station is lit right now'
+                : "In Earth's shadow — unlit night pass",
+      near ? (away ? 'Over open ground/ocean · nearest place-table entry ' + near.name +
+                     ' (' + near.km.toLocaleString('en-GB') + ' km away)'
+                   : 'Over ' + near.name + ' (within ' + near.km.toLocaleString('en-GB') + ' km)')
+           : '',
+      'Orbit track ±50 min · visibility footprint ' + Math.round(st.foot * 111) + ' km radius',
+      'TLE epoch ' + ((window.ISS && window.ISS.epoch) || '?') + ' · snapshot ' +
+        ((window.ISS && window.ISS.fetched) || '?') + ' · ' + ((window.ISS && window.ISS.source) || '')
+    ],
+    link: 'https://spotthestation.nasa.gov/',
+    linkText: 'NASA · Spot the Station sightings ↗'
+  };
+}
+function drawIss(g){
+  const st = issState(); if(!st) return;
+  const ctx = g.ctx, c = [-g.rot[0], -g.rot[1]];
+  const near = pt => d3.geoDistance(pt, c) <= Math.PI / 2 - 0.02;   // near side only
+  // visibility footprint: the circle on the ground the station can see
+  ctx.save();
+  ctx.beginPath(); g.path(d3.geoCircle().center([st.lng, st.lat]).radius(st.foot)());
+  ctx.fillStyle = 'rgba(94,234,212,.055)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(94,234,212,.28)'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.restore();
+  // one full orbit drawn across the globe (past 50 min → next 50 min)
+  const pts = issTrackPts(st.ts);
+  let prev = null;
+  for(let i = 0; i < pts.length; i++){
+    const q = pts[i];
+    const p = near(q) ? g.proj(q) : null;
+    if(p && prev && Math.abs(q[0] - prev.lng) < 180){
+      ctx.beginPath(); ctx.moveTo(prev.p[0], prev.p[1]); ctx.lineTo(p[0], p[1]);
+      ctx.strokeStyle = 'rgba(94,234,212,.45)'; ctx.lineWidth = 1.2;
+      ctx.setLineDash([4, 4]); ctx.stroke(); ctx.setLineDash([]);
+    }
+    prev = p ? { p, lng: q[0] } : null;
+  }
+  // the station itself: dot + halo + crosshair, then the label
+  const pt = plotGlobePt(st.lng, st.lat, ISS_COL, 6, 'iss', st.payload || issPayload(st));
+  if(!pt) return;
+  ctx.save();
+  ctx.font = '600 10px ui-monospace, Menlo, monospace';
+  ctx.fillStyle = ISS_COL;
+  ctx.shadowColor = 'rgba(0,0,0,.85)'; ctx.shadowBlur = 4;
+  ctx.fillText('ISS', pt[0] + 10, pt[1] - 8);
+  ctx.restore();
+}
+// ── the same station on the 2D Leaflet map ───────────────────────────────────
+function issPopupHTML(pl){
+  return '<div class="mp-title" style="color:' + ISS_COL + '">' + esc(pl.title) + '</div>' +
+    gtLinesHTML(pl).replace(/class="gt-line"/g, 'class="mp-meta" style="margin-top:3px"') +
+    (pl.link ? '<div style="margin-top:6px"><a href="' + esc(pl.link) +
+               '" target="_blank" rel="noopener">' + esc(pl.linkText) + '</a></div>' : '');
+}
+function issLegendTick(){
+  const el = $('#mapLegend');
+  if(!el || !SET.iss || !issReady() || el.querySelector('.iss-sw')) return;
+  el.insertAdjacentHTML('beforeend',
+    '<span class="li"><span class="sw iss-sw"></span>🛰 ISS · live orbit</span>');
+}
+function issMapMarker(map){
+  const st = issState(); if(!st) return;
+  const pl = issPayload(st);
+  if(!_issMarker){
+    const ic = L.divIcon({ className:'iss-marker', html:'<span class="iss-pin">🛰</span>',
+                           iconSize:[22,22], iconAnchor:[11,11], popupAnchor:[0,-13] });
+    _issMarker = L.marker([st.lat, st.lng], { icon:ic, zIndexOffset:900 });
+  }
+  _issMarker.setLatLng([st.lat, st.lng]);
+  if(pl && !_issMarker.getPopup()) _issMarker.bindPopup(issPopupHTML(pl));
+  if(!map.hasLayer(_issMarker)) _issMarker.addTo(map);
+  return _issMarker;
+}
+// Everything the station layer needs to stay current: the 2D pin moves every few
+// seconds and, while either popup is open, its numbers are re-rendered in place.
+function issLiveTick(){
+  if(!SET.iss) return;
+  issLegendTick();
+  if(_issMarker && _map && _map.hasLayer(_issMarker)){
+    const st = issState();
+    if(st){
+      _issMarker.setLatLng([st.lat, st.lng]);
+      const pl = issPayload(st);
+      if(pl) _issMarker.setPopupContent(issPopupHTML(pl));
+    }
+  }
+  const tip = $('#globeTip');
+  if(tip && !tip.hidden && tip.dataset.live === 'iss'){
+    const fresh = issPayload(issState());
+    const body = tip.querySelector('.gt-body');
+    if(fresh && body) body.innerHTML = gtLinesHTML(fresh);
+  }
+}
 /* ── Marker popups on the canvas globe ──────────────────────────────────────
    The globe is a single <canvas>, so markers are pixels with no DOM identity.
    plotGlobePt() records each marker's screen position every frame into g.hits;
@@ -1869,6 +2106,9 @@ function hideGlobeTip(){
   const tip = $('#globeTip'); if(tip) tip.hidden = true;
   const g = _globe; if(g && !document.body.classList.contains('motion-off')) g.auto = true;
 }
+function gtLinesHTML(d){
+  return (d.lines || []).filter(Boolean).map(l => '<div class="gt-line">' + esc(l) + '</div>').join('');
+}
 function showGlobeTip(hit){
   const box = $('#globebox'), tip = $('#globeTip');
   if(!box || !tip || !hit) return;
@@ -1876,9 +2116,10 @@ function showGlobeTip(hit){
   tip.innerHTML =
     '<button class="gt-close" type="button" aria-label="Close">×</button>' +
     '<div class="gt-title" style="color:' + esc(d.color || '#fff') + '">' + esc(d.title || '') + '</div>' +
-    (d.lines || []).filter(Boolean).map(l => '<div class="gt-line">' + esc(l) + '</div>').join('') +
+    '<div class="gt-body">' + gtLinesHTML(d) + '</div>' +
     (d.link ? '<a class="gt-link" href="' + esc(d.link) + '" target="_blank" rel="noopener">' +
               esc(d.linkText || 'open ↗') + '</a>' : '');
+  tip.dataset.live = d.live || '';     // lets a live layer refresh its own card
   tip.hidden = false;
   const bw = box.clientWidth, bh = box.clientHeight;
   const tw = tip.offsetWidth || 236, th = tip.offsetHeight || 100;
@@ -2075,10 +2316,18 @@ function boot(){
   renderDefcon();  // derived readiness indicator — recomputed on each news refresh
   initLive();      // live news broadcast channels (iframe loads when the card is in view)
   loadMarkets(); setInterval(loadMarkets,60000);
+  // The ISS layer needs satellite.js on the 2D map as well — the globe fetches it
+  // for itself, but a 2D-only visit would otherwise never load it. Non-fatal.
+  if(SET.iss && typeof satellite === 'undefined' && window.ISS){
+    loadScript(GLOBE_CDN.sat)
+      .then(()=>{ try{ if(_map) updateMapSignals(); issLegendTick(); }catch(e){} })
+      .catch(()=>{ /* globe/2D ISS layer simply stays off */ });
+  }
   applySettings();   // saved display classes + first feed render + refresh timer
   loadPrediction(); setInterval(loadPrediction,300000);
   loadFX(); setInterval(loadFX,300000);
-  renderFiatleak(); setInterval(refreshFiatleak,1800000);   // refresh fiatleak.js hourly data
+  renderFiatleak(); setInterval(refreshFiatleak, 1800000);   // refresh fiatleak.js hourly data
+  setInterval(issLiveTick, 5000);   // ISS: move the 2D pin, refresh any open ISS report
   // guide on first visit (skip when arriving via a section deep-link)
   if(!location.hash && !localStorage.getItem('wm_seen')){ openGuide(); localStorage.setItem('wm_seen','1'); }
   $('#helpBtn').addEventListener('click',openGuide);
