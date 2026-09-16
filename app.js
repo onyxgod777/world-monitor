@@ -2075,6 +2075,11 @@ function issMapMarker(map){
 function issLiveTick(){
   if(!SET.iss) return;
   issLegendTick();
+  // self-heal: if satellite.js landed after the first map render the pin was
+  // never built, so create it here rather than waiting for the next layer toggle
+  if(!_issMarker && _map && typeof L !== 'undefined' && issReady()){
+    try{ issMapMarker(_map); }catch(e){}
+  }
   if(_issMarker && _map && _map.hasLayer(_issMarker)){
     const st = issState();
     if(st){
@@ -2338,7 +2343,11 @@ function boot(){
   // for itself, but a 2D-only visit would otherwise never load it. Non-fatal.
   if(SET.iss && typeof satellite === 'undefined' && window.ISS){
     loadScript(GLOBE_CDN.sat)
-      .then(()=>{ try{ if(_map) updateMapSignals(); issLegendTick(); }catch(e){} })
+      .then(()=>{ try{
+        // the map exists by now in 2D; in 3D the globe draws the station itself
+        if(SET.mapMode !== '3d') updateMapSignals();
+        issLegendTick();
+      }catch(e){} })
       .catch(()=>{ /* globe/2D ISS layer simply stays off */ });
   }
   applySettings();   // saved display classes + first feed render + refresh timer
