@@ -11,7 +11,7 @@ refreshing with no machine of ours running:
 
 | Workflow | Cadence | Writes |
 |---|---|---|
-| `snapshots-fast.yml` | every 15 min | `quakes.js`, `floods.js` |
+| `snapshots-fast.yml` | every 15 min | `quakes.js`, `floods.js`, `penny.js` |
 | `snapshots-hourly.yml` | hourly | `news.js`, `fiatleak.js`, `social.js` |
 | `snapshots-4h.yml` | every 4 h | `amber.js`, `outbreaks.js`, `iss.js` |
 
@@ -20,7 +20,7 @@ Run one by hand from the repo's **Actions** tab (*Run workflow*); no local sched
 The fetchers take their output directory from `WM_REPO_DIR` (unset → `~/world-monitor`).
 
 ## Views
-- **Markets** — live crypto watchlist (BTC/ETH/SOL/XRP…) with prices, ±24h and sparklines ([CoinGecko](https://www.coingecko.com)); **Prediction Signals** from live Polymarket markets (Yes/No probabilities, 24h volume); **FX & Metals** (ECB/Frankfurter forex + real-time gold); an economic snapshot and volatility/risk gauge.
+- **Markets** — live crypto watchlist (BTC/ETH/SOL/XRP…) with prices, ±24h and sparklines; **Penny Stocks** (most-active sub-$5 US + Canadian common stock, USD and CAD columns) ([CoinGecko](https://www.coingecko.com)); **Prediction Signals** from live Polymarket markets (Yes/No probabilities, 24h volume); **FX & Metals** (ECB/Frankfurter forex + real-time gold); an economic snapshot and volatility/risk gauge.
 - **World** — 16 real-time city clocks + UTC.
 - **Intel** — live headlines streamed from public RSS (world, markets, cyber, geopolitics, energy), tagged and auto-aged.
 - **Prophecy** — the daily *News & Prophecy* causal analyses from **pi.thealpha-secret.xyz/news/** rendered as tracked predictions: each tracks an **observed cause**, projects its **necessary effect if the cause persists**, and names **the hinge** — the human choice that changes the cause and rewrites the outcome. A live counter shows how many current feed headlines track each cause. Data lives in `prophecies.js` (update it when the news page publishes).
@@ -33,6 +33,7 @@ The fetchers take their output directory from `WM_REPO_DIR` (unset → `~/world-
 - **Map placement is keyword-derived, country-level.** Every headline on the Live World Signals map / 3D globe is pinned to the place the headline *names* (ISO 3166 countries via `gazetteer.js`, plus multi-country regions like the Black Sea or Sahel), never to where the story was sourced; a headline naming no place stays off the map rather than being guessed into one, and the marker popup says so. The panel's own counter reports how many of the cycle's headlines were placed. `gazetteer.js` is rebuilt monthly by `.github/workflows/gazetteer.yml` from mledoze/countries + Wikidata/Wikipedia/OpenStreetMap coordinates.
 - The intel feed streams live Google News headlines via a public CORS proxy (falling back to rss2json, then clearly-labelled sample items if every source is unreachable), auto-dropping known paywalled outlets so links open readable articles. It recovers automatically on refresh.
 - The ISS layer is **computed, not copied**: position, altitude and velocity come from propagating the committed CelesTrak element set (verified against the independent wheretheiss.at API — sub-0.02° / <0.1 km/h agreement); sunlit-vs-eclipsed comes from a solar position that reproduces that API's solar sub-point exactly. A TLE is valid for days, so the layer is refreshed every 4 h and the popup prints the epoch it was computed from.
+- The **Penny Stocks** panel is fetched live in the browser from the TradingView scanner (keyless, CORS-readable): it is the scanner's own universe filtered to common stock under US$5.00 / C$5.00 with a share-volume floor, ranked by volume — not a hand-picked ticker list, and leveraged ETPs are excluded by the scanner's `type` filter. Prices are the venue's delayed last sale (cross-checked against CNBC quotes for the US and Canadian names), the panel prints its own filter rule, and `penny.js` from `fetch_penny.py` is the fallback when the browser cannot reach the scanner.
 - Risk gauge and AI brief are labelled illustrative heuristics.
 - The Prophecy tab's "headlines tracking" counter is a keyword heuristic over the live feed — an approximate gauge of coverage, not proof a prophecy is being fulfilled. Full analyses and their framing live on the source News & Prophecy page.
 - Prediction-market probabilities are opinion data from Polymarket traders — not forecasts. Verify critical intelligence independently.
