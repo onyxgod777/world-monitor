@@ -1959,11 +1959,20 @@ function issTrackPts(ts){
 }
 // Nearest place-table entry to the sub-point (country centroids / regions —
 // coarse by nature, so the popup states the distance instead of pretending).
+// Distance is computed here rather than with d3.geoDistance: the 2D map can show
+// this layer without the globe, and d3 only exists once the globe has booted.
+function issKmBetween(lat1, lng1, lat2, lng2){
+  const r = Math.PI / 180, R = 6371;
+  const dLat = (lat2 - lat1) * r, dLng = (lng2 - lng1) * r;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1*r) * Math.cos(lat2*r) * Math.sin(dLng/2) * Math.sin(dLng/2);
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+}
 function issNearest(lat, lng){
   const places = (window.GAZETTEER && window.GAZETTEER.places) || [];
   let best = null, bestD = Infinity;
   places.forEach(p => {
-    const d = d3.geoDistance([lng, lat], [p.lng, p.lat]) * 6371;   // km
+    const d = issKmBetween(lat, lng, p.lat, p.lng);
     if(d < bestD){ bestD = d; best = p; }
   });
   return best ? { name: best.n, km: Math.round(bestD), type: best.t } : null;
