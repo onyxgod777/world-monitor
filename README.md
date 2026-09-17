@@ -1,6 +1,6 @@
 # World Monitor
 
-A self-hosted global intelligence dashboard — live markets, geopolitical headlines, world clocks and risk signals in one dark, widescreen workspace. A clean static-shell homage to apps like world-monitor.app, built to run entirely on GitHub Pages.
+A self-hosted global intelligence dashboard — live markets, geopolitical headlines, a world clock and population map, and risk signals in one dark, widescreen workspace. A clean static-shell homage to apps like world-monitor.app, built to run entirely on GitHub Pages.
 
 Live: **https://onyxgod777.github.io/world-monitor/**
 
@@ -29,7 +29,7 @@ The fetchers take their output directory from `WM_REPO_DIR` (unset → `~/world-
 - **ISS (live)** — the station is propagated in the browser with SGP4 (satellite.js) from the TLE committed by `fetch_iss.py` (CelesTrak), so it moves continuously across the globe with its orbit track and visibility footprint; tapping it reports sub-point, altitude, speed, orbit, sunlit/eclipsed state, the nearest place-table entry, and links to NASA's *Spot the Station* sighting reports. Switch it off under Settings → Map layers.
 
 ## Data honesty
-- Crypto prices, forex, gold, prediction markets & clocks are **real-time** (all keyless, CORS-enabled public APIs).
+- Crypto prices, forex, gold, prediction markets & the world clocks are **real-time** (all keyless, CORS-enabled public APIs).
 - **Map placement is keyword-derived, country-level.** Every headline on the Live World Signals map / 3D globe is pinned to the place the headline *names* (ISO 3166 countries via `gazetteer.js`, plus multi-country regions like the Black Sea or Sahel), never to where the story was sourced; a headline naming no place stays off the map rather than being guessed into one, and the marker popup says so. The panel's own counter reports how many of the cycle's headlines were placed. `gazetteer.js` is rebuilt monthly by `.github/workflows/gazetteer.yml` from mledoze/countries + Wikidata/Wikipedia/OpenStreetMap coordinates.
 - The intel feed streams live Google News headlines via a public CORS proxy (falling back to rss2json, then clearly-labelled sample items if every source is unreachable), auto-dropping known paywalled outlets so links open readable articles. It recovers automatically on refresh.
 - The ISS layer is **computed, not copied**: position, altitude and velocity come from propagating the committed CelesTrak element set (verified against the independent wheretheiss.at API — sub-0.02° / <0.1 km/h agreement); sunlit-vs-eclipsed comes from a solar position that reproduces that API's solar sub-point exactly. A TLE is valid for days, so the layer is refreshed every 4 h and the popup prints the epoch it was computed from.

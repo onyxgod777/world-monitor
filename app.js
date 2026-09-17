@@ -298,8 +298,7 @@ function tickClocks(){
   if(utc) utc.textContent = new Intl.DateTimeFormat(SET.clock24 ? 'en-GB' : 'en-US',
     {timeZone:'UTC',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:!SET.clock24}).format(now) + ' UTC';
   const cells = clockCells(now);
-  // The Markets card and the World-view card show the same clocks off one string.
-  const g = $('#clockgrid');      if(g)  g.innerHTML  = cells;
+  // One clock card, in the World view (the Markets view used to duplicate it).
   const wg = $('#worldclockgrid'); if(wg) wg.innerHTML = cells;
   updateMapClocks(now);
   popTick(now);
