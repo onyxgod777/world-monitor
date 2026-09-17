@@ -188,7 +188,7 @@
               <button class="mtbtn is-on" id="map2dBtn" type="button" aria-pressed="true">2D Map</button>
               <button class="mtbtn" id="map3dBtn" type="button" aria-pressed="false">3D Globe</button>
             </div>
-            <span class="src mono">NEWS + SEISMIC + FLOODS + ISS</span>
+            <span class="src mono">NEWS + SEISMIC + FLOODS + ISS + CLOCKS</span>
           </div>
           <div class="mapbox">
             <div id="worldmap"></div>
@@ -199,6 +199,25 @@
             <div class="globetip" id="globeTip" hidden></div>
             <div class="map-legend" id="mapLegend"></div>
           </div>
+        </div>
+
+        <div class="card clockworld span6" id="clockcard">
+          <div class="card-head">
+            <h2>World Clock</h2>
+            <span class="count mono" id="worldClockCount">16 cities</span>
+            <span class="src mono">IANA TZ · LIVE</span>
+          </div>
+          <div class="clockgrid" id="worldclockgrid"></div>
+          <div class="pennynote" style="margin-top:0">Every city below is also pinned on the map above — tap a pin (or a clock) for the UTC offset, the coordinates and whether that city is in daylight or night right now.</div>
+        </div>
+
+        <div class="card worldpop span6" id="worldpopcard">
+          <div class="card-head">
+            <h2>World Population</h2>
+            <span class="count mono" id="popYear">—</span>
+            <span class="src mono" id="popSrc">WORLD BANK</span>
+          </div>
+          <div id="worldpopbody"><div class="ph mono" style="padding:16px">Loading the World Bank estimate…</div></div>
         </div>
 
         <div class="card defcon span5">
@@ -337,6 +356,7 @@
   <script src="quakes.js"></script>
   <script src="iss.js"></script>
   <script src="penny.js"></script>
+  <script src="worldpop.js"></script>
   <script src="floods.js"></script>
   <script src="outbreaks.js"></script>
   <script src="vendor/hls.min.js"></script>

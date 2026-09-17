@@ -250,6 +250,38 @@ a:hover{text-shadow:0 0 10px var(--glow)}
 .clock .ct{font-family:var(--mono);font-size:18px;font-weight:500;color:var(--text);margin-top:4px}
 .clock .cd{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:1px;letter-spacing:.02em}
 .clock .utc-tag{font-size:9px;color:var(--accent);font-family:var(--mono);opacity:.85}
+/* ── clock pins on the 2D map (Leaflet divIcon: city + live local time) ── */
+.mapclockwrap{background:none;border:0}
+.mapclock{display:flex;align-items:baseline;gap:5px;white-space:nowrap;padding:2px 6px;border-radius:5px;
+  background:rgba(6,11,22,.74);border:1px solid rgba(110,168,254,.25);backdrop-filter:blur(2px);
+  font:600 10px var(--mono);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.45)}
+.mapclock .mc-city{font-family:var(--sans);font-weight:700;font-size:9.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted)}
+.mapclock .mc-time{color:var(--text);font-variant-numeric:tabular-nums}
+.mapclock .mc-off{color:var(--faint);font-size:9px}
+.mapclock .mc-day{color:var(--accent);font-size:9px;font-family:var(--sans);font-weight:700}
+.clock-sw{background:#fbbf24;width:9px;height:9px;border-radius:50%;box-shadow:0 0 0 2px rgba(251,191,36,.25)}
+.night-sw{background:rgba(3,6,16,.9);width:9px;height:9px;border-radius:50%;border:1px solid rgba(140,180,255,.55)}
+/* ── world population counter ── */
+.popwrap{padding:14px 16px 16px}
+.popnum{font:500 34px/1.1 var(--mono);color:var(--text);letter-spacing:.01em;font-variant-numeric:tabular-nums}
+.poplabel{font-size:11px;color:var(--muted);margin-top:5px;letter-spacing:.04em}
+.poprates{display:flex;gap:14px;flex-wrap:wrap;margin:13px 0 11px}
+.poprate{font:400 11px var(--mono);color:var(--dim)}
+.poprate b{color:var(--green);font-weight:700}
+.popmeta{font-size:10.5px;color:var(--faint);line-height:1.55;margin-top:5px}
+@media (max-width:640px){ .popnum{font-size:25px} .mapclock .mc-city{display:none} }
+/* The map card head carries four items (title, live count, 2D/3D toggle, sources);
+   on a phone that squeezed the count into a one-word-per-line column, so stack it. */
+@media (max-width:640px){
+  .card.map .card-head{flex-wrap:wrap;row-gap:6px}
+  .card.map .card-head .maptoggle{margin-left:auto}
+  .card.map .card-head .count{flex:1 1 100%;order:3;white-space:normal;line-height:1.5}
+  .card.map .card-head .src{flex:1 1 100%;order:4;margin-left:0}
+  /* 16 clocks in one column is a very long scroll on a phone — two per row fits */
+  .clockgrid{grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:6px;padding:10px}
+  .clock{padding:8px 9px}
+  .clock .ct{font-size:15px}
+}
 
 /* ═══ TABLE (Economic) ═══ */
 .tablewrap{overflow:auto;padding:2px 4px 8px}

@@ -98,6 +98,10 @@ const SETTINGS_DEFS = [
     { k:'reddit', lab:'Reddit',      hint:'Public subreddit feeds · unverified first reports' },
     { k:'x',      lab:'X / Twitter', hint:'Public timeline widget — cached per handle' },
   ]},
+  { group:'World panels', opts:[
+    { k:'clocks',   lab:'World clocks on the map', hint:'City pins with live local time on the 2D map and the 3D globe, plus the day/night line' },
+    { k:'worldpop', lab:'World population',        hint:'Live ticking estimate from the World Bank figure + its published growth rate' },
+  ]},
   { group:'Market panels', opts:[
     { k:'penny',  lab:'Penny stocks',       hint:'Live sub-$5 US + Canadian listings from the TradingView scanner' },
   ]},
@@ -121,6 +125,7 @@ const SETTINGS_SEGS = [
 ];
 const SETTINGS_DEFAULTS = { fx:true, motion:true, grid:true, dense:false,
   tg:true, reddit:true, x:true, quakes:true, floods:true, outbreaks:true, amber:true, iss:true, penny:true,
+  clocks:true, worldpop:true,
   regions:[], view:'markets', clock24:true, refresh:120000, mapMode:'2d' };
 let SET = (function(){
   try{ return Object.assign({}, SETTINGS_DEFAULTS, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
@@ -150,6 +155,11 @@ function applySettings(){
   b.classList.toggle('dense',      !!SET.dense);
   try{ loadNews(); }catch(e){ /* panel not built yet */ }
   try{ if(_map) updateMapSignals(); }catch(e){}
+  try{
+    const cc = $('#clockcard'); if(cc) cc.hidden = !SET.clocks;
+    if(!SET.clocks) clearMapClocks(); else renderMapClocks();
+    const wp = $('#worldpopcard'); if(wp) wp.hidden = !SET.worldpop;
+  }catch(e){}
   try{
     const pc = $('#pennycard'); if(pc) pc.hidden = !SET.penny;
     if(SET.penny && !_pennyTimer) _pennyTimer = setInterval(loadPenny, 120000);
@@ -242,13 +252,26 @@ function setStatus(ok, label){
 }
 
 /* ══════════════ 1. WORLD CLOCKS (real, client-side) ══════════════ */
+// One clock per city — the Markets grid, the World-view grid and the clock markers
+// on the 2D map / 3D globe all read this same list. Coordinates are the cities'
+// Nominatim geocode (verified, not from memory) so the pin sits where the clock is.
 const ZONES = [
-  ['UTC','UTC'], ['New York','America/New_York'], ['Toronto','America/Toronto'],
-  ['Los Angeles','America/Los_Angeles'], ['Sao Paulo','America/Sao_Paulo'],
-  ['London','Europe/London'], ['Frankfurt','Europe/Berlin'], ['Moscow','Europe/Moscow'],
-  ['Istanbul','Europe/Istanbul'], ['Dubai','Asia/Dubai'], ['New Delhi','Asia/Kolkata'],
-  ['Singapore','Asia/Singapore'], ['Beijing','Asia/Shanghai'], ['Tokyo','Asia/Tokyo'],
-  ['Sydney','Australia/Sydney'], ['Auckland','Pacific/Auckland'],
+  { city:'Los Angeles', zone:'America/Los_Angeles', lat:34.0537,  lng:-118.2428 },
+  { city:'New York',    zone:'America/New_York',    lat:40.7127,  lng:-74.0060  },
+  { city:'Toronto',     zone:'America/Toronto',     lat:43.6535,  lng:-79.3839  },
+  { city:'Sao Paulo',   zone:'America/Sao_Paulo',   lat:-23.5507, lng:-46.6334  },
+  { city:'UTC',         zone:'UTC',                 lat:51.4821,  lng:-0.0045,  label:'Greenwich' },
+  { city:'London',      zone:'Europe/London',       lat:51.5074,  lng:-0.1278  },
+  { city:'Frankfurt',   zone:'Europe/Berlin',       lat:50.1106,  lng:8.6821   },
+  { city:'Moscow',      zone:'Europe/Moscow',       lat:55.6256,  lng:37.6064  },
+  { city:'Istanbul',    zone:'Europe/Istanbul',     lat:41.0064,  lng:28.9759  },
+  { city:'Dubai',       zone:'Asia/Dubai',          lat:25.0743,  lng:55.1886  },
+  { city:'New Delhi',   zone:'Asia/Kolkata',        lat:28.6139,  lng:77.2090  },
+  { city:'Singapore',   zone:'Asia/Singapore',      lat:1.3571,   lng:103.8195 },
+  { city:'Beijing',     zone:'Asia/Shanghai',       lat:39.9057,  lng:116.3913 },
+  { city:'Tokyo',       zone:'Asia/Tokyo',          lat:35.6769,  lng:139.7639 },
+  { city:'Sydney',      zone:'Australia/Sydney',    lat:-33.8698, lng:151.2083 },
+  { city:'Auckland',    zone:'Pacific/Auckland',    lat:-36.8521, lng:174.7632 },
 ];
 function zoneFmt(zone, now){
   const h12 = !SET.clock24;
@@ -257,17 +280,215 @@ function zoneFmt(zone, now){
   const day = new Intl.DateTimeFormat('en-GB', { timeZone: zone, weekday:'short' }).format(now);
   return { time, day };
 }
-function tickClocks(){
-  const now = new Date();
-  $('#utcClock').textContent = new Intl.DateTimeFormat(SET.clock24 ? 'en-GB' : 'en-US',
-    {timeZone:'UTC',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:!SET.clock24}).format(now) + ' UTC';
-  const g = $('#clockgrid');
-  g.innerHTML = ZONES.map(([city,zone])=>{
-    const {time,day} = zoneFmt(zone, now);
-    const off = (zone==='UTC') ? '' : `<span class="utc-tag">${utcOffsetLabel(zone,now)}</span>`;
-    return `<div class="clock"><div class="city">${city}</div><div class="ct">${time}</div><div class="cd">${day} ${off}</div></div>`;
+function clockCells(now){
+  return ZONES.map(z=>{
+    const {time,day} = zoneFmt(z.zone, now);
+    const off = (z.zone==='UTC') ? '' : `<span class="utc-tag">${utcOffsetLabel(z.zone,now)}</span>`;
+    const name = z.label ? z.city + ' · ' + z.label : z.city;
+    return `<div class="clock"><div class="city">${esc(name)}</div><div class="ct">${time}</div><div class="cd">${day} ${off}</div></div>`;
   }).join('');
 }
+function clockShort(zone, now){
+  return new Intl.DateTimeFormat(SET.clock24 ? 'en-GB' : 'en-US',
+    { timeZone: zone, hour:'2-digit', minute:'2-digit', second:'2-digit', hour12: !SET.clock24 }).format(now);
+}
+function tickClocks(){
+  const now = new Date();
+  const utc = $('#utcClock');
+  if(utc) utc.textContent = new Intl.DateTimeFormat(SET.clock24 ? 'en-GB' : 'en-US',
+    {timeZone:'UTC',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:!SET.clock24}).format(now) + ' UTC';
+  const cells = clockCells(now);
+  // The Markets card and the World-view card show the same clocks off one string.
+  const g = $('#clockgrid');      if(g)  g.innerHTML  = cells;
+  const wg = $('#worldclockgrid'); if(wg) wg.innerHTML = cells;
+  updateMapClocks(now);
+  popTick(now);
+}
+
+/* ── clock markers on the 2D map: one pin per city, live on its face ─────────
+   Leaflet markers rebuilt whenever the map re-renders; the per-second tick writes
+   straight into each icon's DOM node (no marker churn, no popup flicker). */
+let _clockMarkers = [];
+function clearMapClocks(){
+  _clockMarkers.forEach(m => { try{ m.remove(); }catch(e){} });
+  _clockMarkers = [];
+}
+function mapClockHTML(z, now, big){
+  const {day} = zoneFmt(z.zone, now);
+  const off = (z.zone==='UTC') ? 'UTC' : utcOffsetLabel(z.zone, now);
+  const name = z.label ? z.city + ' · ' + z.label : z.city;
+  return `${big?'<span class="mc-day">'+esc(day)+'</span>':''}<span class="mc-city">${esc(name)}</span>`
+       + `<span class="mc-time">${esc(clockShort(z.zone, now))}</span>`
+       + `<span class="mc-off">${esc(off)}</span>`;
+}
+function renderMapClocks(){
+  const map = _map; if(!map) return;
+  clearMapClocks();
+  if(!SET.clocks) return;
+  const now = new Date();
+  ZONES.forEach(z=>{
+    const ic = L.divIcon({ className:'mapclockwrap', html:`<div class="mapclock">${mapClockHTML(z, now, false)}</div>`,
+                           iconSize:[0,0], iconAnchor:[-6,10] });
+    const m = L.marker([z.lat, z.lng], { icon:ic, interactive:true, keyboard:false, zIndexOffset:300 });
+    m.bindPopup(clockPopup(z, now));
+    m.on('popupopen', ()=>{ const tip = m.getPopup().getElement();
+      if(tip) tip._clockZone = z.zone; });
+    m.addTo(map);
+    m.__zone = z.zone;
+    _clockMarkers.push(m);
+  });
+}
+function updateMapClocks(now){
+  if(!_clockMarkers.length) return;
+  _clockMarkers.forEach(m=>{
+    const el = m.getElement();
+    if(el){ const box = el.querySelector('.mapclock'); if(box) box.innerHTML = mapClockHTML(ZONES.find(z=>z.zone===m.__zone), now, false); }
+    const pop = m.getPopup && m.getPopup();
+    if(pop && pop.isOpen && pop.isOpen()){ const z = ZONES.find(x=>x.zone===m.__zone); if(z) pop.setContent(clockPopup(z, now)); }
+  });
+  // an open clock card on the globe ticks too, so the canvas popup is never stale
+  const tip = $('#globeTip');
+  if(tip && !tip.hidden && tip.dataset.live === 'clock' && tip.dataset.zone){
+    const z = ZONES.find(x=>x.zone === tip.dataset.zone);
+    const body = tip.querySelector('.gt-body');
+    if(z && body) body.innerHTML = gtLinesHTML(clockPayload(z, now));
+  }
+}
+/* ── where the sun is overhead, and how high it is over any point ─────────────
+   Standalone (no satellite.js): the same low-precision solar series used for the
+   ISS eclipse test, rotated from ECI to Earth-fixed coordinates with GMST. */
+function sunSubpoint(now){
+  const n = now.getTime() / 86400000 + 2440587.5 - 2451545.0;
+  const L = (280.460 + 0.9856474 * n) % 360;
+  const g = ((357.528 + 0.9856003 * n) % 360) * Math.PI / 180;
+  const lam = (L + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * Math.PI / 180;
+  const eps = (23.439 - 0.0000004 * n) * Math.PI / 180;
+  const x = Math.cos(lam), y = Math.cos(eps) * Math.sin(lam), z = Math.sin(eps) * Math.sin(lam);
+  const th = (280.46061837 + 360.98564736629 * n) * Math.PI / 180;
+  return { lat: Math.asin(z) * 180 / Math.PI,
+           lng: Math.atan2(-x * Math.sin(th) + y * Math.cos(th), x * Math.cos(th) + y * Math.sin(th)) * 180 / Math.PI };
+}
+function sunElevAt(lat, lng, when){
+  const s = sunSubpoint(when);
+  return 90 - (issKmBetween(lat, lng, s.lat, s.lng) / 6371) * 180 / Math.PI;
+}
+// Solar elevation now, plus when it next crosses the horizon (sampled forward).
+function sunElevation(lat, lng, now){
+  const elev = sunElevAt(lat, lng, now);
+  let cross = null;
+  for(let m = 10; m <= 1440; m += 10){
+    const t = new Date(now.getTime() + m * 60000);
+    if((elev > 0) !== (sunElevAt(lat, lng, t) > 0)){ cross = m; break; }
+  }
+  return { elev, nextMinutes: cross, nextIsSunset: elev > 0 };
+}
+// One payload feeds both the Leaflet popup (2D) and the canvas globe card, so the
+// two views can never disagree about a city's time.
+function clockPayload(z, now){
+  const {time, day} = zoneFmt(z.zone, now);
+  const off = (z.zone==='UTC') ? 'UTC (prime meridian)' : utcOffsetLabel(z.zone, now);
+  const date = new Intl.DateTimeFormat('en-GB', { timeZone:z.zone, weekday:'long', day:'2-digit', month:'short', year:'numeric' }).format(now);
+  const sun = sunElevation(z.lat, z.lng, now);
+  const light = sun.elev > 0 ? '☀ daylight' : (sun.elev > -6 ? '🌆 civil twilight' : '🌙 night');
+  const when = (sun.nextMinutes == null) ? 'no horizon crossing in the next 24 h'
+    : `${sun.nextIsSunset ? 'sunset' : 'sunrise'} in ${Math.floor(sun.nextMinutes/60)}h ${String(sun.nextMinutes % 60).padStart(2,'0')}m`;
+  return {
+    color:'#fbbf24', live:'clock', zone:z.zone,
+    title: z.city + (z.label ? ' · ' + z.label : ''),
+    lines: [
+      'Local time ' + time + ' · ' + day + ' · ' + date,
+      'UTC offset ' + off + ' · ' + z.lat.toFixed(3) + '°, ' + z.lng.toFixed(3) + '°',
+      light + ' — sun ' + sun.elev.toFixed(1) + '° above the horizon',
+      when,
+      'Local time from the browser IANA zone database (' + z.zone + ')',
+    ],
+  };
+}
+function clockPopup(z, now){
+  const d = clockPayload(z, now);
+  return `<div class="mp-title">${esc(d.title)}</div>` +
+         `<div style="margin:3px 0 4px;font:600 15px var(--mono)">${esc(zoneFmt(z.zone, now).time)}</div>` +
+         d.lines.map(l => `<div class="mp-meta">${esc(l)}</div>`).join('');
+}
+
+/* ══════════════ 1b. WORLD POPULATION (World Bank estimate, ticked live) ══════════
+   Source: World Bank indicator SP.POP.TOTL / SP.POP.GROW for the world (WLD) — the
+   UN-derived estimate published once a year. There is no official per-second world
+   population feed, so the counter interpolates that published figure at its own
+   published annual growth rate from the estimate's reference instant. It is labelled
+   as an estimate everywhere it appears — never presented as a live census. */
+const WB_API = 'https://api.worldbank.org/v2/country/WLD/indicator/%s?format=json&date=2015:2035&per_page=40';
+let _pop = null;                      // { base, year, ratePct, updated, source }
+function popEstimate(now){
+  if(!_pop) return null;
+  const baseMs = Date.UTC(_pop.year, 6, 1);            // World Bank figures are mid-year
+  const years = (now.getTime() - baseMs) / (365.2425 * 86400e3);
+  return _pop.base * Math.exp((_pop.ratePct / 100) * years);
+}
+function loadWorldPop(){
+  return Promise.all([
+    fetchTimeout(WB_API.replace('%s','SP.POP.TOTL'), 12000).then(r=>r.ok?r.json():null).catch(()=>null),
+    fetchTimeout(WB_API.replace('%s','SP.POP.GROW'), 12000).then(r=>r.ok?r.json():null).catch(()=>null),
+  ]).then(([tot, grow])=>{
+    const pick = j => {
+      const rows = (j && j[1]) || [];
+      const withVal = rows.filter(x => x && x.value != null && x.date)
+                          .sort((a,b)=>Number(b.date)-Number(a.date));
+      return withVal[0] || null;
+    };
+    const t = pick(tot), g = pick(grow);
+    if(t && t.value){
+      _pop = { base:Number(t.value), year:Number(t.date), ratePct: g ? Number(g.value) : null,
+               updated:(t.date ? 'World Bank · ' + t.date : 'World Bank'), source:'World Bank (WLD)' };
+    }
+    renderWorldPop();
+  }).catch(()=>{ renderWorldPop(); });
+}
+function popFmt(n){
+  return Math.round(n).toLocaleString('en-US');
+}
+function renderWorldPop(){
+  const box = $('#worldpopbody'); if(!box) return;
+  const src = $('#popSrc');
+  if(!_pop){
+    if(window.WORLDPOP && window.WORLDPOP.base){
+      _pop = { base:Number(window.WORLDPOP.base), year:Number(window.WORLDPOP.year),
+               ratePct:Number(window.WORLDPOP.ratePct), updated:'snapshot ' + (window.WORLDPOP._updated || ''),
+               source:'World Bank (WLD) · committed snapshot' };
+    }else{
+      if(src) src.textContent = 'UNAVAILABLE · RETRYING';
+      box.innerHTML = '<div class="ph mono" style="padding:16px">World population source unavailable — retrying automatically.</div>';
+      return;
+    }
+  }
+  if(src) src.textContent = _pop.source.toUpperCase();
+  const now = new Date();
+  const est = popEstimate(now);
+  const perSec = est * (_pop.ratePct / 100) / (365.2425 * 86400);
+  const baseLine = 'Base ' + popFmt(_pop.base) + ' — World Bank estimate for ' + _pop.year +
+                   ' (mid-year), growth ' + (_pop.ratePct != null ? _pop.ratePct.toFixed(2) + '%/yr' : 'n/a');
+  box.innerHTML =
+    `<div class="popwrap">
+       <div class="popnum" id="popnum">${popFmt(est)}</div>
+       <div class="poplabel">people on Earth right now · estimate</div>
+       <div class="poprates">
+         <span class="poprate"><b>+${popFmt(perSec)}</b>/sec</span>
+         <span class="poprate"><b>+${popFmt(perSec*3600)}</b>/hour</span>
+         <span class="poprate"><b>+${popFmt(perSec*86400)}</b>/day</span>
+         <span class="poprate"><b>+${popFmt(perSec*86400*365.2425)}</b>/year</span>
+       </div>
+       <div class="popmeta">${esc(baseLine)}</div>
+       <div class="popmeta">Method: that published figure compounded at its own annual growth rate from the
+         estimate's reference date. There is no official per-second world population feed — treat this as an
+         estimate, not a census. Source: World Bank indicator SP.POP.TOTL / SP.POP.GROW (world).</div>
+     </div>`;
+}
+function popTick(now){
+  const el = $('#popnum'); if(!el || !_pop) return;
+  const est = popEstimate(now || new Date());
+  if(est != null) el.textContent = popFmt(est);
+}
+
 function utcOffsetLabel(zone, now){
   try{
     const dtf = new Intl.DateTimeFormat('en-US',{timeZone:zone,timeZoneName:'shortOffset'});
@@ -1728,6 +1949,8 @@ function updateMapSignals(){
   }else if(_issMarker && _map){
     _map.removeLayer(_issMarker); _issMarker = null;
   }
+  // ── world clocks (one pin per city, live on its face) ─────────────────────
+  renderMapClocks();
   // Legend is assembled from whichever layers are actually switched on (Settings).
   const leg = [
     `<span class="li"><span class="sw" style="background:#22c55e"></span>active</span>`,
@@ -1752,6 +1975,10 @@ function updateMapSignals(){
   }
   if(SET.iss && issReady()){
     leg.push(`<span class="li"><span class="sw iss-sw"></span>🛰 ISS · live orbit</span>`);
+  }
+  if(SET.clocks){
+    leg.push(`<span class="li"><span class="sw clock-sw"></span>🕒 city clock (live)</span>`,
+             `<span class="li"><span class="sw night-sw"></span>night side · terminator</span>`);
   }
   $('#mapLegend').innerHTML = leg.join('');
   const qtxt = !SET.quakes ? ''
@@ -1963,7 +2190,8 @@ function drawGlobe(){
       });
     });
   }
-  // ISS — drawn last so the station and its orbit sit above the event layers
+  // world clocks + day/night terminator, then the ISS on top of everything
+  if(SET.clocks) drawClockLayer(g);
   if(SET.iss && issReady()) drawIss(g);
 }
 function globeFrame(){
@@ -2149,6 +2377,38 @@ function drawIss(g){
   ctx.fillText('ISS', pt[0] + 10, pt[1] - 8);
   ctx.restore();
 }
+/* ── world clocks on the 3D globe: a pin per city + the day/night terminator ──
+   The night hemisphere is the mirror of the sub-solar point drawn as a 90° circle,
+   so the shading is real geometry from the same solar series the popups use. */
+function drawClockLayer(g){
+  const now = new Date();
+  const ctx = g.ctx, center = [-g.rot[0], -g.rot[1]];
+  const near = pt => d3.geoDistance(pt, center) <= Math.PI / 2 - 0.02;
+  const s = sunSubpoint(now);
+  ctx.save();
+  ctx.beginPath(); g.path(d3.geoCircle().center([s.lng + 180, -s.lat]).radius(90)());
+  ctx.fillStyle = 'rgba(3,6,16,.45)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(140,180,255,.22)'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.restore();
+  // Labels are dropped on narrow canvases (phones) — the pins stay tappable and the
+  // card carries the full detail, so the globe never turns into text soup.
+  const dense = g.w >= 620, tiny = g.w < 430;
+  ZONES.forEach(z=>{
+    if(!near([z.lng, z.lat])) return;
+    const p = g.proj([z.lng, z.lat]); if(!p) return;
+    const lit = sunElevAt(z.lat, z.lng, now) > 0;
+    const col = lit ? '#fbbf24' : '#8ab4ff';
+    const payload = clockPayload(z, now); payload.color = col;
+    plotGlobePt(z.lng, z.lat, col, 3, 'clock', payload);
+    if(tiny) return;
+    ctx.save();
+    ctx.font = '600 ' + (dense ? 10 : 9) + 'px ui-monospace, Menlo, monospace';
+    ctx.fillStyle = col; ctx.shadowColor = 'rgba(0,0,0,.9)'; ctx.shadowBlur = 4;
+    const t = clockShort(z.zone, now).replace(/:\d\d$/, '');
+    ctx.fillText(dense ? z.city + ' ' + t : t, p[0] + 6, p[1] + 3);
+    ctx.restore();
+  });
+}
 // ── the same station on the 2D Leaflet map ───────────────────────────────────
 function issPopupHTML(pl){
   return '<div class="mp-title" style="color:' + ISS_COL + '">' + esc(pl.title) + '</div>' +
@@ -2239,6 +2499,7 @@ function showGlobeTip(hit){
     (d.link ? '<a class="gt-link" href="' + esc(d.link) + '" target="_blank" rel="noopener">' +
               esc(d.linkText || 'open ↗') + '</a>' : '');
   tip.dataset.live = d.live || '';     // lets a live layer refresh its own card
+  tip.dataset.zone = d.zone || '';     // clock cards know which city they show
   tip.hidden = false;
   const bw = box.clientWidth, bh = box.clientHeight;
   const tw = tip.offsetWidth || 236, th = tip.offsetHeight || 100;
@@ -2445,6 +2706,7 @@ function boot(){
   initLive();      // live news broadcast channels (iframe loads when the card is in view)
   loadMarkets(); setInterval(loadMarkets,60000);
   loadPenny();   // sub-$5 USD/CAD panel (refresh interval is set in applySettings)
+  loadWorldPop(); setInterval(loadWorldPop, 24*3600*1000);   // World Bank publishes yearly
   // The ISS layer needs satellite.js on the 2D map as well — the globe fetches it
   // for itself, but a 2D-only visit would otherwise never load it. Non-fatal.
   if(SET.iss && typeof satellite === 'undefined' && window.ISS){

@@ -13,7 +13,7 @@ refreshing with no machine of ours running:
 |---|---|---|
 | `snapshots-fast.yml` | every 15 min | `quakes.js`, `floods.js`, `penny.js` |
 | `snapshots-hourly.yml` | hourly | `news.js`, `fiatleak.js`, `social.js` |
-| `snapshots-4h.yml` | every 4 h | `amber.js`, `outbreaks.js`, `iss.js` |
+| `snapshots-4h.yml` | every 4 h | `amber.js`, `outbreaks.js`, `iss.js`, `worldpop.js` |
 
 Each run commits **only when the data actually changed**, so quiet cycles add no commits.
 Run one by hand from the repo's **Actions** tab (*Run workflow*); no local scheduler needed.
@@ -21,7 +21,7 @@ The fetchers take their output directory from `WM_REPO_DIR` (unset → `~/world-
 
 ## Views
 - **Markets** — live crypto watchlist (BTC/ETH/SOL/XRP…) with prices, ±24h and sparklines; **Penny Stocks** (most-active sub-$5 US + Canadian common stock, USD and CAD columns) ([CoinGecko](https://www.coingecko.com)); **Prediction Signals** from live Polymarket markets (Yes/No probabilities, 24h volume); **FX & Metals** (ECB/Frankfurter forex + real-time gold); an economic snapshot and volatility/risk gauge.
-- **World** — 16 real-time city clocks + UTC.
+- **World** — the signal map (2D/3D) with the **world clock on it**: a pin per city showing that city's live local time (amber = in daylight, blue = in night) plus the real day/night terminator on the globe, and a **World Clock** card listing all 16 zones with their UTC offsets (all from the browser's IANA zone database). The same view carries the **World Population** counter — the World Bank's latest world figure compounded at its own published annual growth rate, ticking live and labelled an estimate.
 - **Intel** — live headlines streamed from public RSS (world, markets, cyber, geopolitics, energy), tagged and auto-aged.
 - **Prophecy** — the daily *News & Prophecy* causal analyses from **pi.thealpha-secret.xyz/news/** rendered as tracked predictions: each tracks an **observed cause**, projects its **necessary effect if the cause persists**, and names **the hinge** — the human choice that changes the cause and rewrites the outcome. A live counter shows how many current feed headlines track each cause. Data lives in `prophecies.js` (update it when the news page publishes).
 - **Alerts** — headlines auto-classified HIGH / MED / LOW priority.
@@ -34,6 +34,8 @@ The fetchers take their output directory from `WM_REPO_DIR` (unset → `~/world-
 - The intel feed streams live Google News headlines via a public CORS proxy (falling back to rss2json, then clearly-labelled sample items if every source is unreachable), auto-dropping known paywalled outlets so links open readable articles. It recovers automatically on refresh.
 - The ISS layer is **computed, not copied**: position, altitude and velocity come from propagating the committed CelesTrak element set (verified against the independent wheretheiss.at API — sub-0.02° / <0.1 km/h agreement); sunlit-vs-eclipsed comes from a solar position that reproduces that API's solar sub-point exactly. A TLE is valid for days, so the layer is refreshed every 4 h and the popup prints the epoch it was computed from.
 - The **Penny Stocks** panel is fetched live in the browser from the TradingView scanner (keyless, CORS-readable): it is the scanner's own universe filtered to common stock under US$5.00 / C$5.00 with a share-volume floor, ranked by volume — not a hand-picked ticker list, and leveraged ETPs are excluded by the scanner's `type` filter. Prices are the venue's delayed last sale (cross-checked against CNBC quotes for the US and Canadian names), the panel prints its own filter rule, and `penny.js` from `fetch_penny.py` is the fallback when the browser cannot reach the scanner.
+- **World population is an estimate, and the panel says so.** There is no official per-second world population feed: the counter compounds the World Bank's published world figure (SP.POP.TOTL, latest year) at that year's published growth rate (SP.POP.GROW) from the mid-year reference date, and prints the base figure, the rate and the method on the card. Replace it only with another *published* figure + rate.
+- Clock pins derive local time from the browser's own IANA zone database at the city's geocoded coordinate; the daylight/night state and the terminator come from a low-precision solar position (the same series verified against the wheretheiss.at solar sub-point), so they are computed, not scraped.
 - Risk gauge and AI brief are labelled illustrative heuristics.
 - The Prophecy tab's "headlines tracking" counter is a keyword heuristic over the live feed — an approximate gauge of coverage, not proof a prophecy is being fulfilled. Full analyses and their framing live on the source News & Prophecy page.
 - Prediction-market probabilities are opinion data from Polymarket traders — not forecasts. Verify critical intelligence independently.

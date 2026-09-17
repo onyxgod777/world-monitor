@@ -1,5 +1,5 @@
 # World Monitor — four-hourly snapshots (NCMEC alerts, WHO outbreak bulletins,
-# ISS element set).
+# ISS element set, world population figure).
 #
 # Slow-moving sources, so a 4-hour cadence keeps load (and Nominatim geocoding
 # calls) polite. Runs on GitHub's runners, independent of the maintainer's laptop.
@@ -16,6 +16,7 @@ on:
       - 'fetch_amber.py'
       - 'fetch_outbreaks.py'
       - 'fetch_iss.py'
+      - 'fetch_worldpop.py'
       - '.github/workflows/snapshots-4h.yml'
 
 permissions:
@@ -50,11 +51,13 @@ jobs:
           python3 fetch_amber.py     || fail=$((fail+1))
           python3 fetch_outbreaks.py || fail=$((fail+1))
           python3 fetch_iss.py       || fail=$((fail+1))
+          python3 fetch_worldpop.py  || fail=$((fail+1))
           echo "failed=$fail" >> "$GITHUB_OUTPUT"
           echo "--- produced ---"
           grep -o '"_updated": "[^"]*"' amber.js outbreaks.js 2>/dev/null | head
           grep -o '"epoch": "[^"]*"' iss.js 2>/dev/null | head
-          if [ "$fail" -ge 3 ]; then
+          grep -o '"base": [0-9]*' worldpop.js 2>/dev/null | head
+          if [ "$fail" -ge 4 ]; then
             echo "::error::every fetcher failed — the runner could not reach any source"
             exit 1
           fi
@@ -68,12 +71,12 @@ jobs:
           set -e
           git config user.name  "world-monitor-bot"
           git config user.email "world-monitor-bot@users.noreply.github.com"
-          git add amber.js outbreaks.js iss.js
+          git add amber.js outbreaks.js iss.js worldpop.js
           if git diff --cached --quiet; then
             echo "no snapshot changes"
             exit 0
           fi
-          git commit -m "snapshot: NCMEC alerts + WHO outbreaks + ISS TLE (automated, $(date -u '+%Y-%m-%d %H:%M') UTC)"
+          git commit -m "snapshot: NCMEC alerts + WHO outbreaks + ISS TLE + world population (automated, $(date -u '+%Y-%m-%d %H:%M') UTC)"
           for attempt in 1 2 3 4; do
             git pull --rebase --autostash origin main || true
             if git push origin main; then
