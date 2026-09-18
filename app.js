@@ -197,6 +197,9 @@ function renderSettings(){
     <div class="chips">${regionOptions().map(r =>
       `<button class="chip${SET.regions.indexOf(r) >= 0 ? ' on' : ''}" data-region="${esc(r)}">${esc(r)}</button>`).join('')}</div>
     <div class="sethint">Nothing selected = every region. A selection filters the Intel feed and the map's news signals.</div></div>`;
+  html += `<div class="setgrp"><h3>Android app</h3>
+    <div class="sethint">The same dashboard as a native Android app — no browser chrome, pull down to refresh, and links to other sites open in your browser.
+      <a href="download/WorldMonitor-1.0.apk" download>Download the APK (v1.0, 130 KB)</a> — it installs straight from the file, no store involved.</div></div>`;
   html += `<div class="setgrp"><h3>Behaviour</h3>` + SETTINGS_SEGS.map(s =>
     `<div class="setrow"><span class="setlab"><b>${esc(s.lab)}</b><i>${esc(s.hint)}</i></span>
       <span class="seg" data-seg="${s.k}">${s.vals.map(([v, l]) =>

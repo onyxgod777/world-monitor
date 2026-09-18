@@ -19,6 +19,21 @@ Each run commits **only when the data actually changed**, so quiet cycles add no
 Run one by hand from the repo's **Actions** tab (*Run workflow*); no local scheduler needed.
 The fetchers take their output directory from `WM_REPO_DIR` (unset → `~/world-monitor`).
 
+## Android app
+
+The dashboard also ships as a native Android app — package `com.thealphasecret.worldmonitor`,
+minSdk 24, ~130 KB, built from [`world-monitor-android`](https://github.com/onyxgod777) by
+`aapt2 → javac → d8 → zipalign → apksigner` (no Gradle, no AndroidX). It is a single WebView
+around the live site, so it never needs an update when the dashboard changes: links on
+`*.thealpha-secret.xyz` stay in the app, every other link opens in the real browser, pulling
+down from the top of a page refreshes, back walks the in-app history first, and there is a
+local offline page with auto-retry. Launching it offers itself for any
+`worldmonitor.thealpha-secret.xyz` link on the phone.
+
+Install it from **Settings → Android app** in the dashboard, or directly:
+[`download/WorldMonitor-1.0.apk`](download/WorldMonitor-1.0.apk) (install from the file —
+Android will ask once to allow installs from your browser/file manager; no store involved).
+
 ## Views
 - **Markets** — live crypto watchlist (BTC/ETH/SOL/XRP…) with prices, ±24h and sparklines; **Penny Stocks** (most-active sub-$5 US + Canadian common stock, USD and CAD columns) ([CoinGecko](https://www.coingecko.com)); **Prediction Signals** from live Polymarket markets (Yes/No probabilities, 24h volume); **FX & Metals** (ECB/Frankfurter forex + real-time gold); an economic snapshot and volatility/risk gauge.
 - **World** — the signal map (2D/3D) with the **world clock on it**: a pin per city showing that city's live local time (amber = in daylight, blue = in night) plus the real day/night terminator on the globe, and a **World Clock** card listing all 16 zones with their UTC offsets (all from the browser's IANA zone database). The same view carries the **World Population** counter — **FIGU's** published population scans ([ca.figu.org/overpopulation.html](https://ca.figu.org/overpopulation.html)), ticked between scans exactly the way the FIGU page's own counter ticks them: a quadratic through the published scans surrounding the current instant, with the page's headline sentence, its yearly increase, and the Goblet of the Truth extent (529 million) that the page quotes.
