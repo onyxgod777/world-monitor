@@ -1,5 +1,5 @@
 # World Monitor — four-hourly snapshots (NCMEC alerts, WHO outbreak bulletins,
-# ISS element set, world population figure).
+# ISS element set, FIGU world-population scans).
 #
 # Slow-moving sources, so a 4-hour cadence keeps load (and Nominatim geocoding
 # calls) polite. Runs on GitHub's runners, independent of the maintainer's laptop.
@@ -56,7 +56,7 @@ jobs:
           echo "--- produced ---"
           grep -o '"_updated": "[^"]*"' amber.js outbreaks.js 2>/dev/null | head
           grep -o '"epoch": "[^"]*"' iss.js 2>/dev/null | head
-          grep -o '"base": [0-9]*' worldpop.js 2>/dev/null | head
+          python3 -c "import json;d=json.loads(open('worldpop.js').read().split('=',1)[1].rsplit(';',1)[0]);print('FIGU scans:',len(d['series']),'last:',d['series'][-1][1])" 2>/dev/null | head -1
           if [ "$fail" -ge 4 ]; then
             echo "::error::every fetcher failed — the runner could not reach any source"
             exit 1

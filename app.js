@@ -410,76 +410,99 @@ function clockPopup(z, now){
          d.lines.map(l => `<div class="mp-meta">${esc(l)}</div>`).join('');
 }
 
-/* ══════════════ 1b. WORLD POPULATION (World Bank estimate, ticked live) ══════════
-   Source: World Bank indicator SP.POP.TOTL / SP.POP.GROW for the world (WLD) — the
-   UN-derived estimate published once a year. There is no official per-second world
-   population feed, so the counter interpolates that published figure at its own
-   published annual growth rate from the estimate's reference instant. It is labelled
-   as an estimate everywhere it appears — never presented as a live census. */
-const WB_API = 'https://api.worldbank.org/v2/country/WLD/indicator/%s?format=json&date=2015:2035&per_page=40';
-let _pop = null;                      // { base, year, ratePct, updated, source }
-function popEstimate(now){
-  if(!_pop) return null;
-  const baseMs = Date.UTC(_pop.year, 6, 1);            // World Bank figures are mid-year
-  const years = (now.getTime() - baseMs) / (365.2425 * 86400e3);
-  return _pop.base * Math.exp((_pop.ratePct / 100) * years);
+/* ══════════════ 1b. WORLD POPULATION — FIGU scan series, ticked ══════════════
+   Source of record: https://ca.figu.org/overpopulation.html — that page publishes the
+   population scans (its own `epochs` / `populations` arrays, 2004-04-08 → the latest
+   scan) and runs a counter of its own. The page is cross-origin and sends no CORS
+   headers, so the browser cannot read it directly: fetch_worldpop.py scrapes it in the
+   snapshot workflow and commits worldpop.js. The tick below evaluates a quadratic
+   through the published scans around the current instant — the same fit the FIGU
+   page's own counter builds from its newest scans — so the number stays FIGU's.
+   The World Bank / UN figure carried in the same snapshot is shown only as a labelled
+   cross-check, because the two published sources differ by more than a billion people. */
+const FIGU_URL = 'https://ca.figu.org/overpopulation.html';
+let _pop = null;
+function popSeries(){ return (_pop && _pop.series && _pop.series.length >= 2) ? _pop.series : null; }
+function popLagrange(t, p1, p2, p3){
+  const x1 = p1[0], y1 = p1[1], x2 = p2[0], y2 = p2[1], x3 = p3[0], y3 = p3[1];
+  return y1 * (t - x2) * (t - x3) / ((x1 - x2) * (x1 - x3))
+       + y2 * (t - x1) * (t - x3) / ((x2 - x1) * (x2 - x3))
+       + y3 * (t - x1) * (t - x2) / ((x3 - x1) * (x3 - x2));
 }
+function popLinear(t, p1, p2){
+  const x1 = p1[0], y1 = p1[1], x2 = p2[0], y2 = p2[1];
+  return y1 + (y2 - y1) * (t - x1) / (x2 - x1);
+}
+// The three published scans bracketing t; the last three when t is newer than them all.
+function popWindow(t){
+  const s = popSeries(); if(!s) return null;
+  if(t <= s[0][0]) return s.slice(0, Math.min(3, s.length));
+  let i = 1; while(i < s.length - 1 && s[i][0] < t) i++;
+  return s.slice(Math.max(0, i - 2), i + 1);
+}
+function popValueAt(t){
+  const w = popWindow(t); if(!w || w.length < 2) return null;
+  const tri = w.length >= 3 ? w.slice(-3) : null;
+  let value = tri ? popLagrange(t, tri[0], tri[1], tri[2]) : popLinear(t, w[0], w[1]);
+  let method = tri ? 'quadratic' : 'linear';
+  const lin = popLinear(t, w[w.length - 2], w[w.length - 1]);
+  // Guard: a quadratic carried far past its newest scan can bend. If it drifts more
+  // than 2% from the straight line through the same scans, use the line instead.
+  if(tri && (value < 0 || Math.abs(value - lin) > Math.abs(lin) * 0.02)){ value = lin; method = 'linear'; }
+  return { value, method };
+}
+function popEstimate(now){ const v = popValueAt((now || new Date()).getTime() / 1000); return v ? v.value : null; }
+function popPerSecond(now){
+  const t = (now || new Date()).getTime() / 1000;
+  const a = popValueAt(t), b = popValueAt(t + 60);
+  return (a && b) ? (b.value - a.value) / 60 : null;
+}
+function popFmt(n){ return (n == null) ? '—' : Math.round(n).toLocaleString('en-US'); }
 function loadWorldPop(){
-  return Promise.all([
-    fetchTimeout(WB_API.replace('%s','SP.POP.TOTL'), 12000).then(r=>r.ok?r.json():null).catch(()=>null),
-    fetchTimeout(WB_API.replace('%s','SP.POP.GROW'), 12000).then(r=>r.ok?r.json():null).catch(()=>null),
-  ]).then(([tot, grow])=>{
-    const pick = j => {
-      const rows = (j && j[1]) || [];
-      const withVal = rows.filter(x => x && x.value != null && x.date)
-                          .sort((a,b)=>Number(b.date)-Number(a.date));
-      return withVal[0] || null;
-    };
-    const t = pick(tot), g = pick(grow);
-    if(t && t.value){
-      _pop = { base:Number(t.value), year:Number(t.date), ratePct: g ? Number(g.value) : null,
-               updated:(t.date ? 'World Bank · ' + t.date : 'World Bank'), source:'World Bank (WLD)' };
-    }
-    renderWorldPop();
-  }).catch(()=>{ renderWorldPop(); });
-}
-function popFmt(n){
-  return Math.round(n).toLocaleString('en-US');
+  if(window.WORLDPOP && window.WORLDPOP.series && window.WORLDPOP.series.length >= 2) _pop = window.WORLDPOP;
+  renderWorldPop();
 }
 function renderWorldPop(){
   const box = $('#worldpopbody'); if(!box) return;
   const src = $('#popSrc');
   if(!_pop){
-    if(window.WORLDPOP && window.WORLDPOP.base){
-      _pop = { base:Number(window.WORLDPOP.base), year:Number(window.WORLDPOP.year),
-               ratePct:Number(window.WORLDPOP.ratePct), updated:'snapshot ' + (window.WORLDPOP._updated || ''),
-               source:'World Bank (WLD) · committed snapshot' };
-    }else{
-      if(src) src.textContent = 'UNAVAILABLE · RETRYING';
-      box.innerHTML = '<div class="ph mono" style="padding:16px">World population source unavailable — retrying automatically.</div>';
-      return;
-    }
+    if(src) src.textContent = 'UNAVAILABLE';
+    box.innerHTML = '<div class="ph mono" style="padding:16px">The FIGU population snapshot did not load — it is committed by the snapshot workflow and served from this site.</div>';
+    return;
   }
-  if(src) src.textContent = _pop.source.toUpperCase();
   const now = new Date();
   const est = popEstimate(now);
-  const perSec = est * (_pop.ratePct / 100) / (365.2425 * 86400);
-  const baseLine = 'Base ' + popFmt(_pop.base) + ' — World Bank estimate for ' + _pop.year +
-                   ' (mid-year), growth ' + (_pop.ratePct != null ? _pop.ratePct.toFixed(2) + '%/yr' : 'n/a');
+  const perSec = popPerSecond(now);
+  const head = _pop.headline || {};
+  const series = _pop.series;
+  const last = series[series.length - 1];
+  const day = sec => new Date(sec * 1000).toISOString().slice(0, 10);
+  const sample = popValueAt(now.getTime() / 1000) || {};
+  const ext = _pop.naturalExtent, cross = _pop.crossCheck;
+  if(src) src.textContent = (_pop.source || 'FIGU').toUpperCase();
+  const yEl = $('#popYear');
+  if(yEl) yEl.textContent = 'scan ' + day(last[0]);
   box.innerHTML =
     `<div class="popwrap">
        <div class="popnum" id="popnum">${popFmt(est)}</div>
-       <div class="poplabel">people on Earth right now · estimate</div>
+       <div class="poplabel">people on Earth right now · ticked from the FIGU scans</div>
        <div class="poprates">
-         <span class="poprate"><b>+${popFmt(perSec)}</b>/sec</span>
-         <span class="poprate"><b>+${popFmt(perSec*3600)}</b>/hour</span>
-         <span class="poprate"><b>+${popFmt(perSec*86400)}</b>/day</span>
-         <span class="poprate"><b>+${popFmt(perSec*86400*365.2425)}</b>/year</span>
+         <span class="poprate"><b>+${perSec < 10 ? perSec.toFixed(1) : popFmt(perSec)}</b>/sec</span>
+         <span class="poprate"><b>+${popFmt(perSec * 3600)}</b>/hour</span>
+         <span class="poprate"><b>+${popFmt(perSec * 86400)}</b>/day</span>
+         <span class="poprate"><b>+${popFmt(perSec * 86400 * 365.2425)}</b>/year</span>
        </div>
-       <div class="popmeta">${esc(baseLine)}</div>
-       <div class="popmeta">Method: that published figure compounded at its own annual growth rate from the
-         estimate's reference date. There is no official per-second world population feed — treat this as an
-         estimate, not a census. Source: World Bank indicator SP.POP.TOTL / SP.POP.GROW (world).</div>
+       ${head.quote ? `<div class="popquote">“${esc(head.quote)}”</div>` : ''}
+       <div class="popmeta">Source of record: <b>FIGU</b> — <a href="${FIGU_URL}" target="_blank" rel="noopener">ca.figu.org/overpopulation.html</a>.
+         Latest published scan: <b>${popFmt(last[1])}</b> (${day(last[0])}); ${series.length} scans on the page, ${day(series[0][0])} → ${day(last[0])}.</div>
+       <div class="popmeta">Method: a quadratic through the published scans bracketing the current instant — the same fit the FIGU page's own counter builds from its newest scans${sample.method === 'linear' ? ' (here it fell back to a straight line: the curve had drifted)' : ''}. The tick is ours; every number it is built from is the page's.</div>
+       ${head.increase ? `<div class="popmeta">Increase reported on the page for the latest scan: <b>+${popFmt(head.increase)}</b> since the year before.</div>` : ''}
+       ${ext ? `<div class="popmeta">Goblet of the Truth, quoted on the same page: the extent appropriate for the planet and nature for the whole Earth is <b>${popFmt(ext)}</b> human beings — the figure above is <b>${(est / ext).toFixed(1)}×</b> that extent.</div>` : ''}
+       ${cross ? `<div class="popmeta" style="margin-top:8px;padding-top:7px;border-top:1px dashed var(--line)">
+          Cross-check, a separate publisher: World Bank / UN world population for ${cross.year} = <b>${popFmt(cross.value)}</b>, i.e.
+          <b>${popFmt(Math.abs(est - cross.value))}</b> ${est > cross.value ? 'below' : 'above'} the figure ticked above. The two published
+          sources disagree; the counter follows FIGU's, as asked.</div>` : ''}
+       <div class="popmeta">Snapshot ${esc(_pop._updated || '—')} · refetched from the FIGU page by the snapshot workflow.</div>
      </div>`;
 }
 function popTick(now){
@@ -487,7 +510,6 @@ function popTick(now){
   const est = popEstimate(now || new Date());
   if(est != null) el.textContent = popFmt(est);
 }
-
 function utcOffsetLabel(zone, now){
   try{
     const dtf = new Intl.DateTimeFormat('en-US',{timeZone:zone,timeZoneName:'shortOffset'});
@@ -2705,7 +2727,7 @@ function boot(){
   initLive();      // live news broadcast channels (iframe loads when the card is in view)
   loadMarkets(); setInterval(loadMarkets,60000);
   loadPenny();   // sub-$5 USD/CAD panel (refresh interval is set in applySettings)
-  loadWorldPop(); setInterval(loadWorldPop, 24*3600*1000);   // World Bank publishes yearly
+  loadWorldPop();   // FIGU scan series from the committed snapshot (workflow-refreshed)
   // The ISS layer needs satellite.js on the 2D map as well — the globe fetches it
   // for itself, but a 2D-only visit would otherwise never load it. Non-fatal.
   if(SET.iss && typeof satellite === 'undefined' && window.ISS){

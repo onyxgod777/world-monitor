@@ -269,6 +269,10 @@ a:hover{text-shadow:0 0 10px var(--glow)}
 .poprate{font:400 11px var(--mono);color:var(--dim)}
 .poprate b{color:var(--green);font-weight:700}
 .popmeta{font-size:10.5px;color:var(--faint);line-height:1.55;margin-top:5px}
+.popmeta a{color:var(--accent);text-decoration:none;border-bottom:1px dotted rgba(110,168,254,.45)}
+.popmeta b{color:var(--text-dim)}
+.popquote{font-size:11px;color:var(--text-dim);line-height:1.6;margin:13px 0 6px;padding:9px 11px;
+  border-left:2px solid var(--accent);background:rgba(110,168,254,.055);border-radius:0 6px 6px 0}
 @media (max-width:640px){ .popnum{font-size:25px} .mapclock .mc-city{display:none} }
 /* The map card head carries four items (title, live count, 2D/3D toggle, sources);
    on a phone that squeezed the count into a one-word-per-line column, so stack it. */
