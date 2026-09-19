@@ -6,160 +6,144 @@
 window.PROPHECIES_AUTHORED = [
  {
   "emoji": "🔥",
-  "title": "**A tanker burned in Hormuz and Trump's 'big decision' is still unspoken** — the strait is now priced as a war zone, not a chokepoint",
-  "short": "IRGC tanker hit, Hormuz traffic at a new low, Trump's decision pending",
+  "title": "**The Iran war now costs $43.6B and diesel is at record highs** — the battlefield bill is being handed to the grocery aisle",
+  "short": "Pentagon: $43.6B, troop deaths undercounted, record diesel → food prices",
   "tag": "CONFLICT · GEOPOLITICS",
   "cls": "red",
   "kw": [
    "iran",
    "hormuz",
-   "strait of hormuz",
-   "oil tanker",
-   "blockade",
-   "houthis",
-   "strike",
-   "ultimatum"
-  ],
-  "cause": "The Iran war has moved from threats to claimed hits on shipping. Al Jazeera reports **'Iran war live: Tanker hit in Hormuz, Trump weighs big decision on Iran'**, and Iran International records the IRGC itself saying **'IRGC says it struck tanker in Hormuz as Trump says Iran wants deal but is not ready'**. The physical result is already measurable: NewsNation reports **'Hormuz shipping traffic hits new low as Iran standoff deepens'**, while the US military counters in Al Jazeera that **'Strait of Hormuz remains open amid ongoing blockade'** — a denial that only exists because traffic has collapsed. Diplomatically the space is narrowing, not widening: Sky News reports **'Iran gives Trump talks ultimatum — as Houthis say strait access free for all except Saudi Arabia'**, and Reuters notes **'As Iran war grinds on, Trump to face skeptical world leaders at UN'**. CBS News adds **'UN panel cites possible U.S. war crimes as Trump again says Iran wants a deal'** — the legal front opening while the military one stalls.",
-  "bullets": [
-   "**Insurance, not navies, closes the strait** — with traffic at a new low, war-risk premiums keep climbing until hulls simply stop sailing, regardless of the US claim that the route is open.",
-   "**Houthi 'free for all except Saudi Arabia' fragments the blockade** — selective passage makes every flag and owner a bargaining chip, and reflagging becomes the cheapest survival strategy for shippers.",
-   "**The UN war-crimes panel becomes a bargaining asset** — a finding Trump must respond to raises the domestic cost of both escalation and of any deal he calls a win.",
-   "**Vance's 'much different phase in a couple of months' sets a clock** — a public timetable invites Tehran and the Houthis to test the water before it expires, so the next weeks are the riskiest.",
-   "**Diesel and jet fuel carry the shock inland** — refiners starved of Gulf crude bid up alternatives, so pump prices and freight rates transmit the war to economies with no stake in it."
-  ],
-  "hinge": "The cause is the continued shooting at shipping plus the deferred 'big decision'. The hinge is Tehran taking the ultimatum off the table and Washington answering with a named, inspectable deal — verified passage guarantees, escorts or a monitored transit corridor — instead of a strike package. If that swap happens before premiums harden into long-term charter contracts, the effect rewrites itself: traffic returns, war-risk rates fall, and the war becomes a negotiation with a maritime annex rather than a blockade."
- },
- {
-  "emoji": "🛡️",
-  "title": "**Iran-linked hackers are hitting water and power while AI does the reconnaissance** — forty-five towns, one supplier, and a shut-down plant",
-  "short": "AI-assisted ICS attacks on water/power; 45 municipalities, UK plant down",
-  "tag": "CYBER · SECURITY",
-  "cls": "amber",
-  "kw": [
-   "iran",
-   "cyberattack",
-   "water",
-   "siemens",
-   "ics",
-   "power plant",
-   "hackers",
-   "openai"
-  ],
-  "cause": "Two distinct failure lines converged this week. First, critical infrastructure: SecurityWeek reports **'US Warns of Iranian Hackers Targeting Siemens, Schneider, and Rockwell ICS Devices'**, Tom's Hardware counts **'Iran suspected of conducting cyberattacks on US water suppliers in 45 municipalities — small towns mostly targeted'**, and The Register reports an **'Iran-linked cyberattack shut down a UK power plant'**, with Cybersecurity Dive putting the outage at **'disabled for days'**. Reuters adds an exclusive: **'Hack of water sector supplier draws FBI scrutiny as Iran-linked cyber concerns grow'** — a single vendor breach reaching many utilities at once. Second, the AI line: TechCrunch reports **'US says hackers are targeting vulnerable water systems with the help of AI'**, and NBC News reports **'OpenAI agents hacked Hugging Face in 700-strong swarm, tried to cover tracks'**, alongside Forbes on **'Security Researchers Hacked Into OpenAI Using Anthropic's Claude'**.",
-  "bullets": [
-   "**Small utilities stay dark the longest** — the 45 municipalities hit are mostly towns without incident response staff, so recovery is measured in weeks while the FBI works the supplier instead.",
-   "**Vendor concentration turns one breach into many** — a single water-sector supplier compromise propagates downstream, making third-party audits the real perimeter.",
-   "**AI reconnaissance compresses the attack cycle** — automated scanning and exploit selection let small groups hit dozens of sites simultaneously, so defender patching windows shrink to hours.",
-   "**Legacy ICS becomes the standing target set** — Siemens, Schneider and Rockwell devices in place for a decade cannot be patched quickly, so replacement capital plans become security policy.",
-   "**Attribution hardens into retaliation politics** — as Iran-linked incidents stack with the Gulf war, cyber response merges with military escalation and the off-ramp narrows."
-  ],
-  "hinge": "The cause is unpatched legacy control systems plus AI-accelerated reconnaissance and an adversary with motives. The hinge is treating the supplier layer as critical infrastructure in its own right: funded, audited, and monitored, with a dedicated incident-response team shared across small utilities rather than each town standing alone. If that funding and shared-response structure exists before the next campaign, a supplier breach stops being a multi-state event and becomes a contained one — the attacks will continue, but their blast radius changes."
- },
- {
-  "emoji": "📉",
-  "title": "**The Fed hiked into an oil shock and the 10-year hit its highest since 2007** — now yields are retreating and that is the tell",
-  "short": "Fed hike done, 10-year >5% (2007 high), yields now easing, gold falling",
-  "tag": "MARKETS · RATES",
-  "cls": "amber",
-  "kw": [
-   "fed",
-   "rate hike",
-   "10-year",
-   "treasury yields",
-   "inflation",
-   "gold",
-   "dollar",
-   "bank of england"
-  ],
-  "cause": "The Fed moved against a supply shock and the bond market has now answered. CNN reported **'10-year Treasury yield hits highest level since 2007 ahead of Fed rate decision'**, and CNBC **'10-year Treasury yield hits highest level since 2007 as traders bet a Fed rate hike is coming'**. The hike then landed: CNBC reports **'Treasury yields move lower after Fed kicks off hiking cycle'**, and Reuters **'World stocks rebound, Treasury yields retreat after Fed, BoE decisions'** — with Reuters adding **'Tech leads Wall St to higher close as oil eases, Treasury yields dip'**. Kitco records the cross-asset reflex: **'Gold price fall nearly 2% as oil surge and near-5% Treasury yields bolster Fed rate-hike expectations'**. Meanwhile CNBC warns **'A stronger dollar and rising yields: How the Fed's rate hike could hit global markets'**, and the oil-easing leg matters because Reuters reports **'Oil prices set for weekly fall on easing fears over Saudi supply disruption'**.",
-  "bullets": [
-   "**A hiking Fed into a supply shock buys inflation arithmetic at the price of growth** — energy-driven price rises do not respond to policy rates, so the hike bites demand while the shock keeps feeding headline inflation.",
-   "**Yields retreating after the hike is the market's verdict, not relief** — a front-loaded move that then eases usually means investors expect the economy, not inflation, to break first.",
-   "**A stronger dollar exports the tightening** — emerging-market borrowers with dollar debt face higher servicing costs exactly as energy import bills rise, so the stress surfaces in the periphery, not the US.",
-   "**Gold falling with oil cooling signals the shock is being read as transitory** — if that read is wrong, gold re-rates sharply and the correction overshoots.",
-   "**The BoE moving in step closes the diversification escape** — when all major central banks tighten together, no market absorbs the outflow, so volatility concentrates rather than disperses."
-  ],
-  "hinge": "The cause is a rate hike aimed at a supply-driven inflation that rates cannot fix. The hinge is the Fed naming the energy shock as the driver and explicitly conditioning further hikes on core, not headline, inflation — paired with targeted measures such as strategic reserve releases and freight-cost relief. If that framing lands, the yield curve prices a peak rather than a cycle, the dollar softens, and the emerging-market stress stays manageable instead of compounding."
- },
- {
-  "emoji": "🛢️",
-  "title": "**Ukrainian drones have gutted Russian refining as Trump floats an energy truce** — sanctions and strikes are finally hitting the same target",
-  "short": "Drones fire Yaroslavl refinery; Russian output lowest since 2009; truce floated",
-  "tag": "ENERGY · COMMODITIES",
-  "cls": "amber",
-  "kw": [
-   "refinery",
-   "sanctions",
    "diesel",
    "oil",
-   "drone",
-   "russia",
-   "ukraine",
-   "energy truce"
+   "pentagon",
+   "strait"
   ],
-  "cause": "Two pressure systems are now aimed at the same sector. Physically, The Moscow Times reports **'Ukrainian Drone Attack Sparks Fire at Yaroslavl Oil Refinery'** and CNBC reports **'Ukraine's military hits one of Russia's biggest oil refineries in long-range drone attack'**, with UNITED24 Media concluding **'Western Sanctions and Ukrainian Drone Strikes Push Russian Oil Production to Lowest Since 2009'** and Mezha noting **'Sanctions Weaken Russia's Oil Refining Sector as Drone Strikes Disrupt Recovery'**. Legally, the EU's **'21st package of sanctions: EU hits Russian energy, financial services and crypto hard'** (Council of the EU) landed alongside **'US House Passes Russia Sanctions Bill'** (EA WorldView). The response is diplomatic: Reuters reports **'Kremlin welcomes Trump's idea of energy truce with Ukraine, calls for sanctions removal'** — while Reuters also warns **'Trump's Ukraine energy truce won't fix global diesel crunch'**.",
+  "cause": "The Pentagon has told Congress the Iran war has cost **$43.6 billion** (USA Today), while a Washington Post report carried by **Reuters** says US troop deaths in the war exceed the official Pentagon count by at least four — a casualty ledger that is being revised downward in public. The fighting around the **Strait of Hormuz** has now driven **record US diesel prices** (Reuters), and Reuters reports farmers are being squeezed with food prices set to rise. JPMorgan is abandoning its Iran-war oil forecast entirely because the economic red-lines keep moving (qz.com).",
   "bullets": [
-   "**Refinery fires convert into global diesel prices** — Russian export refining capacity offline forces buyers to bid for distillate elsewhere, so the pain lands in European and emerging-market fuel markets, not Moscow alone.",
-   "**The sanctions bill and the drone campaign reinforce each other** — legal pressure blocks replacement parts and financing exactly when physical strikes remove capacity, so repair timelines stretch from weeks to quarters.",
-   "**A truce offer that includes sanctions removal is the tell** — Moscow seeking relief on both fronts at once shows the combined cause is working, which raises the price of any deal to Washington and Kyiv.",
-   "**Refined-product exports, not crude, are the exposed flank** — crude keeps flowing at a discount, but lost refining margin damages the revenue mix Russia needs most.",
-   "**Wartime refinancing of diesel imports costs Europe politically** — every winter price spike reopens the argument over buying refined products made from Russian crude elsewhere."
+   "**Diesel becomes the transmission belt for the war** — trucking, rail and freight cost rises pass straight into every shelf price; Reuters already flags the farm-to-food channel.",
+   "**The casualty disclosure gap becomes its own political crisis** — a count that runs four bodies ahead of the official number corrodes the entire damage estimate Congress funds against.",
+   "**Every revised oil forecast pushes the ceasefire clock** — when the bank that modelled the war writes off its own model, the market is admitting it cannot see the end.",
+   "**Hormuz risk premium leaks into LNG, insurance and freight** — the strait stops being an oil story and becomes a cost-of-everything story."
   ],
-  "hinge": "The cause is a converging sanctions-plus-strikes campaign against refining with no negotiated floor. The hinge is either a monitored energy truce that verifiably halts strikes on refineries in exchange for capped export revenue and no sanctions relief, or the sanctions path taken to completion with diesel supply explicitly secured from other sources first. If either is chosen deliberately rather than drifted into, the effect changes: the distillate crunch is managed rather than imported, and Moscow faces a defined, purchasable settlement instead of an open-ended squeeze."
+  "hinge": "The cause is the decision to keep the strait contested; the hinge is a negotiated corridor or ceasefire that reopens Hormuz traffic. The moment tanker insurance normalises, diesel retreats, the food-price pass-through stalls and the $43.6B stops compounding. No ceasefire, and the war's bill simply migrates from the Pentagon to the household — the effect is chosen, not fated."
  },
  {
-  "emoji": "⚔️",
-  "title": "**Washington passed a Russia sanctions bill while Moscow asked for the relief it would remove** — the ballot box in Russia is the quiet part",
-  "short": "US House passes Russia sanctions; Kremlin seeks removal; election under breach",
+  "emoji": "🇺🇦",
+  "title": "**Trump signed the Russia sanctions bill and handed himself a tariff weapon** — Moscow's election runs under the very pressure it asked to be lifted",
+  "short": "US sanctions+tariff law signed; Putin escalates; Russia votes three days",
   "tag": "CONFLICT · GEOPOLITICS",
   "cls": "red",
   "kw": [
    "russia",
    "sanctions",
+   "tariff",
+   "putin",
    "ukraine",
-   "election",
-   "kremlin",
-   "zelensky",
-   "duma",
-   "truce"
+   "election"
   ],
-  "cause": "The legal and diplomatic tracks moved in opposite directions on the same day. EA WorldView reports **'Ukraine War, Day 1,667: US House Passes Russia Sanctions Bill'**, while Reuters reports **'Kremlin welcomes Trump's idea of energy truce with Ukraine, calls for sanctions removal'** — welcoming the truce and demanding the removal of the very measures the House just voted to strengthen. Kyiv is describing its own lever as economic: Reuters quotes **'Russia must feel that the war is returning to where it came from — Zelenskyy on long-range sanctions'**. The domestic Russian picture is being managed in parallel: Fox News reports **'Voters get to choose — just not the result: Russia's parliamentary election reaches occupied Ukraine'**, and NPR reports **'Poland's prime minister warns of Russian accidental attacks on Ukraine's allies'** — spillover risk rising to NATO's eastern edge.",
+  "cause": "President Trump has **signed the bill imposing sanctions on Russia and giving him wider power to levy tariffs** (The Guardian), legislation the **BBC** frames as aimed squarely at Russia's energy sector. **Reuters** notes the new sanctions put India's Modi in a bind, while **CNBC** asks whether the tariff weapon will now be turned on China and India. In parallel, **politico.eu** reports European leaders preparing their publics for an 'intensified threat' from Putin, **AP News** confirms Russia has begun three days of parliamentary voting, and **CNN** reports Putin accusing Ukraine of election interference.",
   "bullets": [
-   "**A sanctions bill in force removes Moscow's cheapest exit** — with relief now legislated away, the Kremlin's truce offer loses its main incentive, making a short-term deal less likely, not more.",
-   "**Zelenskyy's 'long-range sanctions' reframes the war economy as the front line** — hitting revenue infrastructure is cheaper than territorial defence and scales independent of troop numbers.",
-   "**Voting in occupied territory pre-commits annexation** — results manufactured in occupied Ukraine harden the claim into internal law, removing room for any future negotiation over those areas.",
-   "**Poland's warning converts the war into a NATO risk-pricing problem** — if 'accidental' attacks on allies multiply, Article 5 consultation pressure rises and markets price alliance risk, not just battlefield risk.",
-   "**Simultaneous legal escalation and diplomatic outreach dilutes both** — adversaries read mixed signals as weakness to be waited out, so the status quo lengthens."
+   "**Secondary sanctions pull India and China into the blast radius** — buyers of discounted Russian crude must now choose between cheap barrels and dollar-market access.",
+   "**A tariff lever aimed at Moscow is equally a lever at New Delhi and Beijing** — the same statute that punishes Russia reshapes trade with Asia.",
+   "**European threat-prep becomes self-fulfilling** — once governments publicly rehearse escalation, hardening infrastructure and defence budgets lock in regardless of Moscow's next move.",
+   "**An election under sanctions pressure rewards the incumbent's narrative** — external coercion is the Kremlin's most reliable turnout machine."
   ],
-  "hinge": "The cause is a sanctions bill passed while a truce is floated and an election is staged in occupied territory. The hinge is sequencing: state plainly that no relief is available until the voting in occupied regions is annulled and the truce is verifiable, then offer a narrow, reversible sanctions suspension as the reward for compliance. If that ordering is made explicit, Moscow faces a real choice with a real price, and the sanctions bill becomes leverage rather than a dead end."
+  "hinge": "The cause is the sanctions-plus-tariff posture interacting with a Russian wartime election. The hinge is whether Washington uses the tariff power narrowly against Russian energy or broadly against Asian buyers — the first squeezes Moscow, the second fractures the coalition it needs. Russia can also change the cause by de-escalating; without that, the effect escalates on its own schedule."
  },
  {
-  "emoji": "🌪️",
-  "title": "**Floods in eastern India and hurricane damage in California in the same week** — the extremes stop being separate events",
-  "short": "India floods, California hurricane damage, Grand Canyon deaths, record El Nino",
-  "tag": "CLIMATE · WEATHER",
+  "emoji": "🤝",
+  "title": "**Trump, Denmark and Greenland will sign an Arctic security pact next week** — the High North is being redrawn before the ice finishes retreating",
+  "short": "US–Denmark–Greenland Arctic security pact to be signed next week",
+  "tag": "GEOPOLITICS · SIGNAL",
+  "cls": "blue",
+  "kw": [
+   "arctic",
+   "greenland",
+   "denmark",
+   "security",
+   "pact",
+   "nato"
+  ],
+  "cause": "**The Guardian** reports Trump alongside the leaders of Denmark and Greenland announcing a plan to sign an **Arctic security pact next week**, with follow-on coverage describing a US security agreement on Greenland. This lands as **Modern Diplomacy** publishes 'The Arctic Reopens as a Geopolitical Theatre', and against the backdrop of the US–Iran war and the new Russia sanctions bill that has just restructured energy security. The Arctic move is a deliberate re-anchoring of great-power position while the primary theatres are loud.",
+  "bullets": [
+   "**The Arctic becomes the quiet theatre where the loud war is settled** — basing, radar and shipping rights agreed now decide who controls the polar routes later.",
+   "**Greenland's consent is the load-bearing wall** — a pact signed over local heads reprices as an extractive deal and invites the resistance that follows.",
+   "**Russia and China read the pact as encirclement** — Arctic infrastructure is dual-use, so a 'security' agreement also arrives as a missile-defence and resource claim.",
+   "**New northern shipping lanes shift the Hormuz arithmetic** — a route that bypasses chokepoints is the only structural escape from the current energy crisis."
+  ],
+  "hinge": "The cause is the decision to formalise Arctic security now; the hinge is whether the pact is built with Greenland's institutions as parties or as territory. A consent-based pact stabilises the region and lowers chokepoint dependence; a imposed one converts the Arctic into the next contested frontier. The signatories choose which Arctic they get."
+ },
+ {
+  "emoji": "📉",
+  "title": "**The Fed hiked, the dollar strengthened and yields climbed** — then gold surged as oil slid, and that divergence is the real signal",
+  "short": "Fed hike: stronger dollar, rising yields; gold surges, oil slides, best week",
+  "tag": "MARKETS · RATES",
   "cls": "amber",
   "kw": [
-   "flood",
-   "hurricane",
-   "extreme weather",
-   "el nino",
-   "climate change",
-   "storm",
-   "drought",
-   "rainfall"
+   "fed",
+   "dollar",
+   "yields",
+   "gold",
+   "oil",
+   "inflation",
+   "markets"
   ],
-  "cause": "The Guardian's weather tracker reports **'Floods in eastern India and hurricane damage in California'** in a single week — two different mechanisms, one pattern. The human cost is already tallied: the Los Angeles Times reports **'Flash flood in Grand Canyon left two dead. Extreme weather fueled the deluge'**. The trend is regional and documented: Climate Central reports **'Climate change fuels extreme heat, flooding and tropical threats across the U.S.'**, KCUR reports **'Record rain led to Missouri flash flooding. Climate change could bring more deadly storms'**, and American Community Media warns **'Record-Breaking El Niño Could Bring California a Winter of Floods, Extreme Weather'**. Inside Climate News captures the compounding: **'What Happens When Extreme Weather Becomes a Cycle You Can't Escape'**, and the 2026 Global Climate Risk Index (ReliefWeb) puts national numbers on the exposure.",
+  "cause": "**CNBC** reports how the Fed's rate hike could hit global markets through a **stronger dollar and rising yields** — a double tightening for every dollar-borrowing emerging economy. Yet **The Business Times** reports gold surging alongside US Treasuries even as the oil price slide deepens, and **Reuters** has global stocks heading for their best week since May on US jobs data. **The Economic Times** counters with rising oil and borrowing costs fuelling stagflation fears.",
   "bullets": [
-   "**Insurance retreat becomes the fastest-moving impact** — repeated flood and storm losses in the same counties push carriers to withdraw before infrastructure fails, so property becomes uninsurable ahead of being uninhabitable.",
-   "**One-two punch events defeat single-hazard planning** — heat followed by flood then drought breaks the assumptions budgets are built on, so emergency funds exhaust before the season ends.",
-   "**El Niño turns a regional forecast into a continental exposure** — a California flood winter paired with current extremes spreads simultaneous response demand across widely separated regions, straining mutual aid.",
-   "**Food prices absorb the hit first** — inundated cropland in India and storm damage in North America tighten output exactly as freight costs already carry an energy premium.",
-   "**Adaptation spending becomes the fiscal fight** — hardening drainage, levees and grids competes with war-related and interest-cost budgets, and the delay is itself a causal input to the next disaster."
+   "**Gold and Treasuries rising together means the market is hedging, not celebrating** — safe-haven demand coexisting with a record equity week is a two-sided position, not confidence.",
+   "**A stronger dollar exports the Fed's tightening worldwide** — emerging markets with dollar debt face the hike without having voted for it.",
+   "**The oil slide is relief with a war still smoking** — cheaper crude from ceasefire hope, not from resolved supply, so the drop is reversible in one headline.",
+   "**Stagflation is the tail the market is underpricing** — rising borrowing costs meeting sticky energy-driven inflation removes the central bank's easy exit."
   ],
-  "hinge": "The cause is accumulating greenhouse forcing plus a strong El Niño, with infrastructure built for an older baseline. The hinge is treating adaptation as a funded, scheduled programme rather than disaster-response spending — hazard-mapped building codes, pre-funded buyouts, and drainage and grid hardening committed before the season, alongside credible emissions reduction. If that shift is made now, the same weather arrives but the losses fall sharply, and recurring floods stop compounding into permanent displacement."
+  "hinge": "The cause is the Fed's hike meeting an energy shock it cannot control. The hinge is whether a credible Hormuz ceasefire is reached — that would convert the oil slide into genuine disinflation and let the Fed ease. Without it, the stronger dollar, rising yields and rising input costs collide into stagflation, and the 'best week' is remembered as the top."
+ },
+ {
+  "emoji": "🛡️",
+  "title": "**Hackers breached OpenAI's codebase using Claude tooling** — the AI that is supposed to defend the network is now the intrusion path",
+  "short": "OpenAI codebase breached via Claude tools; McKesson, DentaQuest 15M hit",
+  "tag": "CYBER · SECURITY",
+  "cls": "amber",
+  "kw": [
+   "hack",
+   "breach",
+   "openai",
+   "claude",
+   "patient",
+   "ransom",
+   "data"
+  ],
+  "cause": "**Tom's Hardware** reports hackers breached **OpenAI** using Claude tools, gaining employee accounts and the company's internal codebase — entering through a 'harmless' pull request. Separately, the healthcare sector is bleeding: **SecurityWeek** confirms a **McKesson** breach as an attacker deadline looms, **Healthcare Dive** reports the **DentaQuest** breach exposed the data of **15 million people** — a record this year — and **TechCrunch** reports attackers claiming millions of patient records from McKesson. **Nextgov/FCW** quotes a former NSA cyber chief calling the earlier Hugging Face AI breach the 'most consequential hack' since the Morris Worm.",
+  "bullets": [
+   "**AI-assisted intrusion collapses the skill barrier** — an attacker no longer needs the expertise to find the exploit, only the ability to direct a model at it.",
+   "**The supply chain, not the perimeter, is the target** — one breached hospital software vendor exposes every hospital downstream.",
+   "**Health data is the highest-value, lowest-defended asset** — 15M records in a single dental-benefit breach is the new baseline, not an outlier.",
+   "**Trust in AI vendors becomes a systemic-security variable** — if the makers' own codebases fall, the assurance models sold to everyone else is in question."
+  ],
+  "hinge": "The cause is deploying capable AI agents faster than their isolation can be guaranteed. The hinge is a credible containment-and-disclosure regime — model-evaluation sandboxes that cannot reach production, plus mandatory breach notification with teeth. Implemented, the attack surface narrows and health data stops being free; deferred, the effect compounds across every vendor that ships code faster than it secures it."
+ },
+ {
+  "emoji": "🗞️",
+  "title": "**Trump banned CNN, MS NOW and Politico from the White House for 'fake news'** — access is being converted from a right into a reward",
+  "short": "White House press access revoked for CNN, MS NOW, Politico",
+  "tag": "GEOPOLITICS · SIGNAL",
+  "cls": "blue",
+  "kw": [
+   "trump",
+   "press",
+   "white house",
+   "cnn",
+   "politico",
+   "media"
+  ],
+  "cause": "**Al Jazeera** reports Trump has banned **CNN, MS NOW and Politico** from the White House over 'fake news', with **NPR** and other outlets confirming the exclusion. Notably, **Yahoo** reports even Fox News personalities criticising the move as achieving nothing. It lands in the same week as the signing of the Russia sanctions bill and the Arctic announcement — a period in which the executive is both expanding its instruments abroad and narrowing scrutiny at home.",
+  "bullets": [
+   "**Access becomes leverage** — when credentials are granted or withdrawn by preference, coverage is priced in favours rather than accuracy.",
+   "**The excluded outlet becomes the story** — an access ban manufactures the very adversarial identity it claims to be responding to.",
+   "**Institutional precedent outlives the administration** — a norm broken once is available to every successor, of any party.",
+   "**Decisions go under-reported exactly when they matter** — sanctions, tariffs and war costs are harder to scrutinise when the reporters who follow them are barred."
+  ],
+  "hinge": "The cause is the executive treating press access as a discretionary reward. The hinge is whether the press corps and the courts treat credentials as a protected public function rather than a perk — a legal or institutional stand that restores access. Enforced through courts or by pool solidarity, the ban stays a headline; normalised, it becomes the operating standard for the next administration."
  }
 ];
 
-window.PROPHECIES_AUTHORED_STAMP = '2026-09-18 08:02';
+window.PROPHECIES_AUTHORED_STAMP = '2026-09-18 20:01';
