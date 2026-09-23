@@ -86,6 +86,21 @@
           </div>
         </div>
 
+        <div class="card edgar span12" id="edgarcard">
+          <div class="card-head">
+            <h2>SEC EDGAR · Insider &amp; Institutional Filings</h2>
+            <span class="count mono" id="edCount">—</span>
+            <span class="src mono" id="edSrc">SEC · EDGAR</span>
+          </div>
+          <div class="edtabs" role="tablist" aria-label="SEC filing type">
+            <button class="edtab" role="tab" aria-selected="true"  data-ed="insiders">Insiders</button>
+            <button class="edtab" role="tab" aria-selected="false" data-ed="funds">13F Holdings</button>
+            <button class="edtab" role="tab" aria-selected="false" data-ed="events">8-K Events</button>
+          </div>
+          <div class="edwrap" id="edlist"><div class="ph mono" style="padding:16px">Loading SEC filings…</div></div>
+          <div class="ednote">Public SEC filings, straight from EDGAR — free, keyless and official, refreshed on a schedule. Insider rows show the transaction code as filed: <b>buy</b> = open-market purchase (Form 4 code P), <b>sell</b> = sale (code S); grants, option exercises and tax withholding are filed under other codes and are not signals. 13F holdings reports are quarterly and land about six weeks after each quarter ends, so they describe what a fund held, not what it holds today. Nothing here is investment advice.</div>
+        </div>
+
         <div class="card econ span8">
           <div class="card-head"><h2>Economic Snapshot</h2><span class="src mono" id="econSrc">COMPOSITE</span></div>
           <div class="tablewrap">
@@ -358,6 +373,7 @@
   <script src="social.js"></script>
   <script src="news.js"></script>
   <script src="gazetteer.js"></script>
+  <script src="edgar.js"></script>
   <script src="app.js"></script>
   <script>
   (function(){

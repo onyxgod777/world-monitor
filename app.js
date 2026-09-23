@@ -1393,6 +1393,76 @@ function renderAmber(){
 
 /* ══════════════ 5c. FLOOD REPORT (GDACS global + NOAA/NWS, real data) ══════════════ */
 function floodRank(l){ return l === 'Red' ? 0 : (l === 'Orange' ? 1 : 2); }
+/* ══════════════ 2x. SEC EDGAR — insider & institutional filings ══════════════
+   Snapshot-only, like the amber / flood / outbreak panels. SEC requires a
+   descriptive User-Agent on every request and does not answer cross-origin
+   browser calls, so fetch_edgar.py commits edgar.js and this panel draws it.
+   The Form 4 transaction code is read out of each filing by the fetcher: a
+   Form 4 without its code cannot honestly be labelled a buy or a sell, because
+   grants, option exercises and tax withholding are filed on the same form. */
+let _edTab = 'insiders';
+function edSideChip(side){
+  const cls = side === 'buy' ? 'ed-buy' : (side === 'sell' ? 'ed-sell' : 'ed-other');
+  const label = side === 'buy' ? 'BUY' : (side === 'sell' ? 'SELL' : String(side || 'other').toUpperCase());
+  return '<span class="edside ' + cls + '">' + esc(label) + '</span>';
+}
+function edMoney(v){
+  if(!(v > 0)) return '—';
+  return v >= 1e9 ? '$' + (v/1e9).toFixed(2) + 'B'
+       : v >= 1e6 ? '$' + (v/1e6).toFixed(2) + 'M'
+       : v >= 1e3 ? '$' + (v/1e3).toFixed(0) + 'K' : '$' + v.toFixed(0);
+}
+function renderEdgar(){
+  const box = $('#edlist'); if(!box) return;
+  const E = window.EDGAR;
+  const cEl = $('#edCount'), sEl = $('#edSrc');
+  if(!E){
+    if(cEl) cEl.textContent = '—';
+    if(sEl) sEl.textContent = 'SEC · EDGAR OFFLINE';
+    box.innerHTML = '<div class="ph mono" style="padding:16px">No SEC filing snapshot available.</div>';
+    return;
+  }
+  const C = E.counts || {};
+  if(cEl) cEl.textContent = (C.buys||0) + ' insider buys · ' + (C.funds||0) + ' 13F · ' + (C.events||0) + ' 8-K';
+  if(sEl) sEl.textContent = 'SEC · EDGAR' + (E._updated ? ' · ' + String(E._updated).slice(0,10) : '');
+
+  const rows = _edTab === 'insiders' ? (E.insiders || [])
+             : _edTab === 'funds'    ? (E.funds || [])
+             : (E.events || []);
+
+  let html = '';
+  if(_edTab === 'insiders'){
+    html = rows.map(i => `
+      <div class="editem">
+        ${edSideChip(i.side)}
+        <div class="edbody">
+          <div class="edtitle">${esc(i.company || i.entity || '')}${i.ticker ? ' · ' + esc(i.ticker) : ''}</div>
+          <div class="edmeta">${esc(i.owner || '')}${i.role ? ' · ' + esc(i.role) : ''} · ${Number(i.shares || 0).toLocaleString('en-US')} sh${i.price ? ' @ $' + Number(i.price).toFixed(2) : ''} · ${edMoney(i.value)}${i.code ? ' · code ' + esc(i.code) : ''}</div>
+          <div class="edsrc">${esc(String(i.date || i.filed || '').slice(0,10))} · Form 4${i.url ? ' · <a href="' + esc(i.url) + '" target="_blank" rel="noopener">filing ↗</a>' : ''}</div>
+        </div>
+      </div>`).join('');
+  } else {
+    html = rows.map(f => `
+      <div class="editem">
+        <span class="edside ed-other">${esc(f.form || '')}</span>
+        <div class="edbody">
+          <div class="edtitle">${esc(f.entity || '')}</div>
+          <div class="edmeta">${_edTab === 'funds' ? 'Institutional holdings report' : 'Material event filing'}${f.role ? ' · ' + esc(f.role) : ''}</div>
+          <div class="edsrc">${esc(String(f.filed || '').slice(0,10))}${f.cik ? ' · CIK ' + esc(f.cik) : ''}${f.url ? ' · <a href="' + esc(f.url) + '" target="_blank" rel="noopener">filing ↗</a>' : ''}</div>
+        </div>
+      </div>`).join('');
+  }
+  if(!html) html = '<div class="ph mono" style="padding:16px">Nothing filed in this category right now.</div>';
+  box.innerHTML = html;
+}
+function wireEdTabs(){
+  $$('.edtab').forEach(b => b.addEventListener('click', () => {
+    _edTab = b.getAttribute('data-ed') || 'insiders';
+    $$('.edtab').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+    renderEdgar();
+  }));
+}
+
 function renderFloods(){
   const bar = $('#floodlist'); if(!bar) return;
   const F = window.FLOODS;
@@ -2726,6 +2796,7 @@ function boot(){
   renderAmber();   // NCMEC amber panel renders from committed snapshot — independent of news fetch
   renderFloods();  // GDACS/NWS flood report — committed snapshot, independent of news fetch
   renderOutbreaks(); // WHO Disease Outbreak News report — committed snapshot
+  renderEdgar(); wireEdTabs(); // SEC EDGAR insider/13F/8-K — committed snapshot (fetch_edgar.py)
   renderDefcon();  // derived readiness indicator — recomputed on each news refresh
   initLive();      // live news broadcast channels (iframe loads when the card is in view)
   loadMarkets(); setInterval(loadMarkets,60000);
