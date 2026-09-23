@@ -1042,3 +1042,12 @@ body.motion-off .ticker-inner{animation-play-state:paused}
           border:1px solid rgba(140,160,190,.3);background:transparent;color:#9db0cc;cursor:pointer}
 .camclose:hover{border-color:rgba(231,76,60,.5);color:#ff8b80}
 .camtag-still{background:rgba(70,110,160,.85)}
+
+/* ── Flight radar canvas (fetch_flights.py -> flights.js) ───────────────────
+   One canvas in Leaflet's overlay pane instead of thousands of markers, so a
+   few thousand aircraft still pan and zoom smoothly. */
+.flightcanvas{position:absolute;left:0;top:0;pointer-events:none;z-index:440}
+.fl-sw{display:inline-block;width:8px;height:8px;margin-right:4px;vertical-align:-1px;
+       background:#22c55e;clip-path:polygon(50% 0,100% 100%,0 100%)}
+.fl-sw.lv-hi{background:#c084fc}
+.fl-sw.lv-mil{background:#f59e0b}

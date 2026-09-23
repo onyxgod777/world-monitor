@@ -110,6 +110,7 @@ const SETTINGS_DEFS = [
     { k:'floods', lab:'Flood alerts',       hint:'Live GDACS global events + NOAA/NWS US warnings' },
     { k:'outbreaks', lab:'Outbreak reports', hint:'Live WHO Disease Outbreak News bulletins' },
     { k:'amber',  lab:'Missing-child pins', hint:'NCMEC alert cases (US-anchored registry)' },
+    { k:'flights', lab:'Aircraft (flight radar)', hint:'Live aircraft positions from the adsb.lol community network, sampled worldwide. A snapshot, not a real-time feed — free ADS-B APIs do not allow browser access.' },
     { k:'iss',    lab:'ISS tracker',        hint:'Live International Space Station — orbit track, visibility footprint' },
   ]},
 ];
@@ -125,6 +126,7 @@ const SETTINGS_SEGS = [
 ];
 const SETTINGS_DEFAULTS = { fx:true, motion:true, grid:true, dense:false,
   tg:true, reddit:true, x:true, quakes:true, floods:true, outbreaks:true, amber:true, iss:true, penny:true,
+  flights:true,
   clocks:true, worldpop:true,
   regions:[], view:'markets', clock24:true, refresh:120000, mapMode:'2d' };
 let SET = (function(){
@@ -1990,9 +1992,119 @@ function ensureMap(){
   _map.setView([24,10],2);
   return _map;
 }
+/* ══════════════ 7a-2. FLIGHT RADAR — aircraft from adsb.lol ══════════════
+   Drawn on a canvas in the overlay pane rather than as Leaflet markers: a few
+   thousand L.marker objects would crawl, while one canvas redraws on move/zoom.
+
+   Honest limitation, and the reason this is a snapshot: no free ADS-B API sends
+   CORS headers, so the browser cannot poll one directly (adsb.lol and adsb.fi
+   answer a preflight with 405, OpenSky allows only its own origin, airplanes.live
+   requires a whitelisting email). Positions are pinned to the time fetch_flights.py
+   sampled them, and the legend always shows that time — the aircraft are NOT live. */
+let _flightCanvas = null, _flightStamp = '';
+function flightColour(a){
+  if(a[7]) return '#f59e0b';                 // military
+  const alt = a[3];
+  if(alt < 0)    return '#94a3b8';           // altitude unknown
+  if(alt === 0)  return '#64748b';           // on the ground
+  if(alt < 10000) return '#38bdf8';          // low
+  if(alt < 25000) return '#22c55e';          // mid
+  return '#c084fc';                          // cruise
+}
+function drawFlights(){
+  const map = _map, c = _flightCanvas;
+  if(!map || !c) return;
+  const size = map.getSize();
+  L.DomUtil.setPosition(c, map.containerPointToLayerPoint([0, 0]));
+  if(c.width !== size.x)  c.width  = size.x;
+  if(c.height !== size.y) c.height = size.y;
+  const g = c.getContext('2d');
+  if(!g) return;
+  g.clearRect(0, 0, size.x, size.y);
+  const F = (SET.flights && window.FLIGHTS) ? window.FLIGHTS : null;
+  if(!F || !Array.isArray(F.ac)) return;
+  _flightStamp = F._updated || '';
+  const b = map.getBounds().pad(0.05);
+  const z = map.getZoom();
+  const s = z >= 7 ? 7 : (z >= 5 ? 6 : 5);
+  g.globalAlpha = 0.92;
+  for(let i = 0; i < F.ac.length; i++){
+    const a = F.ac[i];
+    if(a[0] < b.getSouth() || a[0] > b.getNorth()) continue;
+    let p = null;
+    for(const lon of [a[1], a[1] + 360, a[1] - 360]){      // worldCopyJump wraps the map
+      if(lon >= b.getWest() && lon <= b.getEast()){ p = map.latLngToContainerPoint([a[0], lon]); break; }
+    }
+    if(!p) continue;
+    if(p.x < -20 || p.y < -20 || p.x > size.x + 20 || p.y > size.y + 20) continue;
+    g.fillStyle = flightColour(a);
+    g.save();
+    g.translate(p.x, p.y);
+    g.rotate((a[2] || 0) * Math.PI / 180);
+    g.beginPath();
+    g.moveTo(0, -s);
+    g.lineTo(s * 0.62, s * 0.72);
+    g.lineTo(0, s * 0.30);
+    g.lineTo(-s * 0.62, s * 0.72);
+    g.closePath();
+    g.fill();
+    g.restore();
+  }
+  g.globalAlpha = 1;
+}
+function flightPick(pt){
+  const F = (SET.flights && window.FLIGHTS) ? window.FLIGHTS : null;
+  if(!F || !_map) return null;
+  let best = null, bestD = 13 * 13;
+  for(const a of F.ac){
+    for(const lon of [a[1], a[1] + 360, a[1] - 360]){
+      const p = _map.latLngToContainerPoint([a[0], lon]);
+      const d = (p.x - pt.x) * (p.x - pt.x) + (p.y - pt.y) * (p.y - pt.y);
+      if(d < bestD){ bestD = d; best = a; }
+    }
+  }
+  return best;
+}
+function flightPopup(a){
+  const alt = a[3] < 0 ? 'unknown' : (a[3] === 0 ? 'on the ground' : a[3].toLocaleString('en-US') + ' ft');
+  const spd = a[4] ? a[4].toLocaleString('en-US') + ' kt' : '—';
+  return '<div class="mp-title">' + esc(a[5] || 'Unknown callsign') + '</div>' +
+    '<div class="mp-meta">' + (a[7] ? 'Military' : 'Civil') + ' aircraft' + (a[6] ? ' · ' + esc(a[6]) : '') + '</div>' +
+    '<div class="mp-meta">Altitude: <b>' + esc(String(alt)) + '</b></div>' +
+    '<div class="mp-meta">Ground speed: <b>' + esc(String(spd)) + '</b> · heading ' + Math.round(a[2] || 0) + '°</div>' +
+    '<div class="mp-meta" style="margin-top:6px;font-size:10px">Position from the adsb.lol community ' +
+    'network, sampled ' + esc(_flightStamp || 'recently') + '. This is a snapshot, not a live feed — ' +
+    'the aircraft has moved since this was taken.</div>';
+}
+function flightLayerInit(map){
+  if(_flightCanvas) return;
+  const c = document.createElement('canvas');
+  c.className = 'flightcanvas';
+  c.style.pointerEvents = 'none';
+  map.getPanes().overlayPane.appendChild(c);
+  _flightCanvas = c;
+  map.on('move zoom viewreset resize moveend zoomend', drawFlights);
+  map.on('click', ev => {
+    const a = flightPick(ev.containerPoint);
+    if(a) L.popup({ maxWidth: 280 }).setLatLng([a[0], a[1]]).setContent(flightPopup(a)).openOn(map);
+  });
+  const btn = $('#mapFlightsBtn');
+  if(btn){
+    btn.addEventListener('click', () => {
+      SET.flights = !SET.flights;
+      btn.setAttribute('aria-pressed', String(SET.flights));
+      btn.classList.toggle('is-on', SET.flights);
+      try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(SET)); }catch(e){}
+      drawFlights();
+      updateMapSignals();
+    });
+  }
+}
+
 function updateMapSignals(){
   const map=ensureMap(); if(!map) return;
   _mapMarkers.forEach(m=>m.remove()); _mapMarkers=[];
+  flightLayerInit(map);
   const agg=newsPlaces();
   let liveCount=0;
   agg.groups.forEach(g=>{
@@ -2144,6 +2256,11 @@ function updateMapSignals(){
   if(SET.outbreaks){
     leg.push(`<span class="li"><span class="sw ob-sw"></span>☣ WHO outbreak report</span>`);
   }
+  if(SET.flights && window.FLIGHTS && Array.isArray(window.FLIGHTS.ac)){
+    leg.push(`<span class="li"><span class="sw fl-sw"></span>✈ aircraft · adsb.lol</span>`,
+             `<span class="li"><span class="sw fl-sw lv-hi"></span>cruise</span>`,
+             `<span class="li"><span class="sw fl-sw lv-mil"></span>military</span>`);
+  }
   if(SET.iss && issReady()){
     leg.push(`<span class="li"><span class="sw iss-sw"></span>🛰 ISS · live orbit</span>`);
   }
@@ -2163,10 +2280,15 @@ function updateMapSignals(){
   const otxt = !SET.outbreaks ? ''
     : (outbreakOnMap ? ' · '+outbreakOnMap+' outbreak'+(outbreakOnMap===1?'':'s')
         : (OB ? ' · no outbreak reports' : ''));
+  const fltxt = !SET.flights ? ''
+    : (window.FLIGHTS && window.FLIGHTS.count
+        ? ' · ' + window.FLIGHTS.count.toLocaleString('en-US') + ' aircraft (as of '
+          + String(window.FLIGHTS._updated || '').replace(' UTC', ' UTC') + ')'
+        : '');
   $('#mapCount').textContent =
     (liveCount ? liveCount+' place'+(liveCount===1?'':'s')+' with live signal' : 'no placeable headlines this cycle')
     + (agg.total ? ' · '+agg.placed+'/'+agg.total+' headlines placed' : '')
-    + qtxt + ftxt + otxt;
+    + qtxt + ftxt + otxt + fltxt;
   const amc = $('#amberMapCount'); if(amc && amberOnMap) amc.textContent = amberOnMap+' on map';
 }
 function wakeMap(){
