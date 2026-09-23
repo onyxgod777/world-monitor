@@ -1471,7 +1471,7 @@ function wireEdTabs(){
    scanning, or indexed because they were left misconfigured and exposed. */
 let _camHls = null, _camTimer = null;
 function camMeta(c){
-  return [c.route, c.county].filter(Boolean).join(' · ');
+  return [c.region, c.route || c.place].filter(Boolean).join(' · ');
 }
 function renderCams(){
   const g = $('#camGrid'); if(!g) return;
@@ -1483,14 +1483,17 @@ function renderCams(){
     g.innerHTML = '<div class="ph mono" style="padding:16px">No public camera snapshot available.</div>';
     return;
   }
-  const live = C.cams.filter(c => c.stream).length;
-  if(cEl) cEl.textContent = C.cams.length + ' cameras · ' + live + ' live';
+  const live = C.cams.filter(c => c.kind === 'video').length;
+  const regions = Array.from(new Set(C.cams.map(c => c.region).filter(Boolean))).length;
+  if(cEl) cEl.textContent = C.cams.length + ' cameras · ' + live + ' live video · ' + regions + ' regions';
   if(sEl) sEl.textContent = (C.source || 'Caltrans') + (C._updated ? ' · ' + String(C._updated).slice(0,10) : '');
 
   g.innerHTML = C.cams.map((c, i) => (
-    '<button class="camtile" type="button" data-i="' + i + '" title="Watch live: ' + esc(c.name) + '">' +
+    '<button class="camtile" type="button" data-i="' + i + '" title="' +
+        (c.kind === 'video' ? 'Watch live video: ' : 'View camera: ') + esc(c.name) + '">' +
       '<img data-cam="' + i + '" loading="lazy" referrerpolicy="no-referrer" alt="' + esc(c.name) + '" src="' + esc(c.img) + '">' +
-      '<span class="camtag">' + (c.stream ? '● LIVE' : 'IMAGE') + (c.res ? ' ' + esc(c.res) : '') + '</span>' +
+      '<span class="camtag' + (c.kind === 'video' ? '' : ' camtag-still') + '">' +
+        (c.kind === 'video' ? '● LIVE VIDEO' : '● LIVE STILL') + (c.res ? ' ' + esc(c.res) : '') + '</span>' +
       '<span class="camlabel">' + esc(c.name) + (camMeta(c) ? '<em>' + esc(camMeta(c)) + '</em>' : '') + '</span>' +
     '</button>')).join('');
 
