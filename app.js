@@ -2086,7 +2086,14 @@ function flightLayerInit(map){
   map.on('move zoom viewreset resize moveend zoomend', drawFlights);
   map.on('click', ev => {
     const a = flightPick(ev.containerPoint);
-    if(a) L.popup({ maxWidth: 280 }).setLatLng([a[0], a[1]]).setContent(flightPopup(a)).openOn(map);
+    if(!a) return;
+    // Defer, so that if the click also landed on a city clock or signal marker, the
+    // aircraft popup is the one left on top: clicking an aircraft should show the
+    // aircraft, since that is what the cursor was on.
+    setTimeout(() => {
+      map.closePopup();
+      L.popup({ maxWidth: 280 }).setLatLng([a[0], a[1]]).setContent(flightPopup(a)).openOn(map);
+    }, 0);
   });
   const btn = $('#mapFlightsBtn');
   if(btn){
