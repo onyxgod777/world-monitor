@@ -155,7 +155,17 @@ def enrich_form4(item, depth=0):
 
 def main():
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
-    payload, ok = {}, 0
+    payload, ok, carried, failed_feeds = {}, 0, [], []
+
+    # read the previous snapshot FIRST: if a feed is unreachable this run, its bucket is
+    # carried forward rather than blanked. Publishing an empty list over good data is
+    # worse than publishing yesterday's list, and SEC feeds do time out.
+    prev = {}
+    if os.path.exists(OUT):
+        try:
+            prev = json.loads(open(OUT, encoding='utf-8').read().split('=', 1)[1].rsplit(';', 1)[0])
+        except Exception:
+            prev = {}
 
     for form, key, count in FEEDS:
         try:
@@ -163,6 +173,7 @@ def main():
             ok += 1
         except Exception as exc:
             print('feed %s failed: %s' % (form, exc))
+            failed_feeds.append(form)
             entries = []
         # an Atom entry is emitted once per party, so one Form 4 appears twice — once
         # under the issuer's CIK and once under the reporting owner's, same accession.
@@ -184,6 +195,13 @@ def main():
             entries = [enrich_form4(e) for e in entries[:MAX_ENRICH]]
             entries = [e for e in entries if e.get('code')]
             entries.sort(key=lambda e: (e.get('side') != 'buy', -(e.get('value') or 0)))
+        # Carry forward rather than blank: a feed that returned nothing this cycle must
+        # not wipe a good list. Only a non-empty result replaces a bucket.
+        if not entries and prev.get(key):
+            entries = prev[key]
+            carried.append(key)
+            print('  %s: feed returned nothing — kept %d entries from the previous snapshot'
+                  % (key, len(entries)))
         payload[key] = entries
 
     if not any(payload.get(k) for _, k, _ in FEEDS):
@@ -195,6 +213,8 @@ def main():
         '_updated': stamp,
         'source': 'SEC EDGAR',
         'sources': '%d/%d feeds' % (ok, len(FEEDS)),
+        'carried': carried,
+        'failedFeeds': failed_feeds,
         'liability': 'Public filings, not investment advice.',
         'counts': {
             'insiders': len(ins),
@@ -219,12 +239,6 @@ def main():
                           + [[f.get('cik'), f.get('form')] for f in d.get('funds', [])]
                           + [[e.get('cik'), e.get('form')] for e in d.get('events', [])])
 
-    prev = {}
-    if os.path.exists(OUT):
-        try:
-            prev = json.loads(open(OUT, encoding='utf-8').read().split('=', 1)[1].rsplit(';', 1)[0])
-        except Exception:
-            prev = {}
     if sig(data) == sig(prev):
         print('edgar.js unchanged (%d insider filings, %d funds, %d events)'
               % (len(ins), len(data['funds']), len(data['events'])))
