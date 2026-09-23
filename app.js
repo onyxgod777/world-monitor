@@ -2106,6 +2106,9 @@ function flightLayerInit(map){
       updateMapSignals();
     });
   }
+  // Small testing hook: lets the map's own coordinate maths be checked from outside
+  // (the map and picker are module-scoped, so a console cannot otherwise reach them).
+  window.WM_MAP = { get map(){ return _map; }, pick: flightPick, draw: drawFlights, redraw: updateMapSignals };
 }
 
 function updateMapSignals(){
