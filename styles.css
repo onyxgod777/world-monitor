@@ -1019,3 +1019,25 @@ body.motion-off .ticker-inner{animation-play-state:paused}
        background:transparent;cursor:pointer}
 .edtab[aria-selected="true"]{background:rgba(110,168,254,.16);color:#cfe0ff;border-color:rgba(110,168,254,.45)}
 .ednote{padding:9px 11px;font-size:10.5px;line-height:1.5;color:#7d90ad;border-top:1px solid rgba(30,42,65,.5)}
+
+/* ── Public CCTV grid (fetch_cams.py -> cams.js) ────────────────────────────
+   Tile shows a still from the camera; clicking plays its live HLS stream in the
+   player above. Stills re-pull every 60s because the source refreshes them. */
+.camgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;padding:10px 11px}
+.camtile{position:relative;display:block;padding:0;border:1px solid rgba(30,42,65,.9);border-radius:6px;
+         background:var(--panel2,#131a28);cursor:pointer;overflow:hidden;text-align:left;font:inherit}
+.camtile:hover{border-color:rgba(110,168,254,.55)}
+.camtile img{display:block;width:100%;height:118px;object-fit:cover;background:#0b0f17}
+.camtag{position:absolute;top:5px;left:5px;font:700 8.5px/1 var(--mono,monospace);letter-spacing:.06em;
+        padding:3px 5px;border-radius:3px;background:rgba(231,76,60,.85);color:#fff}
+.camlabel{display:block;padding:6px 7px;font-size:10.5px;line-height:1.35;color:var(--fg,#e8eefc);
+          white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.camlabel em{display:block;font-style:normal;color:var(--dim,#8fa3c0);font-size:9.5px;
+             white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.camplayer{margin:10px 11px 0;border:1px solid rgba(30,42,65,.9);border-radius:6px;overflow:hidden;background:#0b0f17}
+.camplayer-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 9px;
+                background:rgba(20,28,42,.9);font-size:10.5px;color:var(--fg,#e8eefc)}
+.camplayer video{display:block;width:100%;max-height:420px;background:#000}
+.camclose{font:700 10px/1 var(--mono,monospace);letter-spacing:.05em;padding:5px 8px;border-radius:4px;
+          border:1px solid rgba(140,160,190,.3);background:transparent;color:#9db0cc;cursor:pointer}
+.camclose:hover{border-color:rgba(231,76,60,.5);color:#ff8b80}

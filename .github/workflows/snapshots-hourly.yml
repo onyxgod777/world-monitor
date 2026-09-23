@@ -51,10 +51,11 @@ jobs:
           python3 fetch_fiatleak.py || fail=$((fail+1))
           python3 fetch_social.py   || fail=$((fail+1))
           python3 fetch_edgar.py    || fail=$((fail+1))
+          python3 fetch_cams.py     || fail=$((fail+1))
           echo "failed=$fail" >> "$GITHUB_OUTPUT"
           echo "--- produced ---"
-          grep -o '"_updated": "[^"]*"' news.js fiatleak.js social.js edgar.js 2>/dev/null | head
-          if [ "$fail" -ge 4 ]; then
+          grep -o '"_updated": "[^"]*"' news.js fiatleak.js social.js edgar.js cams.js 2>/dev/null | head
+          if [ "$fail" -ge 5 ]; then
             echo "::error::every fetcher failed — the runner could not reach any source"
             exit 1
           fi
@@ -68,7 +69,7 @@ jobs:
           set -e
           git config user.name  "world-monitor-bot"
           git config user.email "world-monitor-bot@users.noreply.github.com"
-          git add news.js fiatleak.js social.js edgar.js
+          git add news.js fiatleak.js social.js edgar.js cams.js
           if git diff --cached --quiet; then
             echo "no snapshot changes"
             exit 0

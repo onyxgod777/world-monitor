@@ -1463,6 +1463,80 @@ function wireEdTabs(){
   }));
 }
 
+/* ══════════════ 2y. Public CCTV — owner-published live traffic cameras ══════
+   Snapshot-driven like the other panels: fetch_cams.py verifies each camera's
+   still image AND its HLS playlist before writing cams.js, so nothing here is a
+   dead feed. Stills re-pull every minute; clicking a tile plays the live stream.
+   Only cameras their operator published are listed — never devices found by
+   scanning, or indexed because they were left misconfigured and exposed. */
+let _camHls = null, _camTimer = null;
+function camMeta(c){
+  return [c.route, c.county].filter(Boolean).join(' · ');
+}
+function renderCams(){
+  const g = $('#camGrid'); if(!g) return;
+  const C = window.CAMS;
+  const cEl = $('#camCount'), sEl = $('#camSrc');
+  if(!C || !(C.cams || []).length){
+    if(cEl) cEl.textContent = '—';
+    if(sEl) sEl.textContent = 'CALTRANS OFFLINE';
+    g.innerHTML = '<div class="ph mono" style="padding:16px">No public camera snapshot available.</div>';
+    return;
+  }
+  const live = C.cams.filter(c => c.stream).length;
+  if(cEl) cEl.textContent = C.cams.length + ' cameras · ' + live + ' live';
+  if(sEl) sEl.textContent = (C.source || 'Caltrans') + (C._updated ? ' · ' + String(C._updated).slice(0,10) : '');
+
+  g.innerHTML = C.cams.map((c, i) => (
+    '<button class="camtile" type="button" data-i="' + i + '" title="Watch live: ' + esc(c.name) + '">' +
+      '<img data-cam="' + i + '" loading="lazy" referrerpolicy="no-referrer" alt="' + esc(c.name) + '" src="' + esc(c.img) + '">' +
+      '<span class="camtag">' + (c.stream ? '● LIVE' : 'IMAGE') + (c.res ? ' ' + esc(c.res) : '') + '</span>' +
+      '<span class="camlabel">' + esc(c.name) + (camMeta(c) ? '<em>' + esc(camMeta(c)) + '</em>' : '') + '</span>' +
+    '</button>').join(''));
+
+  $$('.camtile').forEach(t => t.addEventListener('click', () => playCam(parseInt(t.getAttribute('data-i'), 10))));
+
+  // the source refreshes its stills every 1-5 minutes; re-pull each minute, but
+  // not while the tab is hidden — no point burning bandwidth nobody is looking at
+  if(_camTimer) clearInterval(_camTimer);
+  _camTimer = setInterval(() => {
+    if(document.hidden || !window.CAMS) return;
+    $$('#camGrid img[data-cam]').forEach(im => {
+      const c = (window.CAMS.cams || [])[parseInt(im.getAttribute('data-cam'), 10)];
+      if(c) im.src = c.img + (c.img.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
+    });
+  }, 60000);
+}
+function playCam(i){
+  const C = window.CAMS; if(!C || !(C.cams || [])[i]) return;
+  const c = C.cams[i], box = $('#camPlayer'), v = $('#camVideo');
+  if(!box || !v) return;
+  box.hidden = false;
+  const now = $('#camNow');
+  if(now) now.textContent = c.name + (c.route ? ' · ' + c.route : '') + (c.res ? ' · ' + c.res : '');
+  stopCam(true);
+  if(c.stream && window.Hls && window.Hls.isSupported()){
+    _camHls = new Hls({ lowLatencyMode:true, enableWorker:true, maxBufferLength:8 });
+    _camHls.loadSource(c.stream);
+    _camHls.attachMedia(v);
+    _camHls.on(Hls.Events.MANIFEST_PARSED, () => v.play().catch(() => {}));
+    _camHls.on(Hls.Events.ERROR, (e, d) => {
+      if(d && d.fatal && now) now.textContent += ' — stream unavailable right now';
+    });
+  } else if(v.canPlayType('application/vnd.apple.mpegurl')){
+    v.src = c.stream;
+    v.play().catch(() => {});
+  }
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function stopCam(keepOpen){
+  const v = $('#camVideo'), box = $('#camPlayer');
+  if(_camHls){ try { _camHls.destroy(); } catch(e){} _camHls = null; }
+  if(v){ try { v.pause(); } catch(e){} v.removeAttribute('src'); try { v.load(); } catch(e){} }
+  if(box && !keepOpen) box.hidden = true;
+}
+function wireCamStop(){ const b = $('#camStop'); if(b) b.addEventListener('click', () => stopCam(false)); }
+
 function renderFloods(){
   const bar = $('#floodlist'); if(!bar) return;
   const F = window.FLOODS;
@@ -2797,6 +2871,7 @@ function boot(){
   renderFloods();  // GDACS/NWS flood report — committed snapshot, independent of news fetch
   renderOutbreaks(); // WHO Disease Outbreak News report — committed snapshot
   renderEdgar(); wireEdTabs(); // SEC EDGAR insider/13F/8-K — committed snapshot (fetch_edgar.py)
+  renderCams(); wireCamStop(); // public CCTV, live-verified (fetch_cams.py -> cams.js)
   renderDefcon();  // derived readiness indicator — recomputed on each news refresh
   initLive();      // live news broadcast channels (iframe loads when the card is in view)
   loadMarkets(); setInterval(loadMarkets,60000);

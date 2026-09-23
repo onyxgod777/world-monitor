@@ -152,6 +152,23 @@
           <div class="livenote">Direct HLS broadcasts straight from the broadcaster's own CDN — no YouTube, no account, no sign-in wall, no embed restrictions. Playback is native in your browser; if a source is unavailable from your network the player automatically fails over to the next source for that channel. Public-service and free-to-air news channels only.</div>
         </div>
 
+        <div class="card cams span12" id="camcard">
+          <div class="card-head">
+            <h2><span class="liveglyph"></span> Public CCTV · Live Traffic Cameras</h2>
+            <span class="count mono" id="camCount">—</span>
+            <span class="src mono" id="camSrc">Caltrans</span>
+          </div>
+          <div class="camplayer" id="camPlayer" hidden>
+            <div class="camplayer-head">
+              <span class="mono" id="camNow">—</span>
+              <button class="camclose mono" id="camStop" type="button">■ stop</button>
+            </div>
+            <video id="camVideo" playsinline muted controls></video>
+          </div>
+          <div class="camgrid" id="camGrid"><div class="ph mono" style="padding:16px">Loading public cameras…</div></div>
+          <div class="ednote">Owner-published public highway cameras — Caltrans traveller-information data, free of charge and published for reuse. Every camera listed here was <b>verified to serve a live video stream</b> before it was added. Click a tile to watch it live; the still images behind the tiles refresh themselves every minute. Cameras are monitors on public roads, not surveillance of people, and no camera is included that its operator did not publish.</div>
+        </div>
+
         <div class="card feed span7">
           <div class="card-head">
             <h2>Live Intel Feed</h2>
@@ -373,6 +390,7 @@
   <script src="social.js"></script>
   <script src="news.js"></script>
   <script src="gazetteer.js"></script>
+  <script src="cams.js"></script>
   <script src="edgar.js"></script>
   <script src="app.js"></script>
   <script>
