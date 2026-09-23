@@ -2266,7 +2266,7 @@ function updateMapSignals(){
   if(SET.outbreaks){
     leg.push(`<span class="li"><span class="sw ob-sw"></span>☣ WHO outbreak report</span>`);
   }
-  if(SET.flights && window.FLIGHTS && Array.isArray(window.FLIGHTS.ac)){
+  if(SET.flights && SET.mapMode !== '3d' && window.FLIGHTS && Array.isArray(window.FLIGHTS.ac)){
     leg.push(`<span class="li"><span class="sw fl-sw"></span>✈ aircraft · adsb.lol</span>`,
              `<span class="li"><span class="sw fl-sw lv-hi"></span>cruise</span>`,
              `<span class="li"><span class="sw fl-sw lv-mil"></span>military</span>`);
@@ -2290,7 +2290,7 @@ function updateMapSignals(){
   const otxt = !SET.outbreaks ? ''
     : (outbreakOnMap ? ' · '+outbreakOnMap+' outbreak'+(outbreakOnMap===1?'':'s')
         : (OB ? ' · no outbreak reports' : ''));
-  const fltxt = !SET.flights ? ''
+  const fltxt = (!SET.flights || SET.mapMode === '3d') ? ''
     : (window.FLIGHTS && window.FLIGHTS.count
         ? ' · ' + window.FLIGHTS.count.toLocaleString('en-US') + ' aircraft (as of '
           + String(window.FLIGHTS._updated || '').replace(' UTC', ' UTC') + ')'
@@ -2870,6 +2870,13 @@ function setMapMode(mode){
   if(b2){ b2.classList.toggle('is-on', !is3); b2.setAttribute('aria-pressed', String(!is3)); }
   if(b3){ b3.classList.toggle('is-on', is3);  b3.setAttribute('aria-pressed', String(is3)); }
   if(is3){
+    // The aircraft layer is 2D-only: the 3D globe does not draw it, so strip its
+    // legend entries and its count rather than advertise something that is not there.
+    document.querySelectorAll('#mapLegend .li').forEach(li => {
+      if(/aircraft|adsb\.lol|^cruise$|^military$/i.test((li.textContent || '').trim())) li.remove();
+    });
+    const mc = $('#mapCount');
+    if(mc) mc.textContent = mc.textContent.replace(/ · [\d,]+ aircraft \(as of [^)]*\)/, '');
     ensureGlobe().then(g=>{ if(g){ sizeGlobe(); startGlobe(); } });
   }else{
     stopGlobe();
