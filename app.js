@@ -1492,7 +1492,7 @@ function renderCams(){
       '<img data-cam="' + i + '" loading="lazy" referrerpolicy="no-referrer" alt="' + esc(c.name) + '" src="' + esc(c.img) + '">' +
       '<span class="camtag">' + (c.stream ? '● LIVE' : 'IMAGE') + (c.res ? ' ' + esc(c.res) : '') + '</span>' +
       '<span class="camlabel">' + esc(c.name) + (camMeta(c) ? '<em>' + esc(camMeta(c)) + '</em>' : '') + '</span>' +
-    '</button>').join(''));
+    '</button>')).join('');
 
   $$('.camtile').forEach(t => t.addEventListener('click', () => playCam(parseInt(t.getAttribute('data-i'), 10))));
 
