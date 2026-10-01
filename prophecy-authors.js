@@ -6,32 +6,58 @@
 window.PROPHECIES_AUTHORED = [
  {
   "emoji": "🔥",
-  "title": "**The US completes its troop withdrawal from Iraq as Iran's grip on the Strait of Hormuz visibly loosens — and Washington's attention turns to the water and power plants Tehran is accused of probing**",
-  "short": "Iraq withdrawal done; Iran's Hormuz leverage slipping as sabotage fears rise",
+  "title": "**Russia sends a nuclear warning to NATO as Baltic tensions spike — and Britain now openly names Iran in the RAF Fairford incident**",
+  "short": "Russia's nuclear warning meets a Baltic standoff and a UK-Iran accusation",
   "tag": "CONFLICT · GEOPOLITICS",
   "cls": "red",
   "kw": [
-   "iraq",
-   "withdrawal",
+   "russia",
+   "nato",
+   "nuclear",
+   "baltic",
    "iran",
-   "strait of hormuz",
-   "troops",
-   "water plants",
-   "sabotage"
+   "raf fairford",
+   "britain",
+   "tensions"
   ],
-  "cause": "AP News reports the **US military says its withdrawal of troops from Iraq is complete**, closing a long-running deployment. Simultaneously Fox News reports **Iran loses grip on Strait of Hormuz** as Tehran's leverage over the world's most important oil chokepoint erodes. Reuters adds the **US is warning that Siemens devices can be hacked amid fears Iran is breaching water plants** — moving the contest from open military posture toward infrastructure sabotage. The strategic picture: a vacuum in Iraq, a chokepoint under reduced Iranian control, and both sides testing civilian utilities.",
+  "cause": "Reuters reports **Russia sends a nuclear warning to NATO as tensions rise in the Baltic** — the sharpest escalation signal from Moscow in the current cycle. The BBC adds that **the UK believes Iran was involved in the RAF Fairford incident**, with Greater Manchester mayor Burnham stating the assessment publicly, widening a European base-security file onto the Iran track. Reuters also reports **passengers foiled a bid to crash a Dubai–Tel Aviv flight after the co-pilot stabbed the pilot**, an aviation-security event in the same region. The Hill confirms the **US has ended its military mission in Iraq**, shrinking Washington's regional footprint as these tempers rise. Three separate theatres — Baltic, Gulf aviation, UK home-base security — are compressing into one window of elevated risk.",
   "bullets": [
-   "**Chokepoint risk stays live** — with Iraqi ground presence gone, any Iranian move to reassert control of Hormuz must be naval/covert, keeping tanker insurance and crude risk premiums elevated.",
-   "**Infrastructure becomes the battlefield** — if the water-plant intrusions are confirmed as state-directed, expect reciprocal targeting of Gulf desalination and power grids, the region's true single points of failure.",
-   "**Iraq's internal balance shifts** — a US exit hands more room to Iran-aligned militias and to Baghdad's own security forces, raising the odds of a messy contest for the post-withdrawal order.",
-   "**Gulf capitals hedge faster** — Saudi and Emirati diplomacy accelerates its independent track, since a reduced US footprint in Iraq reads as a reduced guarantee everywhere."
+   "**Nuclear signalling hardens posture on both sides** — once a nuclear warning is public, alliance planners must model worst cases, raising readiness costs and shrinking the room for de-escalation signals.",
+   "**The Iran file absorbs the UK base incident** — if London treats Fairford as Iranian activity, European bases become targets in a conflict they were trying to stay out of.",
+   "**Aviation security becomes a live risk premium** — a foiled cockpit attack forces new carrier screening, and any repeat raises insurance and route disruption across Gulf carriers.",
+   "**A thinner US Iraq footprint invites regional competition** — with the mission closed, Iran-aligned militias and Baghdad's forces contest the vacuum, and every flare-up lands back on the Baltic-style escalation ladder."
   ],
-  "hinge": "This is not fate. A verifiable, third-party-monitored de-escalation between Washington and Tehran — or a regional security channel that lets Iraq secure its own border without either power's proxies — rewrites the causal chain. If Tehran accepts inspection of the cyber activity and Washington declines to treat every utility probe as an act of war, the water-plant escalation never has to happen."
+  "hinge": "None of this is fated. A verified back-channel — direct NATO–Russia military-to-military contact that restores hotline norms, plus London and Tehran agreeing on a joint investigation into the Fairford incident rather than an attribution-first posture — rewrites the chain before any of these three files fuse. The choice is whether escalation is chosen again, or the warning is treated as information to act on."
+ },
+ {
+  "emoji": "📉",
+  "title": "**The 10-year Treasury yield hits 5% as European shares head for their first monthly decline in six months — and the Bank of England warns an AI valuation correction could hit the bond market**",
+  "short": "10-yr yield at 5%, Europe set for first monthly drop, BoE flags AI valuation risk",
+  "tag": "MARKETS · RATES",
+  "cls": "amber",
+  "kw": [
+   "treasury yield",
+   "yields",
+   "10-year",
+   "fed",
+   "rate hike",
+   "global markets",
+   "european shares",
+   "dollar"
+  ],
+  "cause": "CoinDesk reports the **Treasury Secretary amplifying bullish economic data as the 10-year yield hits 5%**, while Yeni Şafak notes **global markets mixed as US Treasury yields hit multi-year highs**. CNBC frames the transmission channel directly: **a stronger dollar and rising yields, and how the Fed's rate hike could hit global markets**. The Economic Times reports **European shares heading for their first monthly decline in six months as yields rise**. On the risk side, finance.biggo reports a **Bank of England warning that an AI valuation correction could hit the global economy and bond markets** — tying the equity bubble to the same yield complex. The rate picture has hardened, not eased.",
+  "bullets": [
+   "**Equity multiples compress** — a 5% risk-free rate reprices growth tech, leveraged real estate and long-duration assets, and Europe's first monthly decline is the visible crack.",
+   "**An AI-valuation shock would land on bonds, not just stocks** — if the BoE's warning proves right, a repricing of AI winners drains the very capital that has been absorbing new Treasury supply.",
+   "**Dollar strength exports tightening** — emerging-market borrowers and commodity importers face higher servicing costs without their own central banks having moved.",
+   "**A policy-error risk sharpens** — if the Fed hikes again into decelerating demand, the effect flips from inflation control to induced downturn."
+  ],
+  "hinge": "Yields at 5% are information, not a sentence. If the Fed holds rather than hikes and fiscal issuance is scheduled to avoid crowding out private credit, the term premium unwinds and equities find footing. The free-will choice is whether the AI-boom concentration is deliberately de-risked now — or left to correct itself into the bond market."
  },
  {
   "emoji": "🛡️",
-  "title": "**The FBI declares a 'cyber security incident' after hackers claim to have stolen agents' personal records — days after AI-assisted breaches hit Anthropic, Hugging Face and OpenAI**",
-  "short": "FBI personnel data allegedly stolen as an AI-assisted hacking wave spreads",
+  "title": "**The FBI declares a 'cyber security incident' after hackers claim agents' personal data — as AI labs absorb a fourth hacking disclosure and Gemini 4 is locked to vetted defenders only**",
+  "short": "FBI personnel data allegedly stolen as the AI-lab breach wave keeps spreading",
   "tag": "CYBER · SECURITY",
   "cls": "amber",
   "kw": [
@@ -44,115 +70,90 @@ window.PROPHECIES_AUTHORED = [
    "openai",
    "hugging face"
   ],
-  "cause": "TechCrunch and NewsNation report the **FBI declared a 'cyber security incident' after hackers stole agents' personal data**, with NYT describing an **'embarrassing breach'** and Federal News Network confirming an investigation into a **compromised jobs website**. In the same cycle, **Anthropic disclosed a fourth AI hacking incident** (Reuters, Al Jazeera), **Hugging Face suffered a breach a former NSA cyber chief called the 'most consequential hack' since the Morris Worm**, and Tom's Hardware reports **hackers breached OpenAI using Claude tools to reach employee accounts and internal codebase**. The common thread: sensitive government and AI-lab systems are being penetrated faster than they can be hardened.",
+  "cause": "TechCrunch and NewsNation report the **FBI declared a 'cyber security incident' after hackers stole agents' personal data**, with Federal News Network confirming an investigation into a **compromised jobs website**. In the same cycle **Anthropic disclosed a fourth AI hacking incident missed in an earlier review** (Reuters), Nextgov relays a former NSA cyber chief calling the **Hugging Face breach the 'most consequential hack' since the Morris Worm**, and Tom's Hardware reports **hackers breached OpenAI using Claude tools to reach employee accounts and the company's internal codebase**. The Verge reports **Google announcing Gemini 4 and restricting it to 'trusted cyber defenders'** — a vendor conceding the dual-use problem by gating access. Sensitive government and AI-lab systems are being penetrated faster than they can be hardened.",
   "bullets": [
-   "**Personnel data is the new perimeter** — stolen agent identities don't just embarrass; they enable doxxing, targeting and social-engineered access to field offices for years.",
-   "**AI labs are now attack surface** — if model vendors cannot secure their own internal code, the tools they ship carry the same exposure into every downstream customer.",
-   "**Regulatory pressure compounds** — expect disclosure mandates and criminal referrals to intensify, regardless of whether attribution names a state actor or an opportunistic crew.",
-   "**Trust erosion spreads institutionally** — after Hugging Face and the FBI, the argument that 'the cloud provider handles security' loses force, pushing on-premise and air-gapped demand."
+   "**Personnel data is the new perimeter** — stolen agent identities enable doxxing, targeting and social-engineered access to field offices for years, long after the incident is closed.",
+   "**AI labs are now attack surface and supply chain** — a vendor's internal codebase is the substrate for every downstream customer, so the blast radius is never one company.",
+   "**Gating capability is a partial fix with a cost** — restricting a frontier model to vetted defenders slows the offense, but hardens the divide between those allowed the tools and everyone else.",
+   "**Accountability pressure compounds** — each disclosure strengthens mandatory external audit over voluntary self-regulation, regardless of whether attribution names a state or a crew."
   ],
-  "hinge": "The breach is a cause, not a verdict. If the FBI and the AI labs adopt mandatory post-incident disclosure, rotate all compromised credentials fast, and treat model-internal code as production-grade surface, the same attacker techniques stop yielding the same prizes. The hinge is whether governments mandate hardening now — or wait for a breach that kills someone."
- },
- {
-  "emoji": "📉",
-  "title": "**The 10-year Treasury yield touches 5% as European shares head for their first monthly decline in six months — and the Fed's one-more-hike signal collides with a slowing consumer**",
-  "short": "10-year yield hits 5%; Europe set for first monthly drop in six months",
-  "tag": "MARKETS · RATES",
-  "cls": "amber",
-  "kw": [
-   "treasury yield",
-   "10-year",
-   "5%",
-   "fed",
-   "rate hike",
-   "global markets",
-   "european shares",
-   "yields"
-  ],
-  "cause": "CoinDesk and Yeni Şafak report the **10-year Treasury yield hitting 5%, a multi-year high**, with the Treasury Secretary amplifying bullish data even as borrowing costs climb. The Economic Times notes **European shares are heading for their first monthly decline in six months as yields rise**, while CNBC frames a **stronger dollar and rising yields** as the pressure point and S&P Global's September outlook flags the strain. Against yesterday's run — where the Fed signalled one more hike and consumer confidence hit a twelve-year low — the rate picture has hardened rather than eased.",
-  "bullets": [
-   "**Equity multiples compress** — a 5% risk-free rate reprices everything from growth tech to leveraged real estate, and the Europe monthly decline is the first visible crack.",
-   "**Dollar strength exports tightening** — emerging-market borrowers and commodity importers face higher servicing costs without their own central banks having tightened.",
-   "**Housing and credit stall** — mortgages and corporate refinancing at these levels freeze marginal demand, feeding back into the slowing consumer data.",
-   "**A policy error risk sharpens** — if the Fed hikes once more into a decelerating economy, the effect flips from inflation control to induced downturn."
-  ],
-  "hinge": "Yields at 5% are a symptom, not a sentence. If the Fed holds rather than hikes, and fiscal issuance is scheduled to avoid crowding out private credit, the term premium unwinds and stocks find footing. The free-will choice is whether policymakers treat the yield spike as information to heed — or as a hurdle to talk past."
+  "hinge": "The breach is a cause, not a verdict. If the FBI and the labs rotate every compromised credential fast, treat model-internal code as production-grade surface, and accept independent audit rather than self-attestation, the same techniques stop yielding the same prizes. The hinge is whether hardening is mandated now — or waits for an incident that kills someone."
  },
  {
   "emoji": "🛢️",
-  "title": "**Goldman warns a diesel export ban would push gasoline prices higher as crude climbs on building supply risk — a ceasefire that half the market is betting on has not arrived**",
-  "short": "Diesel-ban warning meets rising crude as ceasefire optimism fades",
+  "title": "**The Strait of Hormuz blockade drags a whole commodity complex with it — as Reuters calls the Iran war the oil market's biggest crisis in decades and every ceasefire headline whipsaws prices**",
+  "short": "Hormuz blockade spreads beyond crude; war called biggest oil crisis in decades",
   "tag": "ENERGY · COMMODITIES",
   "cls": "amber",
   "kw": [
-   "diesel",
-   "export ban",
-   "gasoline",
-   "crude oil",
-   "supply risk",
-   "ceasefire",
+   "strait of hormuz",
+   "blockade",
    "oil",
-   "commodities"
+   "crude",
+   "iran war",
+   "commodities",
+   "diesel",
+   "supply"
   ],
-  "cause": "OilPrice.com reports **Goldman warns a diesel export ban would send gasoline prices higher** — a policy lever now openly discussed as a response to tight distillate supply. ING's Commodities Feed moves from **'oil surges as peace deal hopes fade'** to **'oil moves higher as supply risks build'**, a reversal of the earlier 'ceasefire optimism weighs on energy markets' framing, while grainews notes **economic-warfare fears pushing crude up**. The signal: the market's assumed de-escalation is not materialising, and physical product — not just headline crude — is the stress point.",
+  "cause": "OilPrice reports **the critical commodities caught in the Hormuz blockade**, and the World Economic Forum widens it to **nine commodities impacted by the Strait of Hormuz crisis** beyond crude. Reuters states plainly that the **Iran war throws the oil market into its biggest crisis in decades**, while ING's Commodities Feed moves to **oil moves higher as supply risks build**. OilPrice also reports **Goldman warning a diesel export ban would send gasoline prices higher** — a policy lever now openly discussed. The pattern across the feed: the market prices a ceasefire on one headline and reprices escalation on the next, with physical product, not just crude futures, as the stress point.",
   "bullets": [
-   "**Distillates lead, crude follows** — diesel and jet fuel tightness feeds directly into freight, farming and consumer prices, reviving the exact inflation the Fed is fighting.",
-   "**An export ban backfires under its own logic** — restricting US diesel exports raises domestic pump prices by shrinking global supply and inviting retaliation, the opposite of the stated goal.",
-   "**Every ceasefire headline becomes a price swing** — with the market levered to peace, a confirmed deal could unwind crude fast and equally fast reverse again.",
-   "**Commodity volatility reignites the inflation path** — sustained energy strength keeps central-bank easing off the table and pressures the 5% yield even higher."
+   "**Distillates lead, crude follows** — diesel and jet-fuel tightness feeds directly into freight, farming and consumer prices, reviving the inflation the Fed is still fighting.",
+   "**A diesel export ban backfires under its own logic** — cutting US exports shrinks global supply, raises domestic pump prices and invites retaliation, the opposite of the stated goal.",
+   "**Beyond oil, the blockade taxes food and industry** — fertilizer, metals, LNG and container freight routed through Hormuz transmit the disruption into sectors that carry no oil headline.",
+   "**Every diplomatic headline becomes a price swing** — with positioning levered to peace, a confirmed deal unwinds crude fast and can reverse just as fast on one incident."
   ],
-  "hinge": "Prices here are hostage to a decision, not a destiny. If an actual ceasefire is signed and verified — halting strikes on Gulf energy infrastructure — crude and products normalise and the diesel-ban debate becomes moot. The hinge is whether escalation is chosen again or the diplomatic track is allowed to close."
+  "hinge": "These prices are hostage to a decision, not a destiny. If a verified ceasefire halts strikes on Gulf energy infrastructure and shipping resumes under an insured corridor, crude and products normalise and the export-ban debate becomes moot. The hinge is whether escalation is chosen again or the diplomatic track is allowed to close."
+ },
+ {
+  "emoji": "🌍",
+  "title": "**Nepal's glacier collapse followed exceptional heat — as fires, floods and record heat stack into a summer of compounding disasters rather than isolated events**",
+  "short": "Nepal glacier heat-collapse joins fires and floods in a compounding-disaster season",
+  "tag": "CLIMATE · WEATHER",
+  "cls": "amber",
+  "kw": [
+   "climate change",
+   "floods",
+   "heat",
+   "glacier",
+   "nepal",
+   "extreme weather",
+   "el nino",
+   "disaster"
+  ],
+  "cause": "The Japan Times reports **Nepal's glacier saw exceptional heat before its collapse caused deadly floods** — a high-altitude ice failure traced to temperature, not season. CNN frames the same window as **fires, floods and record heat: the summer of compounding disasters**, PBS explains why **climate change causes more frequent and extreme weather events**, and Al Jazeera describes **El Niño as a phenomenon supercharged by climate change**. The signal is structural: hazards that used to arrive one at a time now overlap, so recovery from one is interrupted by the next.",
+  "bullets": [
+   "**Glacier retreat moves downstream risk upward** — ice-dammed and moraine-dammed lakes fail fast, giving mountain communities minutes, not days, of warning.",
+   "**Overlapping hazards exhaust response capacity** — a fire season that runs into flood season leaves no recovery window, and mutual aid that was sufficient for single events is not sufficient for stacked ones.",
+   "**El Niño amplification raises the baseline, not just the peaks** — the same warming that intensifies storms also shifts where rain falls, converting some regions to drought while others flood.",
+   "**Adaptation spending becomes the deciding variable** — early-warning systems and hardening at the top of a river basin are far cheaper than rebuilding at the bottom of it."
+  ],
+  "hinge": "The warming signal is set, but the damage is not fated. If glacial-lake monitoring is funded and evacuation plans are rehearsed in the exposed basins — and El Niño years are treated as forecast risk rather than surprise — the same heat produces fewer deaths. The choice is whether resilience is paid for before the disaster or financed after it."
  },
  {
   "emoji": "🤝",
-  "title": "**Gaza's next phase turns from war to reconstruction and Palestinian statehood — as the Iran file goes quiet and Gulf states race to define the post-war order**",
-  "short": "Gaza moves to reconstruction and statehood talks; Iran diplomacy goes quiet",
+  "title": "**The Iran war goes 'all quiet' on the diplomatic front while reconstruction — and the statehood question — becomes the real contest over Gaza's future**",
+  "short": "Iran diplomacy goes quiet; Gaza's future shifts to reconstruction and statehood",
   "tag": "GEOPOLITICS · SIGNAL",
   "cls": "blue",
   "kw": [
+   "iran",
+   "diplomacy",
    "gaza",
    "reconstruction",
-   "palestinian statehood",
-   "diplomacy",
-   "post-war",
+   "statehood",
+   "oman",
    "middle east",
-   "gulf",
-   "iran"
+   "gulf"
   ],
-  "cause": "Middle East Monitor frames **Gaza and the future of Middle Eastern geopolitics: diplomacy, reconstruction and Palestinian statehood** — the agenda has shifted from battlefield to bargaining table. Geopolitical Monitor's weekly reads **'Iran War: All Quiet on the Diplomatic Front'**, and RFI's profile of **Oman as the Gulf's geopolitical exception** underscores a regional scramble to broker. This follows a cycle where Israel's election and a 10-nation Gulf meeting set the stage for exactly this transition.",
+  "cause": "Geopolitical Monitor's weekly reads **'Iran War: All Quiet on the Diplomatic Front'**, and zeihan.com puts it more bluntly: **'Iran Diplomacy Has Yet to Begin'** — the lull is a pause, not a settlement. Middle East Monitor frames **Gaza and the future of Middle Eastern geopolitics: diplomacy, reconstruction and Palestinian statehood**, moving the agenda from battlefield to bargaining table. RFI profiles **what makes the Sultanate of Oman the Gulf's geopolitical exception**, and Modern Diplomacy examines **the geopolitics of spare capacity as the hidden weapon in energy diplomacy**. With Washington's Iraq mission closed, regional capitals are setting the tempo.",
   "bullets": [
-   "**Reconstruction is the new leverage** — who funds and who governs Gaza's rebuild determines its political future more than any communiqué.",
-   "**Statehood language hardens or dilutes** — if the reconstruction framework names a path to statehood, it locks in a political horizon; if it stays humanitarian, it defers the core dispute.",
-   "**Gulf states set the tempo** — with Washington's Iraq footprint receding and Iran's diplomatic front quiet, Riyadh, Doha and Muscat gain agenda-setting power.",
-   "**A quiet Iran file can re-open** — 'all quiet' is a pause, not a settlement; a single incident at Hormuz or a water plant returns the region to the prior frame overnight."
+   "**Quiet is a pause, not a peace** — an unresolved Iran file can re-open on a single incident at Hormuz or a base-security allegation, inverting the region's frame within hours.",
+   "**Reconstruction is the new leverage** — who funds and who governs Gaza's rebuild shapes its political future more than any communiqué ever will.",
+   "**Statehood language hardens or dilutes now** — naming a path to statehood locks in a political horizon; a purely humanitarian frame defers the core dispute and invites its return.",
+   "**Spare capacity is diplomatic currency** — producers with unused output can stabilise prices and buy influence, which is why Oman and other brokers gain agenda-setting power while the war pauses."
   ],
-  "hinge": "Whether Gaza becomes a durable political settlement or a reconstruction limbo rests on a choice now being made: does the funding coalition condition aid on a defined statehood pathway, or does it buy quiet by deferring the question? That single decision rewrites the region's next decade."
- },
- {
-  "emoji": "🛡️",
-  "title": "**A Plejaren foretelling from 1946 about the deadly AI threat resurfaces as autonomous agents breach OpenAI, Anthropic and Hugging Face in a single cycle**",
-  "short": "AI-threat warning meets a wave of autonomous-agent breaches at AI labs",
-  "tag": "CYBER · SECURITY",
-  "cls": "amber",
-  "kw": [
-   "ai",
-   "autonomous",
-   "agents",
-   "openai",
-   "anthropic",
-   "breach",
-   "artificial intelligence",
-   "hacking"
-  ],
-  "cause": "The FIGU/They Fly Blog beat carries **'Deadly AI Threat Foretold by Plejaren Extraterrestrial…in 1946'** — a decades-old warning against unchecked artificial intelligence. In the same news cycle the warning is being empirically echoed: **hackers breached OpenAI using Claude tools, gaining access to employee accounts and internal codebase** (Tom's Hardware), **Anthropic disclosed a fourth AI hacking incident** (Reuters, Al Jazeera), and a former NSA cyber chief called the **Hugging Face breach the 'most consequential' since the Morris Worm** (Nextgov). Three of the world's leading AI labs were penetrated by tooling that partly ran on AI itself.",
-  "bullets": [
-   "**Autonomy amplifies breach speed** — agent-driven attacks execute reconnaissance and exploitation far faster than human operators, shrinking response windows to minutes.",
-   "**Lab compromise becomes downstream compromise** — an AI vendor's internal codebase is the supply chain for every customer built on it; the blast radius is not one company.",
-   "**'Self-policing' is tested** — voluntary industry safety accords, like the one the top tech firms just signed, face their first real stress test and their first credibility question.",
-   "**Public trust in AI governance erodes** — each disclosed incident strengthens the case for mandatory external audit over self-regulation."
-  ],
-  "hinge": "The foretelling is a warning, not a decree. If AI labs adopt mandatory independent security audits, isolate agent tooling from production codebases, and governments move from voluntary accord to enforceable standard, the same predictive pattern is broken by foresight rather than fulfilled by neglect. The choice is present-tense: harden now, or confirm the warning later."
+  "hinge": "Whether this quiet becomes a settlement or another temporary lull rests on a choice being made now: does the funding coalition condition Gaza's reconstruction on a defined statehood pathway and restart a real Iran channel — or does it buy quiet by deferring both questions? That single decision writes the region's next decade."
  }
 ];
 
-window.PROPHECIES_AUTHORED_STAMP = '2026-09-30 08:01';
+window.PROPHECIES_AUTHORED_STAMP = '2026-09-30 20:01';
