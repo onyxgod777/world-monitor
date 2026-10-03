@@ -74,6 +74,26 @@
   }
   function words(text){ return String(text || '').match(WORD) || []; }
 
+  /* ── German words ───────────────────────────────────────────────────────── */
+  // The chart's values are language-specific (Contact Report 128): the German
+  // assignment is the original one, so a flagged word that is a German word gets
+  // a star. german-words.js ships only German words that are themselves 18s
+  // (checked against a German frequency list, minus words that are also English)
+  // — a word outside that list is simply not known to be German, not "not German".
+  var DE = (function(){
+    var raw = String(window.GM_DE || '').split(' '), set = {}, i;
+    for(i=0;i<raw.length;i++){ if(raw[i]) set[raw[i]] = 1; }
+    return set;
+  })();
+  function isGerman(w){ return DE[String(w).toUpperCase()] === 1; }
+
+  function star(kind){
+    // kind: 'sup' inside an inline mark, 'word' in the ledger table
+    return kind === 'sup'
+      ? '<sup class="gmde" title="German-language word — the chart\'s values are language-specific">★</sup>'
+      : ' <span class="gmstar" title="German-language word">★</span>';
+  }
+
   /* ── corpus: every headline the dashboard is currently carrying ─────────── */
   function corpus(){
     var out = [];
@@ -131,6 +151,7 @@
         if(!frag) frag = document.createDocumentFragment();
         frag.appendChild(document.createTextNode(txt.slice(last, m.index)));
         var w = m[0].toUpperCase();
+        var de = isGerman(w);
         var mk = document.createElement('mark');
         mk.className = 'gm18' + (r === 'ends' ? ' gm-ends' : r === 'both' ? ' gm-both' : '');
         mk.textContent = m[0];
@@ -140,7 +161,15 @@
           ? breakdown(w) + ' = 18  ·  18 × 37 = 666'
           : 'first + last letter = ' + w[0] + '(' + (C[w[0]]||0) + ') + ' + w[w.length-1] +
             '(' + (C[w[w.length-1]]||0) + ') = 18  ·  18 × 37 = 666';
+        if(de) mk.title += '  ·  German word';
         frag.appendChild(mk);
+        if(de){
+          var sup = document.createElement('sup');
+          sup.className = 'gmde';
+          sup.textContent = '★';
+          sup.title = 'German-language word — the chart\'s values are language-specific';
+          frag.appendChild(sup);
+        }
         last = m.index + m[0].length;
         total++;
       }
@@ -185,15 +214,17 @@
       return (sc.byWord[b] - sc.byWord[a]) || (a < b ? -1 : 1);
     });
     var bothWords = wordList.filter(function(w){ return rule(w) === 'both'; });
+    var deWords = wordList.filter(isGerman);
     if(cnt) cnt.textContent = sc.hits.length + ' hits · ' + wordList.length + ' words · ' +
                               sc.flaggedItems + ' of ' + sc.items + ' headlines' +
-                              (bothWords.length ? ' · ' + bothWords.length + ' both' : '');
+                              (bothWords.length ? ' · ' + bothWords.length + ' both' : '') +
+                              (deWords.length ? ' · ' + deWords.length + ' ★' : '');
     var rows = wordList.map(function(w){
       var r = rule(w);
       var cls = r === 'both' ? 'gm-both' : (r === 'sum' ? 'gm-sum' : 'gm-ends');
       var lab = r === 'both' ? 'sum + first+last' : (r === 'sum' ? 'sum 18' : 'first+last 18');
       return '<tr>' +
-        '<td class="gmword">' + w + '</td>' +
+        '<td class="gmword">' + w + (isGerman(w) ? star('word') : '') + '</td>' +
         '<td><span class="gmbadge ' + cls + '">' + lab + '</span></td>' +
         '<td class="gmbr mono">' + breakdown(w) + ' = ' + value(w) + '</td>' +
         '<td class="right num">' + sc.byWord[w] + '</td>' +
@@ -203,7 +234,9 @@
       '<div class="gmsum mono">' + sc.hits.length + ' flagged instances · ' + wordList.length +
         ' distinct words · ' + sc.flaggedItems + ' of ' + sc.items + ' headlines carry one' +
         (bothWords.length ? ' · <span class="gmlegend gm-both">' + bothWords.length +
-          ' satisfy both rules</span>' : '') + '</div>' +
+          ' satisfy both rules</span>' : '') +
+        (deWords.length ? ' · <span class="gmlegend gm-de">' + deWords.length +
+          ' ★ German</span>' : '') + '</div>' +
       '<div class="tablewrap"><table class="dt">' +
         '<thead><tr><th>Word</th><th>18 by</th><th>Arithmetic</th><th class="right">Hits</th></tr></thead>' +
         '<tbody>' + rows + '</tbody>' +
@@ -220,8 +253,9 @@
     return inline;
   }
   window.gmRender = gmRender;
-  // console handles: GM.value('JESUS') → 18
-  window.GM = { value: value, ends: ends, rule: rule, breakdown: breakdown, scan: scan, render: gmRender };
+  // console handles: GM.value('JESUS') → 18, GM.isGerman('GOTT') → true
+  window.GM = { value: value, ends: ends, rule: rule, breakdown: breakdown,
+                isGerman: isGerman, scan: scan, render: gmRender };
 
   function init(){ try{ gmRender(); }catch(e){} }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
