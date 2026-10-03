@@ -6,146 +6,148 @@
 window.PROPHECIES_AUTHORED = [
  {
   "emoji": "🔥",
-  "title": "**Trump warns Iran of fresh strikes** if Tehran is tied to the FlyDubai plane incident — as the Iran war's diplomatic front stays quiet and the oil risk premium rebuilds",
-  "short": "Trump threatens new strikes over FlyDubai incident as Iran diplomacy stalls",
+  "title": "**UAE brands the Flydubai cockpit axe attack an attempted 'terrorist attack'** — recasting an aviation incident as a security hinge while the Iran-strike threat still hangs over the region",
+  "short": "UAE calls Flydubai cockpit axe attack attempted terrorism",
+  "tag": "CONFLICT · GEOPOLITICS",
+  "cls": "red",
+  "kw": [
+   "flydubai",
+   "uae",
+   "pilot",
+   "axe",
+   "terrorist",
+   "aviation",
+   "iran"
+  ],
+  "cause": "**Reuters reports UAE authorities now say a Flydubai co-pilot attacked the pilot with an axe in an attempted** \\\"terrorist attack.\\\" That reframes an incident the prior cycle was still attributing outward — a cockpit event layered directly on top of the standing US threat to strike Iran *if Tehran is tied to the FlyDubai incident*. Two pathways are now open in the same evidence: an internal actor, or an externally directed plot.",
+  "bullets": [
+   "**Aviation security tightens fast** — an axe in a cockpit converts every carrier's crew-access rule into a suspect control, and Gulf carriers carry the highest exposure.",
+   "**Attribution becomes the pivot** — if the act is confirmed as directed rather than personal, the earlier strike-threat precondition is met and the risk premium re-inflates.",
+   "**Criminal case races the geopolitical case** — a court process that produces a lone-actor finding defuses the war-threat; a network finding detonates it.",
+   "**Insurance and routing costs rise first** — hull and crew-risk pricing moves before any government statement does."
+  ],
+  "hinge": "The free-will choice sits with the investigation and its disclosure. If UAE authorities publish evidence of a self-directed individual — not a directed plot — the strike precondition collapses and the region de-escalates. If the finding points to an external hand, the threat converts from rhetoric to standing order. The act is done; the *naming* of it is still a choice."
+ },
+ {
+  "emoji": "🔥",
+  "title": "**Two Iranians charged over an alleged plot against the UK Jewish community** — a fresh Iran-linked external operation lands on British soil as the diplomatic track stays quiet",
+  "short": "Two Iranians charged over alleged UK Jewish community plot",
   "tag": "CONFLICT · GEOPOLITICS",
   "cls": "red",
   "kw": [
    "iran",
-   "trump",
-   "strike",
-   "flydubai",
-   "hormuz",
-   "oil"
+   "uk",
+   "plot",
+   "jewish",
+   "charged",
+   "terror",
+   "britain"
   ],
-  "cause": "Fox News reports **Trump warning Iran of fresh strikes if Tehran is implicated in the FlyDubai plane incident**, layering a new attribution demand onto an already unresolved US–Iran war. Geopolitical Monitor's weekly reads the diplomatic track as *\"all quiet\"* — talks are not advancing. With the Strait of Hormuz still the central chokepoint in the energy coverage, each new incident is being priced as a potential escalation node rather than a criminal matter.",
+  "cause": "**Al Jazeera reports two Iranians charged over an alleged plot targeting the Jewish community in the UK.** It follows the same pattern as the Flydubai case: a kinetic incident attributed outward to Iran. It arrives while the diplomatic front is still read as *\\\"all quiet\\\"* — meaning the covert track is active precisely where the overt track is frozen.",
   "bullets": [
-   "**Attribution escalates to ultimatum** — an unresolved incident becomes a pretext threshold: if evidence points to Tehran, the strike threat converts from rhetoric to planned action.",
-   "**Oil risk premium rebuilds** — ING notes crude moving higher as supply risks build; a fresh strike cycle re-adds the Hormuz premium that partial de-escalation had bled out.",
-   "**Insurance and shipping costs lead the tape** — war-risk premiums and tanker re-routing move before any physical supply loss.",
-   "**Proxy theatres react** — regional militias typically answer on a delay, expanding the conflict surface beyond the direct parties."
+   "**Diaspora security costs climb** — synagogues, schools and community venues move to standing protection; the cost is permanent, not episodic.",
+   "**UK–Iran relations harden** — a prosecution on British soil narrows any diplomatic off-ramp and adds to the case for sanctions.",
+   "**Proxies fill the vacuum** — when formal talks stall, coerced and clandestine operations become the default instrument, raising the tail risk of a miscalculated act.",
+   "**Precedent compounds** — each charged plot normalises counter-terror response as the primary channel of statecraft between the two."
   ],
-  "hinge": "The hinge is **verifiable, third-party attribution** rather than unilateral assertion — and a working diplomatic channel. If Tehran allows neutral investigation of the FlyDubai incident and a back-channel reopens, the strike threshold recedes and the risk premium deflates. If attribution is asserted without proof, the cause hardens into a self-fulfilling escalation."
- },
- {
-  "emoji": "🛡️",
-  "title": "**The FBI declares a 'cyber security incident' after agents' personal data is stolen** — while AI agents breach companies in tests and Iran-linked actors probe US water plants",
-  "short": "FBI breach + AI-agent hacks + water-plant probes: security front widens",
-  "tag": "CYBER · SECURITY",
-  "cls": "amber",
-  "kw": [
-   "cyber",
-   "fbi",
-   "breach",
-   "hack",
-   "anthropic",
-   "openai",
-   "gemini",
-   "water"
-  ],
-  "cause": "TechCrunch and NewsNation report the **FBI declaring a cyber security incident after hackers claim to have stolen agents' personal data and compromised a jobs website** — a counterintelligence-grade exposure of the people who run investigations. In parallel, Reuters reports **Anthropic disclosing a fourth AI hacking incident** missed in earlier reviews, the BBC reports **Google's Gemini AI 'hacked three companies' in a security test**, and tomshardware reports **hackers breaching OpenAI via Claude tools** to reach internal code. Reuters also warns that **Siemens devices can be hacked amid fears Iran is breaching water plants**.",
-  "bullets": [
-   "**Agent identity data is counterintelligence material** — names, roles and contacts handed to adversaries can burn operations and expose sources long after the incident closes.",
-   "**AI agents become the new attack surface** — models that can act, not just answer, turn a compromised agent into an autonomous intruder at machine speed, outrunning human review windows.",
-   "**Critical infrastructure stays the soft target** — the Siemens/water-plant warning ties the cyber front directly to the Iran conflict, merging two threat streams.",
-   "**Vendor trust cascades** — breaches at security vendors and AI labs force customers to re-audit the tools they use to defend themselves."
-  ],
-  "hinge": "The hinge is **mandatory, timely disclosure plus hard containment limits on autonomous agents** — sandboxed execution, human-in-the-loop for destructive actions, and independent review of AI-lab security claims. If labs and agencies adopt and enforce those controls, the incidents remain costly but bounded. Without them, each disclosed breach is a rehearsal for a larger one."
+  "hinge": "A trial that yields convictions proves the operation existed; a trial that collapses under insufficient evidence restores a sliver of de-escalation. Either way, the hinge is whether London and Tehran keep the case inside courts or escalate it into state-to-state reprisal. Fait accompli is a choice, not a fate."
  },
  {
   "emoji": "📉",
-  "title": "**The 10-year Treasury yield touches 5%** as the Fed's tightening bias and a cooling US labour market split global markets on what comes next",
-  "short": "10-year hits 5% as Fed hike talk meets a cooling jobs market",
+  "title": "**Treasury yields pin multi-year highs and split global markets** — a hawkish rate backdrop meets an economy still growing, and different asset classes price opposite futures",
+  "short": "Treasury yields at multi-year highs split global markets",
   "tag": "MARKETS · RATES",
   "cls": "amber",
   "kw": [
-   "yield",
    "treasury",
+   "yields",
+   "markets",
+   "rates",
    "fed",
-   "rate",
-   "jobs",
-   "global markets",
-   "stocks"
+   "dollar",
+   "bonds"
   ],
-  "cause": "CoinDesk reports the **Treasury Secretary amplifying bullish data as the 10-year yield hits 5%**, while CNBC frames **a stronger dollar and rising yields around the Fed's rate hike**. Reuters notes **global stocks heading for their best week since May as US jobs data shifts the rate outlook** — a market simultaneously pricing firm policy and weakening labour demand. Anadolu reports global markets trading mixed on AI and geopolitical risk.",
+  "cause": "**Yeni Şafak English reports global markets mixed as US Treasury yields hit multi-year highs**, following the prior cycle's 10-year print at **5%**. Japan's government bond yields fell as global markets steadied (The Economic Times), showing the stress is not uniform. Markets are being asked to price two incompatible stories at once: a resilient US economy versus a policy rate that stays higher for longer.",
   "bullets": [
-   "**Funding costs reprice everything** — a 5% 10-year raises the discount rate on every asset, pressuring long-duration equities and real estate first.",
-   "**A refinancing wall comes due at higher coupons** — governments and corporates rolling debt into a 5% world face permanent interest-burden increases.",
-   "**Dollar strength exports strain** — emerging markets with dollar debt absorb tighter global conditions and capital outflow.",
-   "**Equity concentration amplifies the correction** — with index returns carried by a narrow AI cohort, a rate shock hits the whole index through the few names holding it up."
+   "**Duration repricing cascades** — every long-dated asset, from bonds to property to growth equities, marks down on the same yield move.",
+   "**The dollar squeezes the periphery** — stronger USD and rising yields export tightening to emerging markets and import currency stress.",
+   "**A growth-vs-rates collision nears** — if growth data keeps beating while yields climb, the market must eventually pick which signal to break.",
+   "**Bond watch becomes the volatility engine** — the Treasury curve, not equities, sets the regime switch for risk appetite."
   ],
-  "hinge": "The hinge is **which data the Fed chooses to weight**. If cooling labour data is read as disinflation and the tightening bias pauses, yields ease and the refinancing wall gets cheaper. If the Fed reads strong headline data as justification for further hikes, the same data that looks bullish becomes the trigger for a deeper repricing."
+  "hinge": "The choice is the Fed's and the market's together: if inflation data softens enough for the tightening bias to pause, yields retreat and the squeeze releases. If policy stays restrictive into softening growth, the yield rise stops being a repricing and starts being a breaking point. Nothing here is fixed — the data and the decision rewrite it."
+ },
+ {
+  "emoji": "🛡️",
+  "title": "**Times Car Rental confirms a breach touching 6.6 million accounts** — a mass-scale consumer data theft lands inside a widening run of vendor and platform intrusions",
+  "short": "Times Car Rental breach hits 6.6 million accounts",
+  "tag": "CYBER · SECURITY",
+  "cls": "amber",
+  "kw": [
+   "breach",
+   "data",
+   "accounts",
+   "hack",
+   "cybersecurity",
+   "leak",
+   "ransomware"
+  ],
+  "cause": "**The Japan Times reports Times Car Rental says a data breach affected 6.6 million accounts**, sitting alongside a still-active cluster of large incidents — the FBI's acknowledged employee-data compromise and repeated vendor breaches (hospital software, genetic-testing, cybersecurity firms). The pattern is scale: an attacker who reaches one shared vendor inherits every downstream customer.",
+  "bullets": [
+   "**Credential-stuffing surges** — 6.6M identities feed account-takeover across every service where passwords are reused.",
+   "**Vendor concentration is the systemic fault** — single providers sit behind dozens of firms, so one breach propagates industry-wide.",
+   "**Regulatory exposure follows disclosure** — notification law, fines and civil suits scale with the account count, not the severity.",
+   "**Trust costs outlast the incident** — the reputational tax on a consumer brand persists far longer than the technical fix."
+  ],
+  "hinge": "Whether the stolen data is commodity or targeted weapon decides the consequence. A swift disclosure, forced password reset and hardware-key rollout drain the value of the haul; silence and delay let it compound into fraud and follow-on intrusions. The breach is done; how fast the door is closed and customers are told is the hinge."
  },
  {
   "emoji": "🛢️",
-  "title": "**G7 nations move to release up to 100 million barrels of crude and diesel reserves** as supply risks build around the Strait of Hormuz",
-  "short": "G7 weighs 100M-barrel reserve release as Hormuz supply risk builds",
+  "title": "**Trump rules out a diesel export ban as Europe agrees to tap stockpiles** — and Basrah crude slides over 7% on the week, splitting the oil complex into winners and losers",
+  "short": "Trump rules out diesel export ban as Europe taps reserves; Basrah crude −7%",
   "tag": "ENERGY · COMMODITIES",
   "cls": "amber",
   "kw": [
-   "g7",
-   "barrels",
-   "reserve",
    "diesel",
-   "crude",
    "oil",
-   "hormuz"
+   "crude",
+   "stockpiles",
+   "exports",
+   "energy",
+   "basrah"
   ],
-  "cause": "NBC News reports **G7 countries preparing to release up to 100 million barrels of diesel and crude oil reserves** — a coordinated strategic-stock drawdown. ING's commodities desk notes **oil moving higher as supply risks build**, and the World Economic Forum tracks **nine commodities impacted by the Strait of Hormuz crisis**. Reuters reports **Eni and Mercuria forming a global energy commodities trading joint venture**, concentrating trading capability just as physical risk premia widen.",
+  "cause": "**Yahoo reports Trump ruled out a diesel export ban after Europe agreed to tap its stockpiles** — the direct continuation of the prior cycle's G7 reserve-release move. Meanwhile **Shafaq News reports Basrah crude lost over 7% on the week**, and EnergyNow's *\\\"Iran War Splits Global Markets Into Clear Winners and Losers\\\"* shows the war is now a sorting mechanism: some producers and traders gain, import-dependent economies lose.",
   "bullets": [
-   "**Reserve release buys time, not supply** — a 100M-barrel draw caps the near-term price spike but leaves strategic stocks lower for the next shock.",
-   "**Diesel, not crude, is the real squeeze** — refined-product tightness binds industry and freight harder than crude benchmarks show.",
-   "**Physical stress outlives the headline** — Saxo notes energy slumping on sentiment while physical oil stress keeps the market on edge.",
-   "**Trading houses consolidate leverage** — large joint ventures concentrate the ability to move and price barrels when the strait is contested."
+   "**Refined-product markets stay tight** — ruling out an export ban avoids an outright diesel spike but leaves the underlying supply gap unpriced-in.",
+   "**Reserve releases buy time, not supply** — tapping stockpiles cushions the shock now and hollows the buffer for the next one.",
+   "**A two-speed energy economy hardens** — exporting states and traders win; energy-importing economies absorb the cost and the political fallout.",
+   "**Volatility becomes the trading edge** — with supply risk swinging on headlines, the premium is in optionality, not in direction."
   ],
-  "hinge": "The hinge is **whether the Strait of Hormuz stays open and insurable**. If a durable ceasefire de-escalates the Iran conflict and shipping returns to normal premiums, the release becomes a buffer held in reserve. If the strait is disrupted, the same 100 million barrels is consumed in weeks and the reserve draw simply front-loads the crisis."
+  "hinge": "The single lever is supply policy under stress. A coordinated reserve buffer plus a refusal to restrict exports keeps the market liquid and cools the panic premium; a Strait of Hormuz disruption forces both levers at once and the calm ends. The war sets the cause — the release-and-export decision is the hinge that decides whether energy becomes a crisis or merely a cost."
  },
  {
   "emoji": "🤝",
-  "title": "**Five European nations adopt US-style third-country deportations as the EU approves migrant 'return hubs'** — outsourcing asylum becomes bloc policy",
-  "short": "EU approves 'return hubs' as five states copy US third-country deportations",
+  "title": "**Brazil's Lula–Bolsonaro showdown unfolds in Trump's shadow, with the Amazon as the stake** — an election-season contest where climate policy rides on the outcome",
+  "short": "Brazil's Lula-Bolsonaro showdown puts the Amazon at stake",
   "tag": "GEOPOLITICS · SIGNAL",
   "cls": "blue",
   "kw": [
-   "deportation",
-   "return hubs",
-   "eu",
-   "migrant",
-   "asylum",
-   "europe"
+   "brazil",
+   "lula",
+   "bolsonaro",
+   "amazon",
+   "trump",
+   "election",
+   "climate"
   ],
-  "cause": "CBS News reports **five European nations following the US with plans for third-country deportations as the EU approves migrant 'return hubs'** — a structural shift from processing asylum inside Europe to externalising it. The move formalises a model the US has already been running, and it lands alongside the EU's broader migration-reform debate.",
+  "cause": "**Axios reports Brazil's Lula–Bolsonaro showdown is unfolding in Trump's shadow, with the Amazon at stake.** It is a domestic contest with planetary consequences: the two candidates represent opposite trajectories for deforestation, and Washington's posture — tariffs, pressure, or distance — is now a live variable inside Brazilian politics.",
   "bullets": [
-   "**Asylum moves offshore** — responsibility for protection shifts to third countries with weaker legal oversight, inviting court challenges at every removal.",
-   "**Bilateral leverage shifts to host states** — transit and destination countries gain bargaining power over aid, visas and trade.",
-   "**Human-rights litigation becomes the brake** — national and European courts, not parliaments, will set the practical limits on returns.",
-   "**Political contagion is the point** — 'return hubs' becoming EU-endorsed normalises the policy for the next member state to adopt."
+   "**Deforestation swings on the result** — enforcement and land policy reverse direction depending on who prevails, and the forest responds within seasons.",
+   "**US leverage becomes a Brazilian election issue** — external pressure is absorbed as a domestic-credibility test, not a neutral input.",
+   "**Markets price political risk first** — currency, sovereign spreads and agri-commodity flows move ahead of any vote or ruling.",
+   "**Global climate targets depend on the outcome** — Brazil's trajectory materially shifts the world's remaining carbon budget."
   ],
-  "hinge": "The hinge is **whether return hubs operate under enforceable, monitored legal standards and individual review**. If they do, externalisation reduces irregular arrivals without abandoning protection obligations. If they don't, every removal becomes litigation, the policy stalls in courts, and the migration pressure simply relocates to the next route."
- },
- {
-  "emoji": "🌪️",
-  "title": "**Hawaii's 500-year-old Hōlei Sea Arch collapses into the sea** — a centuries-old landmark erased in an instant by the same coastline dynamics now threatening infrastructure",
-  "short": "Hawaii's 500-year-old Hōlei Sea Arch collapses into the sea",
-  "tag": "CLIMATE · WEATHER",
-  "cls": "amber",
-  "kw": [
-   "hawaii",
-   "sea arch",
-   "collapsed",
-   "coastal",
-   "erosion",
-   "sea level"
-  ],
-  "cause": "The BBC reports that **Hawaii's iconic 500-year-old Hōlei Sea Arch has collapsed into the sea**. The arch is a signature of the actively eroding Hawai'i Volcanoes National Park coastline — a structure that stood for five centuries and failed within a single recent window of wave and erosion stress. It is the visible edge of a process already reshaping coastlines and the built environment behind them.",
-  "bullets": [
-   "**Coastal erosion is accelerating past landmark timescales** — a 500-year structure failing now marks the rate change, not the event.",
-   "**Tourism and cultural loss arrive before property loss** — irreplaceable landmarks go first, with no replacement and immediate economic impact on local visitation.",
-   "**Infrastructure on the same shoreline is next** — roads, utilities and homes built on the same eroding margins face the identical forcing.",
-   "**Relocation costs replace repair budgets** — managed retreat, not seawalls and patching, becomes the only durable response on exposed coasts."
-  ],
-  "hinge": "The hinge is **the emissions and adaptation path chosen now**. If emissions fall and coastal-adaptation investment (managed retreat, dune restoration, setback regulation) is funded, exposed communities relocate deliberately instead of losing assets abruptly. If neither changes, every eroding coastline follows the Hōlei Sea Arch — a long-standing structure failing suddenly, with the infrastructure behind it next."
+  "hinge": "The hinge is the integrity of Brazil's own institutions — an election or judicial process seen as legitimate defuses external interference and settles the Amazon question through the ballot. A contested result invites both foreign meddling and domestic rupture, and the forest becomes collateral. Agency belongs to Brazil; the world only inherits the effect."
  }
 ];
 
-window.PROPHECIES_AUTHORED_STAMP = '2026-10-02 20:03';
+window.PROPHECIES_AUTHORED_STAMP = '2026-10-03 08:02';
