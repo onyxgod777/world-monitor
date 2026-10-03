@@ -839,9 +839,14 @@ body.motion-off .iss-marker{animation:none}
 }
 @media(max-width:480px){
   /* phones: make tabs share the full width evenly so none are cut off by the
-     container scroll (S10e viewport = 360px; 5 tabs would otherwise overflow) */
-  .tabs{overflow-x:hidden;flex-wrap:nowrap}
-  .tabs .tab{flex:1 1 0%;min-width:0;text-align:center;padding:8px 2px;font-size:12px}
+     container scroll (phone viewports = 320–430px; 6 tabs would otherwise
+     overflow). The labels are sized by the type, not renamed: the fluid
+     8–9.5px/.01em keeps the longest ones — PROPHECY, GEMATRIA, MARKETS —
+     inside 1/6 of the row at 320px and still legible at 430px. */
+  .topbar{padding:8px 8px}
+  .tabs{overflow-x:hidden;flex-wrap:nowrap;gap:0}
+  .tabs .tab{flex:1 1 0%;min-width:0;text-align:center;padding:8px 0;
+             font-size:clamp(8px,2.5vw,9.5px);letter-spacing:.01em;border-radius:5px}
 }
 @media(max-width:540px){
   .brand-name{letter-spacing:.08em;font-size:13px}
