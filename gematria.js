@@ -9,6 +9,9 @@
      · SUM  — its letters total 18 (J1+E5+S3+U6+S3 = 18 → JESUS)
      · ENDS — the N.B. rule: its FIRST and LAST letters alone give 18, which
               takes 9+9, i.e. a word starting and ending on B, G or K
+     · BOTH — both rules on the same word. Since the 9+9 ends already spend the
+              whole 18, this can only be a two-letter word of two 9s (BK, KK, GB…) —
+              such a word is flagged red so it never reads as a plain amber/blue.
 
    18 × 37 = 666, so every word flagged here is a 666-family hit.
 
@@ -57,10 +60,16 @@
     for(var i=0;i<u.length;i++){ var v = C[u[i]]; if(v) out.push(u[i]+v); }
     return out.join('+');
   }
-  // 'sum' = whole word is 18, 'ends' = first+last letters are 18, '' = not an 18
+  // 'both' = whole word AND first+last letters are 18, 'sum' = whole word is 18,
+  // 'ends' = only first+last letters are 18, '' = not an 18.
+  // Note the arithmetic: first+last = 18 already consumes two 9-valued letters
+  // (B, G, K), and every other letter is worth at least 1, so 'both' can only
+  // ever occur on a two-letter word made of two 9s (e.g. BK, KK, GB).
   function rule(w){
-    if(value(w) === 18) return 'sum';
-    if(ends(w) === 18) return 'ends';
+    var s = value(w) === 18, e = ends(w) === 18;
+    if(s && e) return 'both';
+    if(s) return 'sum';
+    if(e) return 'ends';
     return '';
   }
   function words(text){ return String(text || '').match(WORD) || []; }
@@ -123,9 +132,11 @@
         frag.appendChild(document.createTextNode(txt.slice(last, m.index)));
         var w = m[0].toUpperCase();
         var mk = document.createElement('mark');
-        mk.className = 'gm18' + (r === 'ends' ? ' gm-ends' : '');
+        mk.className = 'gm18' + (r === 'ends' ? ' gm-ends' : r === 'both' ? ' gm-both' : '');
         mk.textContent = m[0];
-        mk.title = (r === 'sum')
+        mk.title = (r === 'both')
+          ? breakdown(w) + ' = 18 (whole word) AND first + last letter = 18  ·  18 × 37 = 666'
+          : (r === 'sum')
           ? breakdown(w) + ' = 18  ·  18 × 37 = 666'
           : 'first + last letter = ' + w[0] + '(' + (C[w[0]]||0) + ') + ' + w[w.length-1] +
             '(' + (C[w[w.length-1]]||0) + ') = 18  ·  18 × 37 = 666';
@@ -173,21 +184,26 @@
     var wordList = Object.keys(sc.byWord).sort(function(a, b){
       return (sc.byWord[b] - sc.byWord[a]) || (a < b ? -1 : 1);
     });
+    var bothWords = wordList.filter(function(w){ return rule(w) === 'both'; });
     if(cnt) cnt.textContent = sc.hits.length + ' hits · ' + wordList.length + ' words · ' +
-                              sc.flaggedItems + ' of ' + sc.items + ' headlines';
+                              sc.flaggedItems + ' of ' + sc.items + ' headlines' +
+                              (bothWords.length ? ' · ' + bothWords.length + ' both' : '');
     var rows = wordList.map(function(w){
       var r = rule(w);
+      var cls = r === 'both' ? 'gm-both' : (r === 'sum' ? 'gm-sum' : 'gm-ends');
+      var lab = r === 'both' ? 'sum + first+last' : (r === 'sum' ? 'sum 18' : 'first+last 18');
       return '<tr>' +
         '<td class="gmword">' + w + '</td>' +
-        '<td><span class="gmbadge ' + (r === 'sum' ? 'gm-sum' : 'gm-ends') + '">' +
-          (r === 'sum' ? 'sum 18' : 'first+last 18') + '</span></td>' +
+        '<td><span class="gmbadge ' + cls + '">' + lab + '</span></td>' +
         '<td class="gmbr mono">' + breakdown(w) + ' = ' + value(w) + '</td>' +
         '<td class="right num">' + sc.byWord[w] + '</td>' +
       '</tr>';
     }).join('');
     box.innerHTML =
       '<div class="gmsum mono">' + sc.hits.length + ' flagged instances · ' + wordList.length +
-        ' distinct words · ' + sc.flaggedItems + ' of ' + sc.items + ' headlines carry one</div>' +
+        ' distinct words · ' + sc.flaggedItems + ' of ' + sc.items + ' headlines carry one' +
+        (bothWords.length ? ' · <span class="gmlegend gm-both">' + bothWords.length +
+          ' satisfy both rules</span>' : '') + '</div>' +
       '<div class="tablewrap"><table class="dt">' +
         '<thead><tr><th>Word</th><th>18 by</th><th>Arithmetic</th><th class="right">Hits</th></tr></thead>' +
         '<tbody>' + rows + '</tbody>' +

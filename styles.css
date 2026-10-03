@@ -1065,8 +1065,11 @@ body.motion-off .ticker-inner{animation-play-state:paused}
 .gmbadge{font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:999px;border:1px solid transparent;white-space:nowrap}
 .gmbadge.gm-sum{color:var(--tx-amber);background:var(--bg-amber);border-color:rgba(245,158,11,.35)}
 .gmbadge.gm-ends{color:var(--tx-blue);background:var(--bg-blue);border-color:rgba(110,168,254,.35)}
+.gmbadge.gm-both{color:var(--tx-red);background:var(--bg-red);border-color:rgba(239,68,68,.4)}
 .gmlegend{font-family:var(--mono);font-size:10px;padding:1px 5px;border-radius:999px}
 .gmlegend.gm-sum{color:var(--tx-amber);background:var(--bg-amber)}
 .gmlegend.gm-ends{color:var(--tx-blue);background:var(--bg-blue)}
+.gmlegend.gm-both{color:var(--tx-red);background:var(--bg-red)}
 mark.gm18{background:var(--bg-amber);color:var(--tx-amber);border-bottom:1px solid rgba(245,158,11,.7);border-radius:3px;padding:0 2px}
 mark.gm18.gm-ends{background:var(--bg-blue);color:var(--tx-blue);border-bottom-color:rgba(110,168,254,.7)}
+mark.gm18.gm-both{background:var(--bg-red);color:var(--tx-red);border-bottom-color:rgba(239,68,68,.75)}
