@@ -6,155 +6,146 @@
 window.PROPHECIES_AUTHORED = [
  {
   "emoji": "🔥",
-  "title": "**Trump threatens to 'blow up' Iran as talks stall — while Tehran weighs an official US reply and celebrates America's withdrawal from Iraq**",
-  "short": "Trump threatens to 'blow up' Iran while Tehran weighs a US peace reply",
+  "title": "**Trump warns Iran of fresh strikes** if Tehran is tied to the FlyDubai plane incident — as the Iran war's diplomatic front stays quiet and the oil risk premium rebuilds",
+  "short": "Trump threatens new strikes over FlyDubai incident as Iran diplomacy stalls",
   "tag": "CONFLICT · GEOPOLITICS",
   "cls": "red",
   "kw": [
    "iran",
    "trump",
-   "talks",
-   "peace proposal",
-   "iraq",
-   "houthi",
-   "pentagon",
-   "naval"
+   "strike",
+   "flydubai",
+   "hormuz",
+   "oil"
   ],
-  "cause": "Politico reports **Trump threatening to 'blow up' Iran as talks stall** — the rhetoric hardening exactly as the diplomatic track stalls. Yet the same feed shows a parallel channel still open: the New York Post reports **Iran indicating it has received an official US response to its latest offer on ending the war**, and CBS News reports **Iran celebrating the US withdrawal from Iraq while saying it is still considering that US response to its peace proposal**. The regional picture is being reshuffled by the US drawdown, with AP News reporting **the FBI arresting an Energy Department employee on a charge of trying to support Iran-backed Houthis in Yemen** — a reminder that the Iran file and the US homeland now touch directly.",
+  "cause": "Fox News reports **Trump warning Iran of fresh strikes if Tehran is implicated in the FlyDubai plane incident**, layering a new attribution demand onto an already unresolved US–Iran war. Geopolitical Monitor's weekly reads the diplomatic track as *\"all quiet\"* — talks are not advancing. With the Strait of Hormuz still the central chokepoint in the energy coverage, each new incident is being priced as a potential escalation node rather than a criminal matter.",
   "bullets": [
-   "**Hard rhetoric and open channels co-exist** — a threat to 'blow up' Iran while a reply is formally under consideration means the outcome depends on which track any single action serves, not on the volume of the threat.",
-   "**The Iraq withdrawal creates a supply-side vacuum** — as the US steps back, militias and Iran-backed networks move to fill the space, and every faction tests what the new baseline tolerates.",
-   "**Houthi links pull the homeland in** — a US official charged with backing Yemen's Houthis shows the Iran conflict is no longer confined to the Middle East theatre; domestic-security cases now become part of the escalation ladder.",
-   "**Stalled talks favour incidents over settlements** — with negotiations frozen and threats rising, the default is that a single strike or seizure, not a signed deal, sets the next phase."
+   "**Attribution escalates to ultimatum** — an unresolved incident becomes a pretext threshold: if evidence points to Tehran, the strike threat converts from rhetoric to planned action.",
+   "**Oil risk premium rebuilds** — ING notes crude moving higher as supply risks build; a fresh strike cycle re-adds the Hormuz premium that partial de-escalation had bled out.",
+   "**Insurance and shipping costs lead the tape** — war-risk premiums and tanker re-routing move before any physical supply loss.",
+   "**Proxy theatres react** — regional militias typically answer on a delay, expanding the conflict surface beyond the direct parties."
   ],
-  "hinge": "The hinge is whether Washington and Tehran let the exchanged offers become a monitored, phased de-escalation — a verified pause in strikes and militia attacks in return for sanctions relief and an orderly Iraq transition. If they do, the threats become bargaining noise and the region stabilises around a deal. If the 'blow up' language instead becomes policy, the open channel snaps shut and the conflict reopens on a wider map."
- },
- {
-  "emoji": "🇺🇦",
-  "title": "**Putin says Russia is ready to use 'all weapons,' including nuclear, to defend Kaliningrad as Europe's nuclear rhetoric escalates**",
-  "short": "Putin warns of 'all weapons,' including nuclear, over Kaliningrad",
-  "tag": "CONFLICT · GEOPOLITICS",
-  "cls": "red",
-  "kw": [
-   "putin",
-   "kaliningrad",
-   "nuclear",
-   "russia",
-   "nato",
-   "europe",
-   "weapons",
-   "escalation"
-  ],
-  "cause": "CNN reports **Putin warning that Russia is prepared to use 'all weapons,' including nuclear, to protect Kaliningrad** — an explicit extension of the nuclear threshold to a NATO-adjacent exclave. Euronews frames the wider environment as **escalating nuclear threats alongside a Brexit rethink**, showing the rhetoric is landing in European capitals as a security signal, not noise. In parallel, The Guardian reports **Hegseth confirming a plan to cut 20% of the US top military brass** — a restructuring of Western command at the exact moment Moscow is raising the stakes.",
-  "bullets": [
-   "**Kaliningrad is the pressure point** — a nuclear threshold tied to an isolated, garrisoned exclave surrounded by NATO makes any Baltic incident instantly strategic rather than local.",
-   "**Warning language is itself an action** — declaring 'all weapons' available primes domestic audiences and pre-justifies a larger response before any shot is fired.",
-   "**Western command is in flux** — cutting a fifth of top US brass while threats rise strips experienced leadership at the moment it is most needed, inviting miscalculation.",
-   "**Europe re-arms on the warning** — each nuclear threat accelerates defence spending and basing decisions that themselves harden the standoff."
-  ],
-  "hinge": "The hinge is whether both sides keep their posturing inside a tacit boundary — exercises, signals and declarations rather than moves on Kaliningrad or strategic systems. If restraint holds, the rhetoric cools without a test. If a Baltic incident or a command-restructuring gap is read as opportunity, the warnings become a self-fulfilling script that widens the war beyond Ukraine."
+  "hinge": "The hinge is **verifiable, third-party attribution** rather than unilateral assertion — and a working diplomatic channel. If Tehran allows neutral investigation of the FlyDubai incident and a back-channel reopens, the strike threshold recedes and the risk premium deflates. If attribution is asserted without proof, the cause hardens into a self-fulfilling escalation."
  },
  {
   "emoji": "🛡️",
-  "title": "**The FBI declares a 'cyber security incident' after hackers steal agents' personal data and compromise a jobs website — as AI-linked breaches keep multiplying**",
-  "short": "FBI confirms breach of agents' personal data as AI-linked hacks multiply",
+  "title": "**The FBI declares a 'cyber security incident' after agents' personal data is stolen** — while AI agents breach companies in tests and Iran-linked actors probe US water plants",
+  "short": "FBI breach + AI-agent hacks + water-plant probes: security front widens",
   "tag": "CYBER · SECURITY",
   "cls": "amber",
   "kw": [
+   "cyber",
    "fbi",
    "breach",
    "hack",
-   "agents",
-   "data",
-   "cyber security incident",
    "anthropic",
+   "openai",
    "gemini",
-   "openai"
+   "water"
   ],
-  "cause": "TechCrunch reports **the FBI declaring a 'cyber security incident' after hackers stole agents' personal data**, with NewsNation confirming **the FBI's own acknowledgement that employee information was compromised**. Silicon UK reports the agency **acknowledging a major breach of employee data**, and Federal News Network adds that **investigators are examining claims of stolen sensitive employee data and a compromised jobs website**. The breach lands inside the same window as Reuters reporting **Anthropic disclosing a fourth AI hacking incident missed in an earlier review** and Tom's Hardware reporting **attackers breaching OpenAI via Claude tools to reach employee accounts and the internal codebase** — an ecosystem in which frontier AI is now both target and instrument.",
+  "cause": "TechCrunch and NewsNation report the **FBI declaring a cyber security incident after hackers claim to have stolen agents' personal data and compromised a jobs website** — a counterintelligence-grade exposure of the people who run investigations. In parallel, Reuters reports **Anthropic disclosing a fourth AI hacking incident** missed in earlier reviews, the BBC reports **Google's Gemini AI 'hacked three companies' in a security test**, and tomshardware reports **hackers breaching OpenAI via Claude tools** to reach internal code. Reuters also warns that **Siemens devices can be hacked amid fears Iran is breaching water plants**.",
   "bullets": [
-   "**The defender becomes the case file** — when an agency that investigates breaches is itself breached, employee identities and operational data become intelligence for hostile actors and leverage for recruitment.",
-   "**Trust in the institution erodes fastest** — an unremediated breach at the FBI feeds the narrative that no one is secure, weakening public cooperation and internal morale alike.",
-   "**AI-linked incidents compound** — Anthropic's missed fourth incident and the OpenAI/Claude breakout show disclosure is trailing reality, so the true breach count is unknown.",
-   "**Personal data is the durable harm** — stolen personnel records cannot be patched; the damage persists for years through doxxing, targeting and identity abuse."
+   "**Agent identity data is counterintelligence material** — names, roles and contacts handed to adversaries can burn operations and expose sources long after the incident closes.",
+   "**AI agents become the new attack surface** — models that can act, not just answer, turn a compromised agent into an autonomous intruder at machine speed, outrunning human review windows.",
+   "**Critical infrastructure stays the soft target** — the Siemens/water-plant warning ties the cyber front directly to the Iran conflict, merging two threat streams.",
+   "**Vendor trust cascades** — breaches at security vendors and AI labs force customers to re-audit the tools they use to defend themselves."
   ],
-  "hinge": "The hinge is whether the FBI and the AI labs disclose fully and patch verifiably — externally audited containment, honest incident counts and protection for exposed personnel — before a breach lands with physical consequences. If they move on transparency, the trust deficit can be contained and the AI-safety story rebuilt. If incidents keep surfacing only after the fact, emergency regulation will freeze deployment for everyone."
+  "hinge": "The hinge is **mandatory, timely disclosure plus hard containment limits on autonomous agents** — sandboxed execution, human-in-the-loop for destructive actions, and independent review of AI-lab security claims. If labs and agencies adopt and enforce those controls, the incidents remain costly but bounded. Without them, each disclosed breach is a rehearsal for a larger one."
  },
  {
   "emoji": "📉",
-  "title": "**Bond markets hold steady as investors await the US jobs report — with the 10-year yield having touched 5% and global equities mixed on strong data**",
-  "short": "Markets hold for the US jobs report with the 10-year yield near 5%",
+  "title": "**The 10-year Treasury yield touches 5%** as the Fed's tightening bias and a cooling US labour market split global markets on what comes next",
+  "short": "10-year hits 5% as Fed hike talk meets a cooling jobs market",
   "tag": "MARKETS · RATES",
   "cls": "amber",
   "kw": [
-   "treasury yield",
-   "jobs report",
-   "10-year",
-   "bond market",
+   "yield",
+   "treasury",
    "fed",
+   "rate",
+   "jobs",
    "global markets",
-   "stocks",
-   "inflation"
+   "stocks"
   ],
-  "cause": "CNBC reports **Treasury yields holding flat as investors await the key US jobs report**, the pivot on which the next rate move depends. Anadolu reports **global markets trading mixed despite strong US economic data** — good news now read as tightening risk — while The Economic Times notes **Japanese government bond yields falling as global markets steady**. CoinDesk reports **the Treasury Secretary amplifying bullish economic data as the 10-year yield hits 5%**, and CNBC separately frames how **a stronger dollar and rising yields could hit global markets if the Fed hikes**. The market is calm but taut, waiting on a single data print.",
+  "cause": "CoinDesk reports the **Treasury Secretary amplifying bullish data as the 10-year yield hits 5%**, while CNBC frames **a stronger dollar and rising yields around the Fed's rate hike**. Reuters notes **global stocks heading for their best week since May as US jobs data shifts the rate outlook** — a market simultaneously pricing firm policy and weakening labour demand. Anadolu reports global markets trading mixed on AI and geopolitical risk.",
   "bullets": [
-   "**One jobs print sets the quarter's direction** — a hot number firms up hike risk and lifts yields further; a soft one revives cut hopes and lets the 10-year drift off 5%.",
-   "**A 5% 10-year reprices everything** — long-duration growth, leveraged real estate and AI-heavy equity are marked down as the discount rate climbs.",
-   "**A stronger dollar exports tightening** — emerging markets with dollar debt face higher servicing costs exactly when they can least absorb them.",
-   "**Calm positioning has no cushion** — equities shrugging off shocks leaves the market fragile on both sides, so the reaction to the data is amplified by the quiet that preceded it."
+   "**Funding costs reprice everything** — a 5% 10-year raises the discount rate on every asset, pressuring long-duration equities and real estate first.",
+   "**A refinancing wall comes due at higher coupons** — governments and corporates rolling debt into a 5% world face permanent interest-burden increases.",
+   "**Dollar strength exports strain** — emerging markets with dollar debt absorb tighter global conditions and capital outflow.",
+   "**Equity concentration amplifies the correction** — with index returns carried by a narrow AI cohort, a rate shock hits the whole index through the few names holding it up."
   ],
-  "hinge": "The hinge is whether the jobs and inflation data cool enough for the Fed to hold rather than hike, letting yields retreat and the equity rally broaden. If that happens, the dollar eases and the standoff resolves into a soft landing. If inflation stays sticky on war-driven energy costs, the hike becomes self-fulfilling and the repricing accelerates into a broader risk-off."
+  "hinge": "The hinge is **which data the Fed chooses to weight**. If cooling labour data is read as disinflation and the tightening bias pauses, yields ease and the refinancing wall gets cheaper. If the Fed reads strong headline data as justification for further hikes, the same data that looks bullish becomes the trigger for a deeper repricing."
  },
  {
   "emoji": "🛢️",
-  "title": "**China halts fuel exports, turning energy security into geopolitical leverage — as Goldman warns a US diesel export ban would send gasoline higher**",
-  "short": "China's fuel export halt turns energy into leverage; diesel-ban risk eyed",
+  "title": "**G7 nations move to release up to 100 million barrels of crude and diesel reserves** as supply risks build around the Strait of Hormuz",
+  "short": "G7 weighs 100M-barrel reserve release as Hormuz supply risk builds",
   "tag": "ENERGY · COMMODITIES",
   "cls": "amber",
   "kw": [
-   "china",
-   "fuel export",
+   "g7",
+   "barrels",
+   "reserve",
    "diesel",
-   "gasoline",
-   "energy",
-   "commodities",
+   "crude",
    "oil",
-   "leverage"
+   "hormuz"
   ],
-  "cause": "Modern Diplomacy reports **China's fuel export halt and asks whether Beijing is turning energy security into geopolitical leverage** — a supply restriction with clear strategic intent. OilPrice reports **Goldman warning a diesel export ban would send gasoline prices higher**, meaning the West is now openly weighing the same export-restriction lever. Reuters adds that **China's metal-heavy commodity imports map a messy energy transition**, and the World Economic Forum widens the frame to **nine commodities impacted by the Strait of Hormuz crisis beyond crude**. Energy is being weaponised from both ends of the supply chain at once.",
+  "cause": "NBC News reports **G7 countries preparing to release up to 100 million barrels of diesel and crude oil reserves** — a coordinated strategic-stock drawdown. ING's commodities desk notes **oil moving higher as supply risks build**, and the World Economic Forum tracks **nine commodities impacted by the Strait of Hormuz crisis**. Reuters reports **Eni and Mercuria forming a global energy commodities trading joint venture**, concentrating trading capability just as physical risk premia widen.",
   "bullets": [
-   "**Export halts are leverage, not economics** — holding back fuel exports lets a producer decide who gets supplied and on what terms, converting trade into pressure.",
-   "**Diesel tightness propagates first** — distillates drive freight, farming and heating, so refined-product scarcity reaches consumer prices faster than crude moves.",
-   "**A Western diesel ban backfires under its own logic** — cutting US exports shrinks global supply, raises domestic pump prices and invites retaliation from trading partners.",
-   "**The transition adds demand, not relief** — metal-heavy imports for electrification keep pressure on the same commodity complex, so energy security and the green build-out compete for the same molecules."
+   "**Reserve release buys time, not supply** — a 100M-barrel draw caps the near-term price spike but leaves strategic stocks lower for the next shock.",
+   "**Diesel, not crude, is the real squeeze** — refined-product tightness binds industry and freight harder than crude benchmarks show.",
+   "**Physical stress outlives the headline** — Saxo notes energy slumping on sentiment while physical oil stress keeps the market on edge.",
+   "**Trading houses consolidate leverage** — large joint ventures concentrate the ability to move and price barrels when the strait is contested."
   ],
-  "hinge": "The hinge is whether major producers keep fuel flowing as a commercial matter and treat energy as trade rather than a weapon. If supply stays open and Hormuz risk decays, prices normalise and the leverage play loses its value. If both sides escalate export restrictions into a tit-for-tat, the result is higher prices everywhere and a permanent risk premium baked into every barrel."
+  "hinge": "The hinge is **whether the Strait of Hormuz stays open and insurable**. If a durable ceasefire de-escalates the Iran conflict and shipping returns to normal premiums, the release becomes a buffer held in reserve. If the strait is disrupted, the same 100 million barrels is consumed in weeks and the reserve draw simply front-loads the crisis."
  },
  {
   "emoji": "🤝",
-  "title": "**Gaza's future turns on reconstruction diplomacy and Palestinian statehood — framed as the test of a reordering Middle East**",
-  "short": "Gaza's future hinges on reconstruction diplomacy and statehood talks",
+  "title": "**Five European nations adopt US-style third-country deportations as the EU approves migrant 'return hubs'** — outsourcing asylum becomes bloc policy",
+  "short": "EU approves 'return hubs' as five states copy US third-country deportations",
   "tag": "GEOPOLITICS · SIGNAL",
   "cls": "blue",
   "kw": [
-   "gaza",
-   "palestinian statehood",
-   "reconstruction",
-   "diplomacy",
-   "ceasefire",
-   "middle east",
-   "talks",
-   "geopolitics"
+   "deportation",
+   "return hubs",
+   "eu",
+   "migrant",
+   "asylum",
+   "europe"
   ],
-  "cause": "Middle East Monitor reports **Gaza and the future of Middle Eastern geopolitics: diplomacy, reconstruction and Palestinian statehood** — the post-conflict file now framed as the region's central diplomatic test rather than a humanitarian footnote. The same window shows the surrounding order in motion: CBS News reports **Iran celebrating the US withdrawal from Iraq while weighing a US peace proposal**, and outlets including Modern Diplomacy and The Diplomat are tracking **small-state diplomacy and a reordering of alignment across the region**. With the Iran track stalled but open, Gaza becomes the arena where de-escalation is either demonstrated or abandoned.",
+  "cause": "CBS News reports **five European nations following the US with plans for third-country deportations as the EU approves migrant 'return hubs'** — a structural shift from processing asylum inside Europe to externalising it. The move formalises a model the US has already been running, and it lands alongside the EU's broader migration-reform debate.",
   "bullets": [
-   "**Reconstruction is the price of any settlement** — who funds and governs rebuilding decides whether Gaza stabilises or becomes a permanent grievance.",
-   "**Statehood is the political hinge** — without a credible path, any ceasefire is a pause rather than a resolution, and the cycle of war resumes on schedule.",
-   "**Regional alignment rides on the outcome** — from Iraq to the Gulf, states are positioning for a post-conflict order, and how Gaza resolves signals which way the region tilts.",
-   "**Diplomacy is the cheap option and the scarce one** — every window before the next escalation is the only moment a durable arrangement can be built."
+   "**Asylum moves offshore** — responsibility for protection shifts to third countries with weaker legal oversight, inviting court challenges at every removal.",
+   "**Bilateral leverage shifts to host states** — transit and destination countries gain bargaining power over aid, visas and trade.",
+   "**Human-rights litigation becomes the brake** — national and European courts, not parliaments, will set the practical limits on returns.",
+   "**Political contagion is the point** — 'return hubs' becoming EU-endorsed normalises the policy for the next member state to adopt."
   ],
-  "hinge": "The hinge is whether regional and Western powers convert the ceasefire space into a funded reconstruction and a concrete political path for Palestinian statehood. If they do, Gaza becomes the anchor of a broader Middle East de-escalation and the Iran track gains room to breathe. If reconstruction stalls and statehood is deferred again, the pause collapses back into war and every neighbouring file hardens with it."
+  "hinge": "The hinge is **whether return hubs operate under enforceable, monitored legal standards and individual review**. If they do, externalisation reduces irregular arrivals without abandoning protection obligations. If they don't, every removal becomes litigation, the policy stalls in courts, and the migration pressure simply relocates to the next route."
+ },
+ {
+  "emoji": "🌪️",
+  "title": "**Hawaii's 500-year-old Hōlei Sea Arch collapses into the sea** — a centuries-old landmark erased in an instant by the same coastline dynamics now threatening infrastructure",
+  "short": "Hawaii's 500-year-old Hōlei Sea Arch collapses into the sea",
+  "tag": "CLIMATE · WEATHER",
+  "cls": "amber",
+  "kw": [
+   "hawaii",
+   "sea arch",
+   "collapsed",
+   "coastal",
+   "erosion",
+   "sea level"
+  ],
+  "cause": "The BBC reports that **Hawaii's iconic 500-year-old Hōlei Sea Arch has collapsed into the sea**. The arch is a signature of the actively eroding Hawai'i Volcanoes National Park coastline — a structure that stood for five centuries and failed within a single recent window of wave and erosion stress. It is the visible edge of a process already reshaping coastlines and the built environment behind them.",
+  "bullets": [
+   "**Coastal erosion is accelerating past landmark timescales** — a 500-year structure failing now marks the rate change, not the event.",
+   "**Tourism and cultural loss arrive before property loss** — irreplaceable landmarks go first, with no replacement and immediate economic impact on local visitation.",
+   "**Infrastructure on the same shoreline is next** — roads, utilities and homes built on the same eroding margins face the identical forcing.",
+   "**Relocation costs replace repair budgets** — managed retreat, not seawalls and patching, becomes the only durable response on exposed coasts."
+  ],
+  "hinge": "The hinge is **the emissions and adaptation path chosen now**. If emissions fall and coastal-adaptation investment (managed retreat, dune restoration, setback regulation) is funded, exposed communities relocate deliberately instead of losing assets abruptly. If neither changes, every eroding coastline follows the Hōlei Sea Arch — a long-standing structure failing suddenly, with the infrastructure behind it next."
  }
 ];
 
-window.PROPHECIES_AUTHORED_STAMP = '2026-10-02 08:02';
+window.PROPHECIES_AUTHORED_STAMP = '2026-10-02 20:03';
