@@ -29,6 +29,7 @@
     <nav class="tabs" role="tablist" aria-label="Dashboard sections">
       <button class="tab" data-view="intel" role="tab">Intel</button>
       <button class="tab" data-view="prophecy" role="tab">Prophecy</button>
+      <button class="tab" data-view="gematria" role="tab">Gematria</button>
       <button class="tab" data-view="alerts" role="tab">Alerts</button>
       <button class="tab" data-view="world" role="tab">World</button>
       <button class="tab is-active" data-view="markets" role="tab" aria-selected="true">Markets</button>
@@ -314,6 +315,54 @@
       </div>
     </section>
 
+    <!-- ── GEMATRIA view ── -->
+    <section class="view" id="view-gematria">
+      <div class="grid">
+        <div class="card gemchart span5">
+          <div class="card-head">
+            <h2>Figurenlehre · Letter Values</h2>
+            <span class="count mono">18 × 37 = 666</span>
+            <span class="src mono">CHEIRO · PLEJAREN</span>
+          </div>
+          <div class="tablewrap">
+            <table class="dt">
+              <thead><tr><th>Value</th><th>Letters</th><th class="right">n</th></tr></thead>
+              <tbody>
+                <tr><td class="num">1</td><td>C H I J T Y</td><td class="right num">6</td></tr>
+                <tr><td class="num">2</td><td>A R</td><td class="right num">2</td></tr>
+                <tr><td class="num">3</td><td>S</td><td class="right num">1</td></tr>
+                <tr><td class="num">4</td><td>M</td><td class="right num">1</td></tr>
+                <tr><td class="num">5</td><td>D E L N Z</td><td class="right num">5</td></tr>
+                <tr><td class="num">6</td><td>P U V W X</td><td class="right num">5</td></tr>
+                <tr><td class="num">7</td><td>O</td><td class="right num">1</td></tr>
+                <tr><td class="num">8</td><td>F Q</td><td class="right num">2</td></tr>
+                <tr><td class="num">9</td><td>B G K</td><td class="right num">3</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="ednote">Word value = the sum of its letters' values; spaces and punctuation are ignored.
+            German letters: <b>Ä/Æ = A+E = 7</b>, <b>Ö/Œ = O+E = 12 → 3</b>, <b>Ü = U+E = 11 → 2</b>, <b>ß = S+S = 6</b>.
+            A word counts as <b>18</b> when its letters sum to 18, <b>or</b> — the N.B. rule — when its first and last
+            letters alone give 18 (9+9, so either end is a B, G or K). <b>18 × 37 = 666</b>, which makes every flag on
+            this tab a 666-family hit. The chain that closes on 18: <b>JESUS · ISRAEL · ROME · VATICAN · JESUS</b>.</div>
+        </div>
+
+        <div class="card gemflags span7">
+          <div class="card-head">
+            <h2>Flagged · value 18</h2>
+            <span class="count mono" id="gmCount">—</span>
+            <span class="src mono" id="gmSrc">HEADLINE SCAN</span>
+          </div>
+          <div class="gmledger" id="gmLedger"><div class="ph mono" style="padding:16px">Scanning the live headline corpus…</div></div>
+          <div class="ednote" id="gmNote">Every headline the dashboard is carrying — the Intel feed snapshot, the public
+            social snapshot and the prophecy cards — is rescanned on each refresh, and the same words are marked inline
+            in those panels. <span class="gmlegend gm-sum">amber</span> = the whole word sums to 18;
+            <span class="gmlegend gm-ends">blue</span> = only its first and last letters do. Arithmetic, not claims: the
+            chart decides the value and nothing else.</div>
+        </div>
+      </div>
+    </section>
+
     <!-- ══════════ STATUS / FOOTER ══════════ -->
     <footer class="statusbar">
       <div class="srow">
@@ -394,6 +443,7 @@
   <script src="flights.js"></script>
   <script src="cams.js"></script>
   <script src="edgar.js"></script>
+  <script src="gematria.js"></script>
   <script src="app.js"></script>
   <script>
   (function(){

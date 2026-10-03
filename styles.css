@@ -1051,3 +1051,17 @@ body.motion-off .ticker-inner{animation-play-state:paused}
        background:#22c55e;clip-path:polygon(50% 0,100% 100%,0 100%)}
 .fl-sw.lv-hi{background:#c084fc}
 .fl-sw.lv-mil{background:#f59e0b}
+
+/* ══════════════ GEMATRIA — Figurenlehre chart + value-18 flags ══════════════ */
+.gmledger{max-height:560px;overflow:auto;padding:2px 4px 8px}
+.gmsum{padding:10px 12px 4px;font-size:11px;color:var(--muted);letter-spacing:.03em}
+.gmword{font-family:var(--mono);font-weight:700;color:var(--text);letter-spacing:.02em}
+.gmbr{font-size:11px;color:var(--muted)}
+.gmbadge{font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:999px;border:1px solid transparent;white-space:nowrap}
+.gmbadge.gm-sum{color:var(--tx-amber);background:var(--bg-amber);border-color:rgba(245,158,11,.35)}
+.gmbadge.gm-ends{color:var(--tx-blue);background:var(--bg-blue);border-color:rgba(110,168,254,.35)}
+.gmlegend{font-family:var(--mono);font-size:10px;padding:1px 5px;border-radius:999px}
+.gmlegend.gm-sum{color:var(--tx-amber);background:var(--bg-amber)}
+.gmlegend.gm-ends{color:var(--tx-blue);background:var(--bg-blue)}
+mark.gm18{background:var(--bg-amber);color:var(--tx-amber);border-bottom:1px solid rgba(245,158,11,.7);border-radius:3px;padding:0 2px}
+mark.gm18.gm-ends{background:var(--bg-blue);color:var(--tx-blue);border-bottom-color:rgba(110,168,254,.7)}

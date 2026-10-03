@@ -116,7 +116,7 @@ const SETTINGS_DEFS = [
 ];
 const SETTINGS_SEGS = [
   { k:'view',    lab:'Default view',    hint:'Section shown when the page opens', vals:[
-      ['markets','Markets'],['intel','Intel'],['prophecy','Prophecy'],['world','World'],['alerts','Alerts'] ] },
+      ['markets','Markets'],['intel','Intel'],['prophecy','Prophecy'],['gematria','Gematria'],['world','World'],['alerts','Alerts'] ] },
   { k:'clock24', lab:'Clock format',    hint:'World clocks and the UTC readout', vals:[
       [true,'24h'],[false,'12h'] ] },
   { k:'refresh', lab:'Intel refresh',   hint:'How often the feed re-reads the snapshot', vals:[
@@ -1279,7 +1279,7 @@ async function loadNews(){
     }
   }catch(e){ /* keep last good list */ }
   // Render each dependent panel independently so one panel bug never blanks the rest.
-  [renderFeed, renderAlerts, renderAmber, renderFloods, renderOutbreaks, renderDefcon, renderBrief, renderWorld, renderProphecy].forEach(fn=>{ try{ fn(); }catch(e){ /* isolate */ } });
+  [renderFeed, renderAlerts, renderAmber, renderFloods, renderOutbreaks, renderDefcon, renderBrief, renderWorld, renderProphecy, ()=>{ if(window.gmRender) window.gmRender(); }].forEach(fn=>{ try{ fn(); }catch(e){ /* isolate */ } });
 }
 function renderFeed(){
   // Slot guarantee: take one (newest) item per source first, then fill the rest
@@ -2999,7 +2999,7 @@ function boot(){
   bindGuide();
   // honor #view hash first, then the saved default view from Settings
   const want = (location.hash||'').replace('#','') || SET.view;
-  if(['markets','intel','prophecy','world','alerts'].includes(want)){
+  if(['markets','intel','prophecy','gematria','world','alerts'].includes(want)){
     const t=$(`.tab[data-view=${want}]`);
     if(t){ $$('.tab').forEach(x=>{x.classList.remove('is-active');x.setAttribute('aria-selected','false')});
       t.classList.add('is-active');t.setAttribute('aria-selected','true');
