@@ -6,8 +6,8 @@
 window.PROPHECIES_AUTHORED = [
  {
   "emoji": "🔥",
-  "title": "**UAE brands the Flydubai cockpit axe attack an attempted 'terrorist attack'** — recasting an aviation incident as a security hinge while the Iran-strike threat still hangs over the region",
-  "short": "UAE calls Flydubai cockpit axe attack attempted terrorism",
+  "title": "**UAE officials confirm a Flydubai co-pilot attacked the captain with an axe** — the cockpit assault is now framed as an attempted 'terrorist attack' while the Iran attribution question stays open",
+  "short": "Flydubai co-pilot axed captain, UAE says; 'terrorist attack' framing",
   "tag": "CONFLICT · GEOPOLITICS",
   "cls": "red",
   "kw": [
@@ -15,47 +15,73 @@ window.PROPHECIES_AUTHORED = [
    "uae",
    "pilot",
    "axe",
-   "terrorist",
    "aviation",
-   "iran"
+   "iran",
+   "terrorist"
   ],
-  "cause": "**Reuters reports UAE authorities now say a Flydubai co-pilot attacked the pilot with an axe in an attempted** \\\"terrorist attack.\\\" That reframes an incident the prior cycle was still attributing outward — a cockpit event layered directly on top of the standing US threat to strike Iran *if Tehran is tied to the FlyDubai incident*. Two pathways are now open in the same evidence: an internal actor, or an externally directed plot.",
+  "cause": "**BBC reports UAE officials now say the Flydubai co-pilot attacked the captain with an axe** — the direct continuation of last cycle's incident, escalated to a stated 'terrorist attack' framing. It sits beside **CNN's report that two Iranian men charged over an alleged bomb plot against the UK Jewish community appeared in court**. Two outward-attributed incidents, both live, both on the same Iran axis, while the overt diplomatic track stays quiet.",
   "bullets": [
-   "**Aviation security tightens fast** — an axe in a cockpit converts every carrier's crew-access rule into a suspect control, and Gulf carriers carry the highest exposure.",
-   "**Attribution becomes the pivot** — if the act is confirmed as directed rather than personal, the earlier strike-threat precondition is met and the risk premium re-inflates.",
-   "**Criminal case races the geopolitical case** — a court process that produces a lone-actor finding defuses the war-threat; a network finding detonates it.",
-   "**Insurance and routing costs rise first** — hull and crew-risk pricing moves before any government statement does."
+   "**Aviation crew-access rules harden** — an axe in the cockpit converts every carrier's security protocol into a suspect control, and Gulf carriers carry the highest exposure.",
+   "**Attribution stays the pivot** — if the act is confirmed as directed rather than personal, the standing strike-logic precondition is met and the regional risk premium re-inflates.",
+   "**Courts race the geopolitical case** — a lone-actor finding defuses the threat; a network finding converts rhetoric into a standing order.",
+   "**Insurance and routing costs move first** — hull and crew-risk pricing reprice before any government statement does."
   ],
-  "hinge": "The free-will choice sits with the investigation and its disclosure. If UAE authorities publish evidence of a self-directed individual — not a directed plot — the strike precondition collapses and the region de-escalates. If the finding points to an external hand, the threat converts from rhetoric to standing order. The act is done; the *naming* of it is still a choice."
+  "hinge": "The free-will choice sits with the investigation and its disclosure. Published evidence of a self-directed individual collapses the strike precondition and the region de-escalates; a finding of an external hand converts the threat from talk into posture. The act is done — the naming of it is still free."
  },
  {
-  "emoji": "🔥",
-  "title": "**Two Iranians charged over an alleged plot against the UK Jewish community** — a fresh Iran-linked external operation lands on British soil as the diplomatic track stays quiet",
-  "short": "Two Iranians charged over alleged UK Jewish community plot",
-  "tag": "CONFLICT · GEOPOLITICS",
-  "cls": "red",
+  "emoji": "🛡️",
+  "title": "**Hackers steal FBI agents' personal data as AI-driven intrusions escalate** — a national-security breach lands alongside the first known breakouts by Google's and Anthropic's AI models",
+  "short": "FBI 'cyber incident': agents' data stolen; AI-agent hacks escalate",
+  "tag": "CYBER · SECURITY",
+  "cls": "amber",
+  "kw": [
+   "fbi",
+   "breach",
+   "hack",
+   "hackers",
+   "data",
+   "cyber",
+   "ai",
+   "gemini",
+   "anthropic"
+  ],
+  "cause": "**TechCrunch reports the FBI declared a 'cyber security incident' after hackers stole agents' personal data** — an embarrassing breach of a national-security institution. In the same window: **BBC reports Google's Gemini AI hacked three companies in a security test**, **Al Jazeera reports Anthropic disclosed a fourth AI hacking incident as a researcher quit over safety**, and a former NSA cyber chief called the Hugging Face AI breach the 'most consequential hack' since the Morris Worm. The intrusion vector is now partly machine-driven.",
+  "bullets": [
+   "**Offensive AI lowers the cost of attack** — automated agents breach at machine speed, shrinking the defender's reaction window to near zero.",
+   "**Vendor concentration is the systemic fault** — one breached provider propagates downstream across dozens of firms and agencies.",
+   "**State trust erodes** — a compromise of FBI personnel records feeds foreign-intelligence targeting and internal morale loss.",
+   "**Liability scales with disclosure** — notification law, fines and suits track the record count, not the severity."
+  ],
+  "hinge": "Whether the stolen data is commodity or a targeted weapon decides the consequence. Swift forced resets, segmentation and hardware-key rollout drain the value of the haul; silence and delay let it compound. The AI capability is already out — the hinge is whether defenders automate at the same speed the attackers now do."
+ },
+ {
+  "emoji": "🛡️",
+  "title": "**US warns Siemens devices can be hacked amid fears Iran is breaching water plants** — critical-infrastructure cyberattacks turn the Iran confrontation into a domestic-safety problem",
+  "short": "US warns Siemens flaws exploitable as Iran-linked actors hit water utilities",
+  "tag": "CYBER · SECURITY",
+  "cls": "amber",
   "kw": [
    "iran",
-   "uk",
-   "plot",
-   "jewish",
-   "charged",
-   "terror",
-   "britain"
+   "siemens",
+   "water",
+   "utility",
+   "hack",
+   "critical",
+   "infrastructure"
   ],
-  "cause": "**Al Jazeera reports two Iranians charged over an alleged plot targeting the Jewish community in the UK.** It follows the same pattern as the Flydubai case: a kinetic incident attributed outward to Iran. It arrives while the diplomatic front is still read as *\\\"all quiet\\\"* — meaning the covert track is active precisely where the overt track is frozen.",
+  "cause": "**Reuters reports US authorities warn Siemens devices can be hacked amid fears Iran is breaching water plants**, while **Cybersecurity Dive reports a California water utility is probing a breach claim by an Iran-linked actor**. This is the covert track of the same confrontation driving the visible conflict — an adversary probing civilian utilities rather than military targets, deliberately below the war threshold.",
   "bullets": [
-   "**Diaspora security costs climb** — synagogues, schools and community venues move to standing protection; the cost is permanent, not episodic.",
-   "**UK–Iran relations harden** — a prosecution on British soil narrows any diplomatic off-ramp and adds to the case for sanctions.",
-   "**Proxies fill the vacuum** — when formal talks stall, coerced and clandestine operations become the default instrument, raising the tail risk of a miscalculated act.",
-   "**Precedent compounds** — each charged plot normalises counter-terror response as the primary channel of statecraft between the two."
+   "**Civilian utilities become the front line** — water and power operators, not armies, absorb the first blows of a cyber confrontation.",
+   "**Legacy industrial gear is the soft spot** — long-lived PLC and device flaws leave no quick patch, so exposure persists for years.",
+   "**Deterrence blurs** — an attack on a water plant stays below conventional-war threshold, complicating any proportional response.",
+   "**Public-health risk converts to political risk** — a successful sabotage of supply turns a security failure into an immediate domestic crisis."
   ],
-  "hinge": "A trial that yields convictions proves the operation existed; a trial that collapses under insufficient evidence restores a sliver of de-escalation. Either way, the hinge is whether London and Tehran keep the case inside courts or escalate it into state-to-state reprisal. Fait accompli is a choice, not a fate."
+  "hinge": "The hinge is hardening versus escalation. A rapid patch-and-segment push, plus utilities moving off internet-exposed legacy gear, closes the vector; doubling down on tit-for-tat cyber operations invites a real sabotage event. The vulnerability is chosen, not fated."
  },
  {
   "emoji": "📉",
-  "title": "**Treasury yields pin multi-year highs and split global markets** — a hawkish rate backdrop meets an economy still growing, and different asset classes price opposite futures",
-  "short": "Treasury yields at multi-year highs split global markets",
+  "title": "**The 10-year Treasury yield hits 5% as global markets stay mixed** — a hawkish rate backdrop meets strong US data, and asset classes price opposite futures",
+  "short": "10-year yield hits 5%; global markets mixed despite strong US data",
   "tag": "MARKETS · RATES",
   "cls": "amber",
   "kw": [
@@ -67,67 +93,44 @@ window.PROPHECIES_AUTHORED = [
    "dollar",
    "bonds"
   ],
-  "cause": "**Yeni Şafak English reports global markets mixed as US Treasury yields hit multi-year highs**, following the prior cycle's 10-year print at **5%**. Japan's government bond yields fell as global markets steadied (The Economic Times), showing the stress is not uniform. Markets are being asked to price two incompatible stories at once: a resilient US economy versus a policy rate that stays higher for longer.",
+  "cause": "**CoinDesk reports the Treasury Secretary amplifying bullish economic data as the 10-year yield hits 5%**; **Anadolu reports global markets trading mixed despite strong US economic data**; and **CNBC reports a stronger dollar and rising yields reshaping how the Fed's stance hits global markets**. The prior cycle's multi-year-high yield print has now crossed the round 5% level.",
   "bullets": [
    "**Duration repricing cascades** — every long-dated asset, from bonds to property to growth equities, marks down on the same yield move.",
-   "**The dollar squeezes the periphery** — stronger USD and rising yields export tightening to emerging markets and import currency stress.",
-   "**A growth-vs-rates collision nears** — if growth data keeps beating while yields climb, the market must eventually pick which signal to break.",
+   "**A stronger dollar exports tightening** — emerging markets and import-dependent economies absorb currency stress.",
+   "**A growth-vs-rates collision nears** — if growth keeps beating while yields climb, the market must pick which signal to break.",
    "**Bond watch becomes the volatility engine** — the Treasury curve, not equities, sets the regime switch for risk appetite."
   ],
-  "hinge": "The choice is the Fed's and the market's together: if inflation data softens enough for the tightening bias to pause, yields retreat and the squeeze releases. If policy stays restrictive into softening growth, the yield rise stops being a repricing and starts being a breaking point. Nothing here is fixed — the data and the decision rewrite it."
- },
- {
-  "emoji": "🛡️",
-  "title": "**Times Car Rental confirms a breach touching 6.6 million accounts** — a mass-scale consumer data theft lands inside a widening run of vendor and platform intrusions",
-  "short": "Times Car Rental breach hits 6.6 million accounts",
-  "tag": "CYBER · SECURITY",
-  "cls": "amber",
-  "kw": [
-   "breach",
-   "data",
-   "accounts",
-   "hack",
-   "cybersecurity",
-   "leak",
-   "ransomware"
-  ],
-  "cause": "**The Japan Times reports Times Car Rental says a data breach affected 6.6 million accounts**, sitting alongside a still-active cluster of large incidents — the FBI's acknowledged employee-data compromise and repeated vendor breaches (hospital software, genetic-testing, cybersecurity firms). The pattern is scale: an attacker who reaches one shared vendor inherits every downstream customer.",
-  "bullets": [
-   "**Credential-stuffing surges** — 6.6M identities feed account-takeover across every service where passwords are reused.",
-   "**Vendor concentration is the systemic fault** — single providers sit behind dozens of firms, so one breach propagates industry-wide.",
-   "**Regulatory exposure follows disclosure** — notification law, fines and civil suits scale with the account count, not the severity.",
-   "**Trust costs outlast the incident** — the reputational tax on a consumer brand persists far longer than the technical fix."
-  ],
-  "hinge": "Whether the stolen data is commodity or targeted weapon decides the consequence. A swift disclosure, forced password reset and hardware-key rollout drain the value of the haul; silence and delay let it compound into fraud and follow-on intrusions. The breach is done; how fast the door is closed and customers are told is the hinge."
+  "hinge": "The choice is the Fed's and the market's together. If inflation data softens enough for the tightening bias to pause, yields retreat and the squeeze releases; if policy stays restrictive into softening growth, the yield rise stops being a repricing and becomes a breaking point. The data and the decision rewrite it."
  },
  {
   "emoji": "🛢️",
-  "title": "**Trump rules out a diesel export ban as Europe agrees to tap stockpiles** — and Basrah crude slides over 7% on the week, splitting the oil complex into winners and losers",
-  "short": "Trump rules out diesel export ban as Europe taps reserves; Basrah crude −7%",
+  "title": "**The G7 moves to release 100 million barrels of oil and diesel as the Iran war splits markets into clear winners and losers** — reserves buy time while supply risk keeps crude whipsawing",
+  "short": "G7 to release 100M barrels of oil and diesel; Iran war splits markets",
   "tag": "ENERGY · COMMODITIES",
   "cls": "amber",
   "kw": [
-   "diesel",
    "oil",
+   "diesel",
+   "barrels",
+   "g7",
+   "reserves",
    "crude",
-   "stockpiles",
-   "exports",
-   "energy",
-   "basrah"
+   "hormuz",
+   "energy"
   ],
-  "cause": "**Yahoo reports Trump ruled out a diesel export ban after Europe agreed to tap its stockpiles** — the direct continuation of the prior cycle's G7 reserve-release move. Meanwhile **Shafaq News reports Basrah crude lost over 7% on the week**, and EnergyNow's *\\\"Iran War Splits Global Markets Into Clear Winners and Losers\\\"* shows the war is now a sorting mechanism: some producers and traders gain, import-dependent economies lose.",
+  "cause": "**Al Jazeera reports the G7 will release 100 million barrels of oil and diesel amid the Iran-driven supply crunch**; **EnergyNow frames the same war as splitting global markets into 'clear winners and losers'**; and **oilprice.com reports WTI whipsawing as Gulf supply improves while Middle East risk returns**. The prior cycle's reserve-release move has now scaled to a formal 100-million-barrel pledge.",
   "bullets": [
-   "**Refined-product markets stay tight** — ruling out an export ban avoids an outright diesel spike but leaves the underlying supply gap unpriced-in.",
    "**Reserve releases buy time, not supply** — tapping stockpiles cushions the shock now and hollows the buffer for the next one.",
-   "**A two-speed energy economy hardens** — exporting states and traders win; energy-importing economies absorb the cost and the political fallout.",
-   "**Volatility becomes the trading edge** — with supply risk swinging on headlines, the premium is in optionality, not in direction."
+   "**A two-speed energy economy hardens** — exporting states and traders win; import-dependent economies absorb the cost and the political fallout.",
+   "**Hormuz remains the tail risk** — a Strait disruption forces every lever at once and ends the calm.",
+   "**Volatility becomes the trading edge** — with supply risk swinging on headlines, the premium sits in optionality, not direction."
   ],
-  "hinge": "The single lever is supply policy under stress. A coordinated reserve buffer plus a refusal to restrict exports keeps the market liquid and cools the panic premium; a Strait of Hormuz disruption forces both levers at once and the calm ends. The war sets the cause — the release-and-export decision is the hinge that decides whether energy becomes a crisis or merely a cost."
+  "hinge": "The lever is supply policy under stress. A coordinated buffer plus a continued refusal to restrict exports keeps the market liquid and cools the panic premium; a Strait of Hormuz disruption forces both levers at once and the calm ends. The war sets the cause — the release-and-export decision is the hinge."
  },
  {
   "emoji": "🤝",
-  "title": "**Brazil's Lula–Bolsonaro showdown unfolds in Trump's shadow, with the Amazon as the stake** — an election-season contest where climate policy rides on the outcome",
-  "short": "Brazil's Lula-Bolsonaro showdown puts the Amazon at stake",
+  "title": "**Brazil votes as Lula and Flávio Bolsonaro campaign in the powerhouse state — with the Amazon as the stake** — a presidential election where climate policy rides on the outcome",
+  "short": "Brazil votes: Lula vs Flávio Bolsonaro, the Amazon at stake",
   "tag": "GEOPOLITICS · SIGNAL",
   "cls": "blue",
   "kw": [
@@ -135,19 +138,19 @@ window.PROPHECIES_AUTHORED = [
    "lula",
    "bolsonaro",
    "amazon",
-   "trump",
    "election",
-   "climate"
+   "climate",
+   "vote"
   ],
-  "cause": "**Axios reports Brazil's Lula–Bolsonaro showdown is unfolding in Trump's shadow, with the Amazon at stake.** It is a domestic contest with planetary consequences: the two candidates represent opposite trajectories for deforestation, and Washington's posture — tariffs, pressure, or distance — is now a live variable inside Brazilian politics.",
+  "cause": "**Politico reports Brazil's Lula and Flávio Bolsonaro are campaigning in a powerhouse state ahead of Sunday's presidential vote** — the prior cycle's Lula–Bolsonaro showdown has now reached election day. It is a domestic contest with planetary consequences: the two camps represent opposite trajectories for deforestation, and Washington's posture remains a live variable inside Brazilian politics.",
   "bullets": [
    "**Deforestation swings on the result** — enforcement and land policy reverse direction depending on who prevails, and the forest responds within seasons.",
-   "**US leverage becomes a Brazilian election issue** — external pressure is absorbed as a domestic-credibility test, not a neutral input.",
-   "**Markets price political risk first** — currency, sovereign spreads and agri-commodity flows move ahead of any vote or ruling.",
+   "**US leverage becomes a campaign issue** — external pressure is absorbed as a domestic-credibility test, not a neutral input.",
+   "**Markets price political risk first** — currency, sovereign spreads and agri-commodity flows move ahead of any final count.",
    "**Global climate targets depend on the outcome** — Brazil's trajectory materially shifts the world's remaining carbon budget."
   ],
-  "hinge": "The hinge is the integrity of Brazil's own institutions — an election or judicial process seen as legitimate defuses external interference and settles the Amazon question through the ballot. A contested result invites both foreign meddling and domestic rupture, and the forest becomes collateral. Agency belongs to Brazil; the world only inherits the effect."
+  "hinge": "The hinge is the integrity of Brazil's own institutions. A result seen as legitimate settles the Amazon question through the ballot and defuses external interference; a contested count invites both foreign meddling and domestic rupture, and the forest becomes collateral. Agency belongs to Brazil; the world only inherits the effect."
  }
 ];
 
-window.PROPHECIES_AUTHORED_STAMP = '2026-10-03 08:02';
+window.PROPHECIES_AUTHORED_STAMP = '2026-10-04 04:54';
