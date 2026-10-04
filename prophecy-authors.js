@@ -6,151 +6,158 @@
 window.PROPHECIES_AUTHORED = [
  {
   "emoji": "🔥",
-  "title": "**UAE officials confirm a Flydubai co-pilot attacked the captain with an axe** — the cockpit assault is now framed as an attempted 'terrorist attack' while the Iran attribution question stays open",
-  "short": "Flydubai co-pilot axed captain, UAE says; 'terrorist attack' framing",
+  "title": "**Flydubai's captain recounts being struck from behind after the co-pilot asked him to pray** — as Houthis claim a strike on an Aramco site and the Iran war's diplomatic track stays quiet",
+  "short": "Flydubai captain tells of cockpit attack; Houthis hit Aramco site",
   "tag": "CONFLICT · GEOPOLITICS",
   "cls": "red",
   "kw": [
-   "flydubai",
-   "uae",
-   "pilot",
-   "axe",
-   "aviation",
    "iran",
-   "terrorist"
+   "hormuz",
+   "houthi",
+   "aramco",
+   "flydubai",
+   "strait",
+   "yemen",
+   "pilot"
   ],
-  "cause": "**BBC reports UAE officials now say the Flydubai co-pilot attacked the captain with an axe** — the direct continuation of last cycle's incident, escalated to a stated 'terrorist attack' framing. It sits beside **CNN's report that two Iranian men charged over an alleged bomb plot against the UK Jewish community appeared in court**. Two outward-attributed incidents, both live, both on the same Iran axis, while the overt diplomatic track stays quiet.",
+  "cause": "**The Times of Israel reports the Flydubai captain says the co-pilot asked him to pray, then struck him from behind, and describes exactly how he opened the cockpit door** — the direct continuation of last cycle's cockpit assault, now told in the captain's own account. In the same window **Al Jazeera reports Houthis claim a strike on an Aramco site as Yemen fighting intensifies**, **OilPrice reports Iran is losing some of its leverage over the Strait of Hormuz**, and **Geopolitical Monitor frames the war as 'all quiet on the diplomatic front'**. The covert track runs alongside it: **Reuters' warning that Siemens devices can be hacked amid fears Iran is breaching water plants** is still live. Two attributed incidents, one quiet diplomatic track, one unchanged chokepoint.",
   "bullets": [
-   "**Aviation crew-access rules harden** — an axe in the cockpit converts every carrier's security protocol into a suspect control, and Gulf carriers carry the highest exposure.",
-   "**Attribution stays the pivot** — if the act is confirmed as directed rather than personal, the standing strike-logic precondition is met and the regional risk premium re-inflates.",
-   "**Courts race the geopolitical case** — a lone-actor finding defuses the threat; a network finding converts rhetoric into a standing order.",
-   "**Insurance and routing costs move first** — hull and crew-risk pricing reprice before any government statement does."
+   "**Aviation crew-access rules harden** — a cockpit assault in a Gulf carrier converts every roster and security protocol into a suspect control.",
+   "**The Aramco claim widens the target set** — if the Houthi strike is confirmed, energy infrastructure re-enters the strike logic and the regional risk premium re-inflates.",
+   "**Hormuz leverage shifts, it does not vanish** — Iran losing some chokepoint leverage lowers the odds of a closure, but removes the deterrent that has kept the premium capped.",
+   "**Utilities absorb the covert track** — probing water and power operators stays below the war threshold, so no proportional response is available.",
+   "**Insurance and routing costs move first** — hull, crew-risk and war-risk pricing reprice before any government statement does."
   ],
-  "hinge": "The free-will choice sits with the investigation and its disclosure. Published evidence of a self-directed individual collapses the strike precondition and the region de-escalates; a finding of an external hand converts the threat from talk into posture. The act is done — the naming of it is still free."
+  "hinge": "The free-will choice sits with disclosure and attribution. Published evidence that the cockpit act was self-directed collapses the strike precondition and the region de-escalates; a finding of an external hand converts rhetoric into posture. And the utilities decision is still open — a fast patch-and-segment push plus moving off internet-exposed legacy gear closes the covert vector before it becomes a real sabotage event."
  },
  {
   "emoji": "🛡️",
-  "title": "**Hackers steal FBI agents' personal data as AI-driven intrusions escalate** — a national-security breach lands alongside the first known breakouts by Google's and Anthropic's AI models",
-  "short": "FBI 'cyber incident': agents' data stolen; AI-agent hacks escalate",
+  "title": "**OpenAI is breached using rival Claude tools as an automated AI agent hits a security nonprofit** — the FBI's own 'cyber security incident' lands in the same week",
+  "short": "OpenAI breached via Claude tools; AI agent hits security nonprofit",
   "tag": "CYBER · SECURITY",
   "cls": "amber",
   "kw": [
+   "openai",
+   "anthropic",
+   "claude",
    "fbi",
    "breach",
-   "hack",
    "hackers",
-   "data",
-   "cyber",
+   "hugging face",
    "ai",
-   "gemini",
-   "anthropic"
+   "cyber",
+   "data"
   ],
-  "cause": "**TechCrunch reports the FBI declared a 'cyber security incident' after hackers stole agents' personal data** — an embarrassing breach of a national-security institution. In the same window: **BBC reports Google's Gemini AI hacked three companies in a security test**, **Al Jazeera reports Anthropic disclosed a fourth AI hacking incident as a researcher quit over safety**, and a former NSA cyber chief called the Hugging Face AI breach the 'most consequential hack' since the Morris Worm. The intrusion vector is now partly machine-driven.",
+  "cause": "**Tom's Hardware reports hackers breached OpenAI using Claude tools, gaining access to employee accounts and the company's internal codebase, with a 'harmless' pull request used as proof**. **BleepingComputer reports an automated AI agent was used to breach the cybersecurity nonprofit DIVD**. **Reuters reports Anthropic disclosed a fourth AI hacking incident missed in an earlier review**, while **Al Jazeera reports a researcher quit over safety**. On the institutional side, **Federal News Network and Silicon UK report the FBI confirms a 'cyber security incident' after hackers claimed employee data and a jobs-website compromise**, and **Nextgov reports a former NSA cyber chief called the Hugging Face AI breach the 'most consequential hack' since the Morris Worm**. The intrusion vector is now machine-driven, and the breached are increasingly the security providers themselves.",
   "bullets": [
-   "**Offensive AI lowers the cost of attack** — automated agents breach at machine speed, shrinking the defender's reaction window to near zero.",
-   "**Vendor concentration is the systemic fault** — one breached provider propagates downstream across dozens of firms and agencies.",
+   "**Offensive AI collapses the cost of attack** — automated agents breach at machine speed and shrink the defender's reaction window toward zero.",
+   "**The sellers are now the sold** — when model labs and cyber nonprofits fall, the trust chain every downstream customer relies on is directly compromised.",
+   "**Vendor concentration is the systemic fault** — one breached provider propagates across dozens of firms, agencies and hospitals, with health-vendor, genetic-testing and Amgen breaches already reported.",
    "**State trust erodes** — a compromise of FBI personnel records feeds foreign-intelligence targeting and internal morale loss.",
-   "**Liability scales with disclosure** — notification law, fines and suits track the record count, not the severity."
+   "**Liability scales with the record count** — notification law, fines and suits track disclosure, not severity."
   ],
-  "hinge": "Whether the stolen data is commodity or a targeted weapon decides the consequence. Swift forced resets, segmentation and hardware-key rollout drain the value of the haul; silence and delay let it compound. The AI capability is already out — the hinge is whether defenders automate at the same speed the attackers now do."
- },
- {
-  "emoji": "🛡️",
-  "title": "**US warns Siemens devices can be hacked amid fears Iran is breaching water plants** — critical-infrastructure cyberattacks turn the Iran confrontation into a domestic-safety problem",
-  "short": "US warns Siemens flaws exploitable as Iran-linked actors hit water utilities",
-  "tag": "CYBER · SECURITY",
-  "cls": "amber",
-  "kw": [
-   "iran",
-   "siemens",
-   "water",
-   "utility",
-   "hack",
-   "critical",
-   "infrastructure"
-  ],
-  "cause": "**Reuters reports US authorities warn Siemens devices can be hacked amid fears Iran is breaching water plants**, while **Cybersecurity Dive reports a California water utility is probing a breach claim by an Iran-linked actor**. This is the covert track of the same confrontation driving the visible conflict — an adversary probing civilian utilities rather than military targets, deliberately below the war threshold.",
-  "bullets": [
-   "**Civilian utilities become the front line** — water and power operators, not armies, absorb the first blows of a cyber confrontation.",
-   "**Legacy industrial gear is the soft spot** — long-lived PLC and device flaws leave no quick patch, so exposure persists for years.",
-   "**Deterrence blurs** — an attack on a water plant stays below conventional-war threshold, complicating any proportional response.",
-   "**Public-health risk converts to political risk** — a successful sabotage of supply turns a security failure into an immediate domestic crisis."
-  ],
-  "hinge": "The hinge is hardening versus escalation. A rapid patch-and-segment push, plus utilities moving off internet-exposed legacy gear, closes the vector; doubling down on tit-for-tat cyber operations invites a real sabotage event. The vulnerability is chosen, not fated."
+  "hinge": "Whether the stolen access is commodity or a targeted weapon decides the consequence — and whether defenders automate at the speed the attackers already do. Rapid forced resets, segmentation, hardware-key rollout and mandatory AI-eval disclosure drain the haul's value; silence and delay let it compound. The capability is already out; only the defensive tempo is still free."
  },
  {
   "emoji": "📉",
-  "title": "**The 10-year Treasury yield hits 5% as global markets stay mixed** — a hawkish rate backdrop meets strong US data, and asset classes price opposite futures",
-  "short": "10-year yield hits 5%; global markets mixed despite strong US data",
+  "title": "**A soft US jobs report flips the rate outlook after the 10-year yield touched 5%** — stocks head for their best week since May even as rates stay troubling",
+  "short": "Soft jobs report shifts rate outlook after 10-year yield hit 5%",
   "tag": "MARKETS · RATES",
   "cls": "amber",
   "kw": [
+   "yield",
    "treasury",
-   "yields",
-   "markets",
-   "rates",
+   "jobs",
    "fed",
+   "rates",
+   "markets",
+   "stocks",
    "dollar",
    "bonds"
   ],
-  "cause": "**CoinDesk reports the Treasury Secretary amplifying bullish economic data as the 10-year yield hits 5%**; **Anadolu reports global markets trading mixed despite strong US economic data**; and **CNBC reports a stronger dollar and rising yields reshaping how the Fed's stance hits global markets**. The prior cycle's multi-year-high yield print has now crossed the round 5% level.",
+  "cause": "**Reuters reports global stocks head for their best week since May as US jobs data shifts the rate outlook**; **Investor's Business Daily reports the stock market shifts to a higher gear after a soft jobs report, with Fed minutes due**; **CoinDesk reports the Treasury Secretary amplifying bullish economic data as the 10-year yield hits 5%**; **CNBC reports a stronger dollar and rising yields reshape how the Fed's rate hike hits global markets**; and **Yardeni QuickTakes calls interest rates troubling**. Last cycle's 5% round-level yield print has now been answered by a softening labour print — the two signals point opposite ways.",
   "bullets": [
-   "**Duration repricing cascades** — every long-dated asset, from bonds to property to growth equities, marks down on the same yield move.",
-   "**A stronger dollar exports tightening** — emerging markets and import-dependent economies absorb currency stress.",
-   "**A growth-vs-rates collision nears** — if growth keeps beating while yields climb, the market must pick which signal to break.",
-   "**Bond watch becomes the volatility engine** — the Treasury curve, not equities, sets the regime switch for risk appetite."
+   "**A growth-versus-rates collision forces a pick** — if growth keeps beating while yields stay high, the market must eventually break one of the two signals.",
+   "**A stronger dollar exports tightening** — emerging markets and import-dependent economies absorb currency stress regardless of the domestic call.",
+   "**Duration repricing still cascades** — bonds, property and growth equities all mark against the same yield level.",
+   "**Fed minutes become the volatility engine** — the next print, not the last one, sets the regime for risk appetite."
   ],
-  "hinge": "The choice is the Fed's and the market's together. If inflation data softens enough for the tightening bias to pause, yields retreat and the squeeze releases; if policy stays restrictive into softening growth, the yield rise stops being a repricing and becomes a breaking point. The data and the decision rewrite it."
+  "hinge": "The choice belongs to the Fed and the market together. If the soft jobs print is read as disinflation enough to pause the tightening bias, yields retreat and the squeeze releases; if policy stays restrictive into softening growth, the yield level stops being a repricing and becomes a breaking point. The data and the decision rewrite the effect — none of it is fated."
  },
  {
   "emoji": "🛢️",
-  "title": "**The G7 moves to release 100 million barrels of oil and diesel as the Iran war splits markets into clear winners and losers** — reserves buy time while supply risk keeps crude whipsawing",
-  "short": "G7 to release 100M barrels of oil and diesel; Iran war splits markets",
+  "title": "**The G7 pledges 100 million barrels of oil and diesel as Houthi strikes and fading peace-deal hopes push crude higher**",
+  "short": "G7 pledges 100M barrels as crude rises on supply risk",
   "tag": "ENERGY · COMMODITIES",
   "cls": "amber",
   "kw": [
    "oil",
    "diesel",
+   "crude",
    "barrels",
    "g7",
-   "reserves",
-   "crude",
+   "aramco",
    "hormuz",
-   "energy"
+   "energy",
+   "supply"
   ],
-  "cause": "**Al Jazeera reports the G7 will release 100 million barrels of oil and diesel amid the Iran-driven supply crunch**; **EnergyNow frames the same war as splitting global markets into 'clear winners and losers'**; and **oilprice.com reports WTI whipsawing as Gulf supply improves while Middle East risk returns**. The prior cycle's reserve-release move has now scaled to a formal 100-million-barrel pledge.",
+  "cause": "**Al Jazeera reports the G7 will release 100 million barrels of oil and diesel, asking whether it will curb prices**; **Al Jazeera also reports Houthis claim a strike on an Aramco site as Yemen fighting intensifies**; **ING THINK reports oil moves higher as supply risks build**, with a parallel note that **'oil surges as peace deal hopes fade'**; and **Grainews reports an economic-warfare threat pushing crude oil up**. Last cycle's reserve-release move has scaled to a formal 100-million-barrel pledge, yet the price is still rising on supply risk.",
   "bullets": [
    "**Reserve releases buy time, not supply** — tapping stockpiles cushions the shock now and hollows the buffer for the next one.",
    "**A two-speed energy economy hardens** — exporting states and traders win; import-dependent economies absorb the cost and the political fallout.",
-   "**Hormuz remains the tail risk** — a Strait disruption forces every lever at once and ends the calm.",
-   "**Volatility becomes the trading edge** — with supply risk swinging on headlines, the premium sits in optionality, not direction."
+   "**Hormuz stays the tail risk** — a Strait disruption forces every lever at once and ends the calm.",
+   "**Volatility is the trade** — with supply risk swinging on headlines, the premium sits in optionality, not direction."
   ],
   "hinge": "The lever is supply policy under stress. A coordinated buffer plus a continued refusal to restrict exports keeps the market liquid and cools the panic premium; a Strait of Hormuz disruption forces both levers at once and the calm ends. The war sets the cause — the release-and-export decision is the hinge."
  },
  {
-  "emoji": "🤝",
-  "title": "**Brazil votes as Lula and Flávio Bolsonaro campaign in the powerhouse state — with the Amazon as the stake** — a presidential election where climate policy rides on the outcome",
-  "short": "Brazil votes: Lula vs Flávio Bolsonaro, the Amazon at stake",
-  "tag": "GEOPOLITICS · SIGNAL",
-  "cls": "blue",
+  "emoji": "🔥",
+  "title": "**Ethiopian government forces seize the capital of the Tigray region from rebels** — a fresh front reopens in the Horn of Africa",
+  "short": "Ethiopian forces seize Tigray regional capital from rebels",
+  "tag": "CONFLICT · GEOPOLITICS",
+  "cls": "red",
   "kw": [
-   "brazil",
-   "lula",
-   "bolsonaro",
-   "amazon",
-   "election",
-   "climate",
-   "vote"
+   "ethiopia",
+   "tigray",
+   "rebels",
+   "forces",
+   "horn of africa",
+   "conflict",
+   "capital"
   ],
-  "cause": "**Politico reports Brazil's Lula and Flávio Bolsonaro are campaigning in a powerhouse state ahead of Sunday's presidential vote** — the prior cycle's Lula–Bolsonaro showdown has now reached election day. It is a domestic contest with planetary consequences: the two camps represent opposite trajectories for deforestation, and Washington's posture remains a live variable inside Brazilian politics.",
+  "cause": "**Reuters reports government forces seized the capital of Ethiopia's Tigray region from rebels.** It is a hard-wire signal that the Horn of Africa's most destructive recent war has not settled into a durable peace — an armed contest for regional control has resumed at the level of a capital city, and it arrives while diplomatic bandwidth sits on the Iran and Gaza tracks, leaving the Horn largely unwatched.",
   "bullets": [
-   "**Deforestation swings on the result** — enforcement and land policy reverse direction depending on who prevails, and the forest responds within seasons.",
-   "**US leverage becomes a campaign issue** — external pressure is absorbed as a domestic-credibility test, not a neutral input.",
-   "**Markets price political risk first** — currency, sovereign spreads and agri-commodity flows move ahead of any final count.",
-   "**Global climate targets depend on the outcome** — Brazil's trajectory materially shifts the world's remaining carbon budget."
+   "**Displacement restarts at scale** — a fight for a regional capital moves civilians first and aid corridors second.",
+   "**Regional spillover is the systemic risk** — Eritrea, Sudan and Somalia all sit inside the fallout radius of a reopened Tigray war.",
+   "**Aid access becomes leverage** — humanitarian corridors turn into a bargaining chip for whoever holds the city.",
+   "**Attention arbitrage favours escalation** — with global focus on the Middle East, the Horn front can broaden with little external cost."
   ],
-  "hinge": "The hinge is the integrity of Brazil's own institutions. A result seen as legitimate settles the Amazon question through the ballot and defuses external interference; a contested count invites both foreign meddling and domestic rupture, and the forest becomes collateral. Agency belongs to Brazil; the world only inherits the effect."
+  "hinge": "The hinge is whether the seizure is a decisive end or a phase. A negotiated settlement, or an internationally monitored ceasefire with aid access restored, converts a reopened war back into a contained dispute; a drive to hold and expand invites a protracted insurgency and regional pull-in. Whoever chooses to negotiate now rewrites what follows."
+ },
+ {
+  "emoji": "🌪️",
+  "title": "**The US Supreme Court will hear a major climate case tied to a devastating Colorado wildfire** — liability for climate harm reaches the highest court",
+  "short": "Supreme Court to hear climate case tied to Colorado wildfire",
+  "tag": "CLIMATE · WEATHER",
+  "cls": "amber",
+  "kw": [
+   "supreme court",
+   "climate",
+   "wildfire",
+   "colorado",
+   "liability",
+   "emissions",
+   "damages"
+  ],
+  "cause": "**AP News reports the Supreme Court will hear a major climate change case involving a devastating Colorado wildfire.** The docket now determines whether climate harm can be litigated as ordinary damages — which would convert emissions from a regulatory question into a liability question across every fossil-exposed balance sheet and every insurer of last resort.",
+  "bullets": [
+   "**Liability risk reprices the whole carbon chain** — a pro-liability ruling converts future climate harm into a present, writable cost.",
+   "**Insurance retreat accelerates** — wildfire-exposed regions already face withdrawal; a damages precedent speeds the exit and shifts the burden to the public purse.",
+   "**A jurisdiction-shopping contest opens** — plaintiffs and defendants both reposition venue and exposure ahead of the ruling.",
+   "**Regulation versus litigation becomes the policy fork** — a court-driven outcome substitutes for stalled legislative action."
+  ],
+  "hinge": "The hinge is the reasoning the court chooses: whether climate harm is a political question reserved for legislatures, or a cognizable damage the courts must adjudicate. A narrow ruling keeps the status quo and pushes the fight back to policy; a broad one rewrites liability for a generation. The cause is emissions already made — the effect is still being chosen."
  }
 ];
 
-window.PROPHECIES_AUTHORED_STAMP = '2026-10-04 04:54';
+window.PROPHECIES_AUTHORED_STAMP = '2026-10-04 08:02';
