@@ -1,3 +1,5 @@
+# NOTE (2026-10-20): scheduled runs are OFF — the laptop Hermes cron is the single
+# writer for these snapshots. Kept as a manual cloud fallback (workflow_dispatch).
 # World Monitor — four-hourly snapshots (NCMEC alerts, WHO outbreak bulletins,
 # ISS element set, FIGU world-population scans).
 #
@@ -8,8 +10,11 @@
 name: WM snapshots — 4h
 
 on:
-  schedule:
-    - cron: '12 */4 * * *'
+  # Scheduled runs are DISABLED: the laptop cron (Hermes job 'wm-snapshot-sweep',
+  # hourly at :05, plus the 15/30/60-minute quake, flood and flight fetchers) is the
+  # single writer for these snapshots. Two pipelines committing the same files was
+  # costing ~300 commits/day and constant push races, so this workflow now runs only
+  # on demand (workflow_dispatch) as a cloud fallback if the laptop is offline.
   workflow_dispatch:
   push:
     paths:
@@ -17,7 +22,6 @@ on:
       - 'fetch_outbreaks.py'
       - 'fetch_iss.py'
       - 'fetch_worldpop.py'
-      - '.github/workflows/snapshots-4h.yml'
 
 permissions:
   contents: write

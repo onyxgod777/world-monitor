@@ -1,3 +1,5 @@
+# NOTE (2026-10-20): scheduled runs are OFF — the laptop Hermes cron is the single
+# writer for these snapshots. Kept as a manual cloud fallback (workflow_dispatch).
 # World Monitor — hourly snapshots (Intel news feed, FiatLeak movers, social signals).
 #
 # Runs on GitHub's runners so the dashboard keeps refreshing with the maintainer's
@@ -5,15 +7,17 @@
 name: WM snapshots — hourly
 
 on:
-  schedule:
-    - cron: '7 * * * *'
+  # Scheduled runs are DISABLED: the laptop cron (Hermes job 'wm-snapshot-sweep',
+  # hourly at :05, plus the 15/30/60-minute quake, flood and flight fetchers) is the
+  # single writer for these snapshots. Two pipelines committing the same files was
+  # costing ~300 commits/day and constant push races, so this workflow now runs only
+  # on demand (workflow_dispatch) as a cloud fallback if the laptop is offline.
   workflow_dispatch:
   push:
     paths:
       - 'fetch_news.py'
       - 'fetch_fiatleak.py'
       - 'fetch_social.py'
-      - '.github/workflows/snapshots-hourly.yml'
 
 permissions:
   contents: write
