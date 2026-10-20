@@ -2267,7 +2267,7 @@ function updateMapSignals(){
     leg.push(`<span class="li"><span class="sw ob-sw"></span>☣ WHO outbreak report</span>`);
   }
   if(SET.flights && SET.mapMode !== '3d' && window.FLIGHTS && Array.isArray(window.FLIGHTS.ac)){
-    leg.push(`<span class="li"><span class="sw fl-sw"></span>✈ aircraft · adsb.lol</span>`,
+    leg.push(`<span class="li"><span class="sw fl-sw"></span>✈ aircraft · ${window.FLIGHTS.source || 'adsb.lol'}</span>`,
              `<span class="li"><span class="sw fl-sw lv-hi"></span>cruise</span>`,
              `<span class="li"><span class="sw fl-sw lv-mil"></span>military</span>`);
   }
