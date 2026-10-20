@@ -96,13 +96,20 @@ MS_TO_KT = 1.943844
 
 # ── adsb.lol request budget ──────────────────────────────────────────────────
 def _budget_load():
-    """{'day': 'YYYY-MM-DD', 'used': n} — resets when the UTC day rolls over."""
+    """Daily request ledger, reset when the UTC day rolls over.
+
+    Keys: day, used, plus whatever the caller sets (blocked_until — unix seconds
+    before which adsb.lol is known to be 429-walling this IP; mil_off_day — the
+    enrichment endpoint answered 404 and is not worth spending requests on).
+    """
     today = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d')
     try:
         with open(BUDGET_FILE, encoding='utf-8') as f:
             b = json.load(f)
         if b.get('day') == today:
-            return {'day': today, 'used': int(b.get('used') or 0)}
+            b['used'] = int(b.get('used') or 0)
+            b['day'] = today
+            return b
     except Exception:
         pass
     return {'day': today, 'used': 0}
@@ -119,6 +126,12 @@ def _budget_save(b):
 
 def budget_left():
     return max(0, ADSB_DAILY_BUDGET - _budget_load()['used'])
+
+
+def budget_blocked_for():
+    """Seconds until the recorded adsb.lol cooldown expires (0 when clear)."""
+    until = _budget_load().get('blocked_until') or 0
+    return max(0, int(until - time.time()))
 
 
 def budget_spend(n=1):
@@ -200,6 +213,10 @@ def fetch_adsb_centre(lat, lon, timeout=12):
 
 def fetch_adsb_fallback():
     """Per-centre fan-out, stopping when the time box or the request budget ends."""
+    wait = budget_blocked_for()
+    if wait:
+        print('  fallback skipped: adsb.lol cooldown, %ds left' % wait)
+        return [], 0, []
     started = time.time()
     seen, batches, used, empty = set(), [], 0, []
     for name, lat, lon in CENTRES:
@@ -215,8 +232,15 @@ def fetch_adsb_fallback():
             batch = fetch_adsb_centre(lat, lon)
         except urllib.error.HTTPError as exc:
             if exc.code == 429:
-                reset = exc.headers.get('x-ratelimit-reset') if exc.headers else '?'
-                print('  fallback: adsb.lol rate-limited (resets in %ss) — stopping' % reset)
+                reset = exc.headers.get('x-ratelimit-reset') if exc.headers else None
+                try:
+                    wait = int(reset)
+                except Exception:
+                    wait = 3600
+                b = _budget_load()
+                b['blocked_until'] = int(time.time()) + wait
+                _budget_save(b)
+                print('  fallback: adsb.lol rate-limited (resets in %ss) — stopping' % wait)
                 break
             print('  %-13s failed: %s' % (name, exc))
             empty.append(name)
@@ -268,10 +292,35 @@ def enrich_military(rows):
     """
     if os.environ.get('WM_NO_MIL'):
         return 0
+    b = _budget_load()
+    if b.get('mil_off_day') == b['day']:
+        return 0                      # endpoint said 404 today; do not spend requests on it
+    wait = budget_blocked_for()
+    if wait:
+        print('  military enrichment skipped: adsb.lol cooldown, %ds left' % wait)
+        return 0
     if not budget_spend(1):
         return 0
     try:
         data = _get_json('https://api.adsb.lol/v2/mil', timeout=20)
+    except urllib.error.HTTPError as exc:
+        b = _budget_load()
+        if exc.code == 429:
+            reset = exc.headers.get('x-ratelimit-reset') if exc.headers else None
+            try:
+                wait = int(reset)
+            except Exception:
+                wait = 3600
+            b['blocked_until'] = int(time.time()) + wait
+            _budget_save(b)
+            print('  military enrichment skipped: 429, cooldown %ds recorded' % wait)
+        elif exc.code == 404:
+            b['mil_off_day'] = b['day']
+            _budget_save(b)
+            print('  military enrichment disabled: /v2/mil returned 404')
+        else:
+            print('  military enrichment skipped: %s' % exc)
+        return 0
     except Exception as exc:
         print('  military enrichment skipped: %s' % exc)
         return 0
