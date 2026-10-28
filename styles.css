@@ -496,6 +496,20 @@ a:hover{text-shadow:0 0 10px var(--glow)}
 .flood-sw{width:9px;height:9px;border-radius:2px}
 .flood-sw.lv-red{background:#ef4444}.flood-sw.lv-orange{background:#f59e0b}.flood-sw.lv-green{background:#2dd4bf}
 
+/* ═══ GLOBAL WEATHER REPORT (Open-Meteo) ═══ */
+.weatherglyph{font-size:12px}
+.weathergrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:8px;padding:12px}
+.wtile{border:1px solid var(--line);border-radius:8px;background:var(--panel2);padding:10px 12px}
+.wtile:hover{background:var(--panel)}
+.wcity{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.wmain{display:flex;align-items:center;gap:8px;margin-top:5px}
+.wemoji{font-size:20px;line-height:1}
+.wtemp{font-family:var(--mono);font-size:21px;font-weight:600;color:var(--text)}
+.wcond{font-size:11.5px;color:var(--dim);margin-top:3px}
+.wmeta{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:5px}
+.wmeta2{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:2px}
+@media(max-width:480px){.weathergrid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;padding:10px}.wtile{padding:8px 10px}.wtemp{font-size:18px}}
+
 /* ═══ OUTBREAK REPORT (WHO Disease Outbreak News) ═══ */
 .obglyph{color:var(--violet);font-size:12px}
 .outbreaklist{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:0;max-height:420px;overflow:auto;padding:6px}

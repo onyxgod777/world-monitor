@@ -1279,7 +1279,7 @@ async function loadNews(){
     }
   }catch(e){ /* keep last good list */ }
   // Render each dependent panel independently so one panel bug never blanks the rest.
-  [renderFeed, renderAlerts, renderAmber, renderFloods, renderOutbreaks, renderDefcon, renderBrief, renderWorld, renderProphecy, ()=>{ if(window.gmRender) window.gmRender(); }].forEach(fn=>{ try{ fn(); }catch(e){ /* isolate */ } });
+  [renderFeed, renderAlerts, renderAmber, renderFloods, renderWeather, renderOutbreaks, renderDefcon, renderBrief, renderWorld, renderProphecy, ()=>{ if(window.gmRender) window.gmRender(); }].forEach(fn=>{ try{ fn(); }catch(e){ /* isolate */ } });
 }
 function renderFeed(){
   // Slot guarantee: take one (newest) item per source first, then fill the rest
@@ -1573,7 +1573,32 @@ function renderFloods(){
     + ` US: ${F.usWarnings} NWS flood warning${F.usWarnings === 1 ? '' : 's'}. Source: GDACS (EU JRC) + NOAA/NWS.</div>`;
 }
 
-/* ══════════════ 5e. OUTBREAK REPORT (WHO Disease Outbreak News, real data) ══════════════ */
+/* ══════════════ 5e. WEATHER REPORT (Open-Meteo, keyless) ══════════════ */
+function renderWeather(){
+  const bar = $('#weathergrid'); if(!bar) return;
+  const W = window.WEATHER;
+  const cEl = $('#weatherCount'), sEl = $('#weatherSrc');
+  if(!W || !Array.isArray(W.cities) || !W.cities.length){
+    if(cEl) cEl.textContent = '0 cities';
+    if(sEl) sEl.textContent = 'Open-Meteo · OFFLINE';
+    bar.innerHTML = `<div class="ph mono" style="padding:16px">Weather feed unavailable right now — retrying on next refresh. If this persists Open-Meteo is unreachable.</div>`;
+    return;
+  }
+  if(cEl) cEl.textContent = W.count + ' cities';
+  if(sEl) sEl.textContent = 'Open-Meteo · ' + String(W._updated||'').slice(0,10);
+  const t = v => (v==null || v==='' || isNaN(v)) ? '—' : Math.round(v);
+  bar.innerHTML = W.cities.map(c=>`
+    <div class="wtile">
+      <div class="wcity">${esc(c.city)}</div>
+      <div class="wmain"><span class="wemoji">${esc(c.emoji)}</span><span class="wtemp">${t(c.tempC)}°</span></div>
+      <div class="wcond">${esc(c.cond)}</div>
+      <div class="wmeta">H ${t(c.tMax)}° · L ${t(c.tMin)}°</div>
+      <div class="wmeta2">💧 ${t(c.humidity)}% · 💨 ${t(c.windKmh)} km/h</div>
+    </div>`).join('')
+    + `<div class="flnote">Current conditions for ${W.count} major world cities — the same set as the World Clock. Feels-like ${W.cities.some(c=>c&&c.feelsC!=null&&Math.round(c.feelsC)!==Math.round(c.tempC))?'is shown as the apparent temperature where it differs; ':''}humidity is relative, wind is km/h, and H/L is today's forecast high/low. Source: Open-Meteo (free, keyless global forecast API).</div>`;
+}
+
+/* ══════════════ 5f. OUTBREAK REPORT (WHO Disease Outbreak News, real data) ══════════════ */
 function renderOutbreaks(){
   const bar = $('#outbreaklist'); if(!bar) return;
   const O = window.OUTBREAKS;
@@ -3011,6 +3036,7 @@ function boot(){
   tickClocks(); setInterval(tickClocks,1000);
   renderAmber();   // NCMEC amber panel renders from committed snapshot — independent of news fetch
   renderFloods();  // GDACS/NWS flood report — committed snapshot, independent of news fetch
+  renderWeather(); // Open-Meteo weather report — committed snapshot, independent of news fetch
   renderOutbreaks(); // WHO Disease Outbreak News report — committed snapshot
   renderEdgar(); wireEdTabs(); // SEC EDGAR insider/13F/8-K — committed snapshot (fetch_edgar.py)
   renderCams(); wireCamStop(); // public CCTV, live-verified (fetch_cams.py -> cams.js)

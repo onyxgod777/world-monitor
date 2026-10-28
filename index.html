@@ -257,6 +257,18 @@
           <div class="defconbody" id="defconbody"></div>
         </div>
 
+        <div class="card weather span12" id="weathercard">
+          <div class="card-head">
+            <h2><span class="weatherglyph">🌡️</span> Global Weather</h2>
+            <span class="count mono" id="weatherCount">—</span>
+            <span class="src mono" id="weatherSrc">Open-Meteo</span>
+          </div>
+          <div class="weathergrid" id="weathergrid">
+            <div class="ph mono" style="padding:16px">Loading weather…</div>
+          </div>
+          <div class="ednote">Current conditions for the same major cities as the World Clock, from <b>Open-Meteo</b> — a free, keyless global forecast API, refreshed on a schedule. Temperatures are °C; humidity is relative and wind is km/h; <b>H / L</b> is today's forecast high and low. Weather is observation-plus-forecast, not a live sensor reading, and can lag the moment by a few minutes.</div>
+        </div>
+
         <div class="card floods span7">
           <div class="card-head">
             <h2><span class="floodglyph">▲</span> Flood Report</h2>
@@ -438,6 +450,7 @@
   <script src="penny.js"></script>
   <script src="worldpop.js"></script>
   <script src="floods.js"></script>
+  <script src="weather.js"></script>
   <script src="outbreaks.js"></script>
   <script src="vendor/hls.min.js"></script>
   <script src="social.js"></script>
