@@ -23,8 +23,8 @@ const PROPHECIES = [
  },
  {
   "emoji": "🇺🇦",
-  "title": "The Word Is \"Flexibility\", and It Is Not on the Record",
-  "short": "The Word Is \"Flexibility\", and It Is Not on the Record",
+  "title": "The Word Is Flexibility, and It Is Not on the Record",
+  "short": "The Word Is Flexibility, and It Is Not on the Record",
   "tag": "GEOPOLITICS · SIGNAL",
   "cls": "red",
   "kw": [],
