@@ -109,7 +109,7 @@ const SETTINGS_DEFS = [
     { k:'quakes', lab:'Seismic activity',   hint:'Live USGS — dashed magnitude rings, M2.5+' },
     { k:'floods', lab:'Flood alerts',       hint:'Live GDACS global events + NOAA/NWS US warnings' },
     { k:'outbreaks', lab:'Outbreak reports', hint:'Live WHO Disease Outbreak News bulletins' },
-    { k:'amber',  lab:'Missing-child pins', hint:'NCMEC alert cases (US-anchored registry)' },
+    { k:'amber',  lab:'Missing-child alerts', hint:'NCMEC alert cases (US-anchored registry) — map pins and the Alerts panel' },
     { k:'flights', lab:'Aircraft (flight radar)', hint:'Live aircraft positions from the adsb.lol community network, sampled worldwide. A snapshot, not a real-time feed — free ADS-B APIs do not allow browser access.' },
     { k:'iss',    lab:'ISS tracker',        hint:'Live International Space Station — orbit track, visibility footprint' },
   ]},
@@ -162,6 +162,7 @@ function applySettings(){
     if(!SET.clocks) clearMapClocks(); else renderMapClocks();
     const wp = $('#worldpopcard'); if(wp) wp.hidden = !SET.worldpop;
   }catch(e){}
+  try{ renderAmber(); }catch(e){ /* panel not built yet */ }
   try{
     const pc = $('#pennycard'); if(pc) pc.hidden = !SET.penny;
     if(SET.penny && !_pennyTimer) _pennyTimer = setInterval(loadPenny, 120000);
@@ -1368,7 +1369,16 @@ function renderAmber(){
   const A = window.AMBER;
   const bar = $('#amberbar');
   const countEl = $('#amberCount'); const srcEl = $('#amberSrc');
+  // The switch is the one control for missing-child content: it owns the map
+  // pins, the globe pins and this panel, so turning it off must empty the panel
+  // too — a card of cases sitting under an "off" switch reads as a broken toggle.
+  const card = $('#ambercard'); if(card) card.hidden = !SET.amber;
   if(!bar){ return; }
+  if(!SET.amber){
+    if(countEl) countEl.textContent = '';
+    bar.innerHTML = '';
+    return;
+  }
   if(!A || !Array.isArray(A.cases) || !A.cases.length){
     if(countEl) countEl.textContent='0 active';
     if(srcEl) srcEl.textContent='NCMEC · OFFLINE';
