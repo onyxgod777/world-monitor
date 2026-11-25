@@ -42,7 +42,7 @@ window.addEventListener('load', () => setTimeout(async () => {
   A('all switches rendered', sw.length === wantSwitches, 'got ' + sw.length + ' of ' + wantSwitches);
   A('switch uses a real checkbox', sw.length && sw[0].type === 'checkbox');
   A('region chips rendered', qa('#settingsBody .chip').length >= 15, num('#settingsBody .chip') + ' chips');
-  A('behaviour segments rendered', num('#settingsBody .seg') === 3, num('#settingsBody .seg') + ' segs');
+  A('behaviour segments rendered', num('#settingsBody .seg') === SETTINGS_SEGS.length, num('#settingsBody .seg') + ' segs');
 
   // ── baseline ──
   const baseSocial = num('#feed .fitem.social');
