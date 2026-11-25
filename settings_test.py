@@ -92,6 +92,30 @@ window.addEventListener('load', () => setTimeout(async () => {
   await wait(350);
   A('quakes back on -> rings redrawn', rings() > 0, rings() + ' rings');
 
+  // ── the missing-child switch owns the whole surface: map pins AND the panel ──
+  // (it used to leave the Alerts panel full of cases under an "off" switch)
+  q('.tab[data-view="alerts"]').click();
+  await wait(200);
+  const acard = q('#view-alerts .amberalert');
+  const ait = () => num('#amberbar .amberitem');
+  A('amber off -> Alerts panel hidden', getComputedStyle(acard).display === 'none', getComputedStyle(acard).display);
+  A('amber off -> no case rows left', ait() === 0, ait() + ' left');
+  am.checked = true; am.dispatchEvent(new Event('change', {bubbles: true}));
+  await wait(200);
+  A('amber on -> Alerts panel restored', getComputedStyle(acard).display !== 'none' && ait() > 0,
+    getComputedStyle(acard).display + ', ' + ait() + ' items');
+  q('.tab[data-view="world"]').click();
+  await wait(600);
+
+  // ── panel switches actually hide their card (hidden must beat .card's display) ──
+  const pkw = q('#pennycard'), pkin = q('#settingsBody input[data-opt="penny"]');
+  pkin.checked = false; pkin.dispatchEvent(new Event('change', {bubbles: true}));
+  await wait(60);
+  A('penny off -> card display:none', getComputedStyle(pkw).display === 'none', getComputedStyle(pkw).display);
+  pkin.checked = true; pkin.dispatchEvent(new Event('change', {bubbles: true}));
+  await wait(60);
+  A('penny on -> card restored', getComputedStyle(pkw).display !== 'none', getComputedStyle(pkw).display);
+
   // ── display toggle ──
   const dx = q('#settingsBody input[data-opt="dense"]');
   dx.checked = true; dx.dispatchEvent(new Event('change', {bubbles: true}));

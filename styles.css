@@ -195,6 +195,9 @@ a:hover{text-shadow:0 0 10px var(--glow)}
     0 22px 48px -30px rgba(0,0,0,.95),
     0 0 34px -18px var(--glow);
 }
+/* A panel switched off in Settings sets .hidden; .card's own display:flex would
+   otherwise beat the UA [hidden] rule and every panel toggle would do nothing. */
+.card[hidden]{display:none}
 /* HUD corner brackets — accent ticks in opposing corners of every panel */
 .card::before,.card::after{
   content:'';position:absolute;width:13px;height:13px;pointer-events:none;z-index:2;
